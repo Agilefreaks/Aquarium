@@ -1,0 +1,5 @@
+h2. Join Points and Pointcuts
+
+h3. TODO
+
+For now, look at the <span class="keyword">JoinPoint</span> and <span class="keyword">Pointcut</span> spec files and the "examples":../../rdoc/files/examples directory in the distribution.

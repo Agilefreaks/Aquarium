@@ -1,0 +1,42 @@
+---
+title: Download
+orderInfo: 2
+---
+
+h2. Download
+
+There are several ways to download <span class="keyword">Aquarium</span>. Which way is right for you depends on how you want to use it.
+
+h3. Rubygems
+
+This is the preferred approach. Non-windows users may have to use sudo. Download the latest with:
+
+<pre>
+gem install aquarium
+</pre>  
+
+or if you want an older version:
+
+<pre>
+gem install aquarium -v 0.1.0
+</pre>  
+
+h3. Direct download
+
+Get it from "Rubyforge":http://rubyforge.org/frs/?group_id=4281
+
+h3. Subversion
+
+Check it out:
+
+<pre>
+svn checkout svn://rubyforge.org/var/svn/aquarium/trunk aquarium_trunk
+</pre>
+
+or
+
+<pre>
+svn checkout svn://rubyforge.org/var/svn/aquarium/tags/{svn_tag: }/aquarium aquarium_{svn_tag: }
+</pre>
+
+See the "README":rdoc/files/README.html for details about how to build it.

@@ -1,0 +1,55 @@
+index.page:
+  directoryName: Home
+  orderInfo: 1
+upgrade.page:
+  orderInfo: 2
+examples.page:
+  orderInfo: 3
+documentation/:
+  orderInfo: 6    
+documentation/index.page:
+  orderInfo: 20
+documentation/API/:
+  orderInfo: 30
+documentation/API/aspects.page:
+  orderInfo: 20
+documentation/API/join_points_and_pointcuts.page:
+  title: Join Points and Pointcuts
+  orderInfo: 21
+documentation/API/finders.page:
+  orderInfo: 22
+documentation/API/extensions.page:
+  orderInfo: 23
+documentation/API/utils.page:
+  orderInfo: 24
+documentation/API/extras.page:
+  orderInfo: 35
+license.page:
+  orderInfo: 11
+changes.page:
+  orderInfo: 12
+download.page:
+  orderInfo: 213
+community/:
+  orderInfo: 30
+community/index.page:
+  orderInfo: 31
+community/contribute.page:
+  orderInfo: 32
+---
+community/rubyforge.html:
+  title: Rubyforge
+  url: http://rubyforge.org/projects/aquarium
+  orderInfo: 12  
+documentation/rcov.html:
+  title: RCov
+  url: ../coverage/index.html
+  orderInfo: 54
+documentation/report.html:
+  title: RSpec Report
+  url: ../report.html
+  orderInfo: 55
+documentation/rdoc.html:
+  title: RDoc
+  url: ../rdoc/index.html
+  orderInfo: 60

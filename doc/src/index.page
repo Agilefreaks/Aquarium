@@ -1,0 +1,59 @@
+---
+title: Home
+--- 
+
+h2. Overview
+
+<span class="keyword">Aquarium</span> is a framework that implements <span class="keyword">Aspect-Oriented Programming</span> (AOP) for
+Ruby. The premise of AOP is that some <span class="keyword">concerns</span> in an application will 
+cut across the natural object boundaries of the problem domain. Rather than
+scatter duplicated code in each object to handle the <span class="keyword">cross-cutting concern</span>,
+AOP modularizes the specification of which execution points are affected (called
+<span class="keyword">join points</span>) and the actions that should be invoked at those points.
+
+For example, persistence of "model" objects is a cross-cutting concern, in the 
+sense that the desired persistence approach (database, flat files, replication,
+etc.) is independent of the domain logic represented by the model. So, why should
+the model code have any persistence logic? Instead, capture the details of mapping
+the domain to the persistence approach in separate "components" and programmatically
+or declaratively modify the model objects to synchronize state changes with the 
+persistent memory of the state.
+ 
+h2. How to Use Aquarium
+
+<span class="keyword">Aquarium</span> provides a <span class="keyword">Domain Specific Language</span> (DSL) with which you can express "aspectual" system behaviour in a modular way, _i.e.,_ using a succinct language and without repeating yourself all over your code base!
+
+Imagine you want to trace all invocations of the public, instance methods in all classes whose names end with "Service". Here's how you can implement that behavior in <span class="keyword">Aquarium<span>:
+
+<ruby>before :types => /Service$/, :methods => :all do |execution_point, *args|
+  log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+end
+after :types => /Service$/, :methods => :all do |execution_point, *args|
+  log "Leaving: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+end
+</ruby>
+
+The <code>#before</code> advice adds behavior that is invoked before each method is invoked, in this case, it logs a message with the name of the executing class and method, followed by the list of arguments passed to the method.
+
+The <code>#after</code> advice adds similar behavior the is invoked after each method is invoked.
+
+Note that <code>#before</code> and <code>#after</code> are methods added to <code>Object</code>, by default.
+
+A more succinct implementation of this behavior uses <code>#around</code> advice:
+
+<ruby>around :types => /Service$/, :methods => :all do |execution_point, *args|
+  log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+  execution_point.proceed
+  log "Leaving: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+end
+</ruby>
+
+The special method <code>#proceed</code> invokes the advised method, passing it the args list (by default). For <code>#around</code> advice, you must call <code>#proceed</code> unless you specifically don't want the original method called!
+
+See the "Examples":examples.html and the "API":documentation/API/index.html section for more details.
+
+h2. Start Here
+
+<pre>$ gem install aquarium</pre>
+
+

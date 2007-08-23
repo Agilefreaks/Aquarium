@@ -1,0 +1,3 @@
+h2. Extras
+
+Extras are tools that use <span class="keyword">Aquarium</span>, but are not imported automatically when requiring "aquarium.rb":../../rdoc/files/lib/aquarium_rb.html. Instead, you have to require "aquarium/extras.rb":../../rdoc/files/lib/aquarium/extras_rb.html explicitly.

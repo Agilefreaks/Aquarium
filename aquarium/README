@@ -1,0 +1,250 @@
+== Aquarium
+
+Aquarium is a toolkit for Aspect-Oriented Programming (AOP) whose goals include:
+* A powerful "pointcut" language for specifying where to apply aspects, comparable to the pointcut language in AspectJ for Java.
+* Management of concurrent aspects (i.e., those acting on the same "join points").
+* Adding and removing aspects dynamically.
+* A user-friendly DSL.
+
+=== Why Is an AOP Framework Useful in Ruby?
+
+Ruby's metaprogramming facilities already provide some of the capabilities for which static-language AOP toolkits like AspectJ are typically used. With Ruby, you can easily add new methods and attributes to existing classes and objects. You can alias and redefine existing methods, which provides the method interception and "wrapping" needed to extend or modify existing behavior.
+
+However, what is missing in Ruby is an expressive language for describing systemic modifications, a so-called "pointcut language". If you have simple needs for method interception and wrapping, then Aquarium will be overkill. However, if you have system-wide concerns that cross the boundaries of many objects, then an AOP tookit like Aquarium can help you implement these concerns in a modular way.
+
+=== Terminology
+
+Several terms are used in the AOP community.
+
+* Join Point - A point of execution in a program where "advice" might invoked.
+* Pointcut - (yes, one word...) A set of join points, like a query over all join points in the system.
+* Advice - The behavior invoked at a join point. There are several kinds of advice:
+  * Before advice - Advice invoked before the actual join point is invoked.
+  * After returning advice - Advice invoked after the join point executes successfully.
+  * After raising advice - Advice invoked only if the join point raises an exception.
+  * After advice - Advice invoked after the join point executes successfully or raises an exception.
+  * Around advice - Advice invoked instead of the join point. The around advice must choose whether or not to invoke the join point by calling a special "proceed" method. Otherwise, the join point is NOT executed.
+
+Only around advice can prevent execution of the join point, except for the special case where before advice raises an exception.
+
+=== Known Limitations
+
+* Concurrent type- and object-based advice can't be removed cleanly.
+* See also the comparison with AspectJ behavior next.
+* The API and wrapper DSL will probably evolve until the 1.0.0 release. Backwards compatibility will be maintained between releases as much as possible and translation tools will be provided, when necessary.
+
+=== Differences With Other Ruby AOP Toolkits
+
+There are several other AOP toolkits for Ruby that precede Aquarium. The most notable are AspectR and the aspect capabilities in the Facets toolkit. There are also Ruby 2.0 proposals to add method wrappers for "before", "after" and "wrap" behavior.
+
+The goal of Aquarium is to provide a superset of the functionality provided by these other toolkits. Aquarium is suitable for non-trivial and large-scale aspect-oriented components in systems. Aquarium will be most valuable for systems where aspects might be added and removed dynamically at runtime and systems where nontrivial pointcut descriptions are needed, requiring a full-featured pointcut language (as discussed elsewhere...). For less demanding needs, the alternatives are lighter weight and hence may be more appropriate.
+
+=== Differences With AspectJ Behavior
+
+Many of AspectJ's behaviors that aren't currently supported are planned for future releases.
+ 
+* Attribute reading and writing join points are not supported. The :attribute(s) Aspect options are convenience wrappers for the corresponding accessor methods. 
+* At this time, the pointcut language supported by Aquarium is not nearly as feature-rich as AspectJ's language. For example, there are no runtime pointcut designators supported, such as "if" conditions and "cflow" (context flow). Most of AspectJ pointcut language features are planned, however.
+* While AspectJ provides "intertype declaration" capabilities (i.e., adding state and behavior to existing classes), Ruby's native metaprogramming support satisfies this need. There may be convenience hooks added in a future release, however.
+* User defined advice precedence is not supported. However, advice precedence is unambiguous; the last aspects created as modules are loaded at runtime have higher precedence than earlier aspects. Ensuring a particular order is not always easy, of course. 
+* Unlike AspectJ, Aquarium can advise individual objects, can remove advice, and it has named pointcuts that can be defined separately from aspects.
+
+=== Examples
+
+Several complete examples are provided in the "examples" directory.
+
+In most cases, you can either declare the appropriate classes or use the optional DSL, which adds methods to Object.
+
+Here is an example that traces invocations of all public instance methods of the classes or modules Foo and Bar.
+
+	require 'aquarium'
+	Aspect.new :around, :types => [Foo, Bar], :methods => :all do |execution_point, *args|
+		p "Entering: #{execution_point.type.name}##{execution_point.method_name}"
+		execution_point.proceed
+		p "Leaving: #{execution_point.type.name}##{execution_point.method_name}"
+	end
+
+The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, etc.) Here is the same example using the convenience DSL that adds aspectual behavior to Object.
+
+	require 'aquarium'
+	around :types => [Foo, Bar], :methods => :all do |execution_point, *args|
+		p "Entering: #{execution_point.type.name}##{execution_point.method_name}"
+		execution_point.proceed
+		p "Leaving: #{execution_point.type.name}##{execution_point.method_name}"
+	end
+
+See "examples/method_tracing_example.rb" for a more detailed version of this example.
+
+If you use the DSL inside a class and omit the :type(s) and :object(s) options, "self" is assumed.
+
+	class Foo
+		...
+		def critical_operation *args
+			...
+		end
+	end
+	...
+	class Foo
+		around :critical_operation do |execution_point, *args|
+			p "Entering: Foo#critical_operation"
+			execution_point.proceed
+			p "Leaving: Foo#critical_operation"
+		end
+	end
+
+Here are some more succinct examples, illustrating the API.
+
+You can pass in pointcuts defined elsewhere:
+
+	my_pointcut = Pointcut.new :types => /Foo::Bar::/, :methods => /^do_/
+	around :pointcuts => my_pointcut do |jp, *args| ...         # Pass in a pointcut
+	around :pointcuts => [my_pointcut, ...] do |jp, *args| ...  # Pass in a pointcut array
+
+You can specify a single type, a type name, a type regular expression, or an array of the same. Note that :type and :types are synonymous.
+
+	around :type = A, ...
+	around :types => [A, B, ...], ...
+	around :types => /A::.*Helper$/, ...
+	around :types => [/A::.*Helper$/, /B::Foo.*/], ...
+	
+You can specify a single object or an array of objects. Note that :object and :objects are synonymous. If no types or objects are specified, the object defaults to "self".
+
+	a1 = A.new
+	a2 = A.new
+	around :object = a1, ...
+	around :objects => [a1, a2], ...
+
+You can specify a single method symbol (name), a regular expression, or an array of the same. Note that :all is a special keyword meaning all methods and :method and :methods are synonymous.
+
+	around :method = :all, ...
+	around :method = :foo, ...
+	around :methods = [:foo, :bar, :baz], ...
+	around :methods = /^foo/, ...
+	around :methods = [/^foo/, /bar$/], ...
+
+You can specify a method options. By default, public instance methods only are matched.
+
+	around :methods = /foo/, :method_options => [:instance], ...  # match instance methods (default)
+	around :methods = /foo/, :method_options => [:class], ...     # match class methods
+	around :methods = /foo/, :method_options => [:public, :protected, :private], ... 
+		# match public, protected, and private instance methods
+	around :methods = /foo/, :method_options => [:singleton], ... # match singleton methods
+
+You can specify attributes, which are actually convenience methods for the attribute accessors. They work
+very much like the :method options. Note that :all is NOT supported in this case and :attribute and :attributes are synonymous.
+
+	around :attribute = :foo, ...                                  # defaults to methods #foo and #foo=
+	around :attribute = :foo, :attribute_options => [:readers]...  # only matches #foo 
+	around :attribute = :foo, :attribute_options => [:writers]...  # only matches #foo= 
+	around :attributes = [:foo, :bar, :baz], ...
+	around :attributes = /^foo/, ...
+	around :attributes = [/^foo/, /bar$/], ...
+
+You can advice methods before execution:
+
+	before :types => ...
+
+You can advice methods after returning successfully (i.e., no exceptions were raised):
+
+	after_returning :types => ...
+	after_returning_from :types => ...
+	
+You can advice methods after raising exceptions:
+
+	after_raising :types => ...              # After any exception is thrown
+	after_raising_within :types => ...
+	after_raising => MyError, :types => ...  # Only invoke advice if "MyError" is raised.
+	after_raising => [MyError1, MyError2], :types => ...  
+		# Only invoke advice if "MyError1" or "MyError2" is raised.
+	 
+You can advice methods after returning successfully or raising exceptions. (You can't specify
+a set of exceptions in this case.):
+
+	after :types => ...
+	after_raising_within_or_returning_from : types =>
+	
+You can advice methods both before after. This is different from around advice, where the advice has to explicitly invoke the join point (using JoinPoint#proceed). Rather, these methods are convenience wrappers
+around the creation of before advice and the corresponding after advice.
+
+	before_and_after :types =>, ...
+	before_and_after_returning :types =>, ...
+	before_and_after_returning_from :types =>, ...
+	before_and_after_raising :types =>, ...
+	before_and_after_raising_within :types =>, ...
+	before_and_after_raising_within_or_returning_from :types =>, ...
+
+You can pass a block as the advice. Notice that all advice blocks and Procs (see below) are required to accept two arguments, the JoinPoint, which will contain useful context information, and "*args", which will contain the parameters used when invoking the join point (method). It is an error if no block is specified.
+
+	around :type => [...], :methods => :all do |join_point, *args|
+	  advice_to_execute_before_the_jp
+	  join_point.proceed	# Invoke the join point, passing *args implicitly (you can override...)
+	  advice_to_execute_after_the_jp
+	end
+	around(:type => [...], :methods => :all) {|join_point, *args| ...}  # (...) necessary for precedence...
+
+Rather than passing a block as the advice, you can pass a previously-created Proc:
+	
+	around :type => [...], :methods => :all, :advice => advice 
+	around :type => [...], :methods => :all, :advise_with => advice  # synonym for advice. Note the "s"!
+	around :type => [...], :methods => :all, :call => advice         # synonym for advice.
+	around :type => [...], :methods => :all, :invoke => advice       # synonym for advice.
+
+=== Packages
+
+Aquarium::Aspects contains the Aspect class and supporting classes Pointcut, JoinPoint, etc.
+
+Aquarium::Finders provides tools for locating types, objects, and methods in the runtime, using names, symbols, or regular expressions.
+
+Aquarium::Extensions provides extensions to several Ruby core library routines.
+
+Aquarium::Utils provides general-purpose utilities for manipulating Strings, Sets, Hashes, etc. as well as some generic types.
+
+Aquarium::Extras provides add-ons for Aquarium, such as a Design by Contract implementation. These extras are NOT included when you require the general 'aquarium.rb' file. You have to explicitly include 'aquarium/extras' or one of the 'aquarium/extras/*' if you want to use them.
+
+== Installation
+
+The simplest approach is to install the gem:
+
+  gem install -r aquarium    # sudo may be required
+
+== Building the Aquarium gem
+
+If you prefer to build the gem locally, check out source from svn://rubyforge.org/var/svn/aquarium/trunk. Then
+do the following:
+
+  rake gem
+  gem install pkg/aquarium-x.y.z.gem   # sudo may be required
+
+== Running Aquarium's RSpec Specs
+
+In order to run Aquarium's full suite of specs (rake pre_commit) you must install the following gems:
+
+* rake          # Runs the build script
+* rspec         # Used instead of Test::Unit for TDD
+* rcov          # Verifies that the code is 100% covered by specs
+* webgen        # Generates the static HTML website
+* RedCloth      # Required by webgen
+* syntax        # Required by RSpec's custom webgen extension to highlight ruby code
+* diff-lcs      # Required if you use the --diff switch
+* win32console  # Required by the --colour switch if you're on Windows
+* meta_project  # Required in order to make releases at RubyForge
+* heckle        # Required if you use the --heckle switch
+
+Once those are all installed, you should be able to run the suite with the following steps:
+
+* svn co svn://rubyforge.org/var/svn/aquarium/trunk aquarium
+* cd aquarium
+* rake spec
+or
+* rake spec_rcov  # also runs rcov
+
+Note that Aquarium itself - once built - doesn't have any dependencies outside the Ruby core and stdlib.
+
+See http://aquarium.rubyforge.org for further documentation.
+
+=== Acknowledgments
+
+My colleagues in the AOSD community, in particular those who developed AspectJ, have been a big inspiration.
+The RSpec team, in particular David Chelimsky, have really inspired my thinking about what's possible in Ruby, especially in the realm of DSLs. I also cribbed parts of the RSpec Rake process ;)
+My colleagues at Object Mentor are an endless source of insight and inspiration.
+ 

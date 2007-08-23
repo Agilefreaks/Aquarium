@@ -1,0 +1,83 @@
+h2. Aspects
+
+<span class="keyword">Aspects</span> are modularization constructs for encapsulating <span class="keyword">concerns</span> that cut across the normal
+system object and module boundaries. Two classic examples including the mapping of a global
+persistence or security strategy to the objects in the system that must use or be controlled
+by them. 
+
+Think of your persistence strategy as one, well-modularized domain and your business logic as
+another. Rather than <span class="keyword">tangle</span> the business objects with the code to support 
+persistence and <span class="keyword">scatter</span> that logic all over the application (breaking 
+"DRY":http://en.wikipedia.org/wiki/Don't_repeat_yourself),
+<span class="keyword">aspects</span> modularize the <i>integration</i> logic
+between the persistence and domain-logic subsystems. 
+
+By modularization, I mean that you can 
+express the intersection <span class="keyword">join points</span> (defined shortly) succinctly and in one 
+place, as well as defining the logic that expresses what should happen at those intersection points.
+
+h3. Terminology
+
+Several terms are used in the AOP community.
+
+| <span class="keyword">Join Point</span> | A point of execution in a program where "advice" might be invoked.|
+| <span class="keyword">Pointcut</span> (yes, one word...) | A set of join points of interest, like a query over all join points in the system.|
+| <span class="keyword">Advice</span> | The behavior invoked at a join point.|
+
+Potential <span class="keyword">join points</span> include method calls, variable reads and writes, conditionals, <i>etc.</i>. <span class="keyword">Aquarium</span> currently supports only method calls, which is sufficient for most needs.
+
+There are several kinds of <span class="keyword">advice</span>:
+| <span class="keyword">Before</span> | Advice invoked before the actual join point is invoked.|
+| <span class="keyword">After Returning</span> | Advice invoked after the join point executes successfully.|
+| <span class="keyword">After Raising</span> | Advice invoked only if the join point raises an exception.|
+| <span class="keyword">After</span> | Advice invoked after the join point executes successfully or raises an exception.|
+| <span class="keyword">Around</span> | Advice invoked instead of the join point. The around advice must choose whether or not to invoke the join point by calling a special "proceed" method. Otherwise, the join point is NOT executed.|
+
+Only <span class="keyword">around advice</span> can prevent execution of the <span class="keyword">join point</span>, except for the special case where before <span class="keyword">advice</span> raises an exception.
+
+There are two disadvantages of the term <span class="keyword">advice</span>. One disadvantage is that it implies that we're just "tweaking" the system in some sense, which is a limiting perspective. The second disadvantage is that both of the words "advise" and "advice" are used and it's easy to use one when you meant the other!
+
+h4. Usage
+
+Aspects are implemented as classes and you can either create instances of them or use the convenient methods that are added to <code>Object</code>, by default. For example, the following two expressions are equivalent:
+
+<ruby>
+aspect1 = Aspect.new :before, :types => /*Service$/, :methods => :all do |join_point, *args|
+  log("calling #{join_point.inspect}")
+end
+
+aspect2 = before :types => /*Service$/, :methods => :all do |join_point, *args|
+  log("calling #{join_point.inspect}")
+end
+</ruby>
+
+Both examples add <span class="keyword">before advice</span> (which logs the invocations of the methods) to all the public methods in all classes and modules whose name ends with <code>Service</code>. Note that while the second form is using what is effectively an instance method on the current <code>self</code>, it has no affect on <code>self</code>.
+
+Here is a similar example that advises just a single instance of the <code>MyService</code> class.
+
+<ruby>
+service = MyService.new(...)
+aspect = before :object => service, :methods => :all do |join_point, *args|
+  log("calling #{join_point.inspect}")
+end
+</ruby>
+
+Here is effectively the same example that uses a previously-defined <span class="keyword">pointcut</span>.
+
+<ruby>
+service = MyService.new(...)
+pointcut = Pointcut.new :object => service, :methods => :all 
+aspect = before :pointcut => pointcut do |join_point, *args|
+  log("calling #{join_point.inspect}")
+end
+</ruby>
+
+Note that the following are synonyms of each other, for better readability: <code>:types</code> and <code>:type</code>, <code>:objects</code> and <code>:object</code>, <code>:pointcuts</code> and <code>:pointcut</code>, <code>:methods</code> and <code>:method</code>.
+
+Finally, <span class="keyword">Aquarium</span> supports removing <span class="keyword">advice</span>:
+
+<ruby>
+aspect.unadvise
+</ruby>
+
+Other examples can be found in the "README":../../rdoc/files/README.html and the "examples":../../rdoc/files/examples directory in the distribution.

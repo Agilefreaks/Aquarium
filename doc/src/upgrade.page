@@ -1,0 +1,14 @@
+---
+title: Upgrade
+inMenu: true
+---
+
+h2. Upgrading the <span class="keyword">Aquarium</span> gem
+
+There are no incompatibilities between versions at this time, so you should be able to upgrade
+without difficulty.
+
+<pre>
+gem upgrade aquarium
+</pre>
+

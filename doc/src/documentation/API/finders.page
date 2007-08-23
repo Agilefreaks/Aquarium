@@ -1,0 +1,4 @@
+h2. Finders
+
+Utilities for finding types, objects, methods, <i>etc.</i> in the current runtime.
+See "finders.rb":../../rdoc/files/lib/aquarium/finders_rb.html.

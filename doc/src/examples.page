@@ -1,0 +1,45 @@
+---
+title: Examples
+---
+h2. Examples
+
+These examples are all in the "examples" directory that is part of the distribution. Other examples can be found in the 
+"README":rdoc/files/README.html, in particular, different ways of expressing the same ideas (for readability...).
+
+h3. Tracing Method Calls
+
+Want to trace invocations of certain methods? This example demonstrates how to do it.
+
+<ruby file="../aquarium/examples/method_tracing_example.rb" /> 
+
+h3. "Enhancing" <code>method_missing</code> Without Overriding
+
+Here is an example of "advising" <code>method_missing</code> to add behavior, rather than overriding it,
+which can increase the risk of collisions with overrides from other toolkits:
+
+<ruby file="../aquarium/examples/method_missing_example.rb" /> 
+
+h3. Aspect Design
+
+The AOP community is still discovering good design principles. However, simple extensions of good OOD principles
+are an important step. Many of those principles focus on minimal coupling between components and, in particular, coupling
+through abstractions, rather than concrete details. 
+
+In this example, we demonstrate how one module defines a pointcut representing an object's state changes. An
+"observer" aspect watches for those changes and prints a message when updates occur. Hence, the example demonstrates one
+implementation of the Observer Pattern.
+
+Notice how the aspect is independent of the details of the pointcut, so it won't require change as the observed class 
+evolves.
+
+<ruby file="../aquarium/examples/aspect_design_example.rb" />
+
+h3. Design by Contract
+
+It is easy to use <span class="keyword">Aquarium</span> to implement a "contract" for a Module, in the sense of Bertrand
+Meyer's "Design by Contract". In fact, there is a simple DbC module (not a complete implementation...) in
+the "extras":rdoc/files/lib/aquarium/extras_rb.html, which this example uses:
+
+<ruby file="../aquarium/examples/design_by_contract_example.rb" />
+
+Other examples can be found in the "README":rdoc/files/README.html.

@@ -1,0 +1,14 @@
+h2. <span class="keyword">Aquarium</span> API
+
+Aquarium::Aspects contains the "Aquarium::Aspects::Aspect":aspects.html class and supporting classes "Aquarium::Aspects::Pointcut":join_points_and_pointcuts.html,
+"Aquarium::Aspects::JoinPoint":join_points_and_pointcuts.html, <i>etc.</i>
+
+"Aquarium::Finders":finders.html provides tools for locating types, objects, and methods in the runtime, using names, symbols, or regular expressions.
+
+"Aquarium::Extensions":extensions.html provides extensions to several Ruby core library routines.
+
+"Aquarium::Utils":utils.html provides general-purpose utilities for manipulating Strings, Sets, Hashes, etc. as well as some generic types.
+
+"Aquarium::Extras":extras.html provides add-ons for <span class="keyword">Aquarium</span>, such as a <span class="keyword">Design by Contract</span> implementation. Note that these extras are <b>not</b> included when you require the general "aquarium.rb":../../rdoc/files/lib/aquarium_rb.html file. You have to explicitly include "aquarium/extras":../../rdoc/files/lib/aquarium/extras_rb.html file to use them.
+
+More details are discussed in the "README":../../rdoc/files/README.html.

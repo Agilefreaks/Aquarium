@@ -1,0 +1,78 @@
+---
+title: Contribute
+---
+
+h2. Contribute to Aquarium
+
+There are several ways in which you can contribute to Aquarium. 
+
+h2. Mailing Lists
+
+One easy way you can contribute is to join and participate in our mailing lists:
+
+"http://rubyforge.org/mail/?group_id=4281":http://rubyforge.org/mail/?group_id=4281
+
+* aquarium-users is for anyone who uses Aquarium. Use this list to discuss any topics related to
+the use of Aquarium.
+* aquarium-devel is for those interested in the ongoing development of Aquarium,
+including those who wish to contribute to the development effort.
+
+Since there will (hopefully!) be a reasonable amount of traffic on these lists, 
+please mark off-topic posts with an "[OT]" prefix in the subject line.
+
+h2. Requests For Enhancement (RFEs)
+
+Please use the "RubyForge tracker":http://rubyforge.org/tracker/?group_id=4281 to submit Requests For 
+Enhancement, rather than using the mailing lists. Discussion of issues on the mailing list is welcome,
+but the tracker is the best way to capture issues.
+
+So, for Feature Requests, Patches and Bugs, please be sure to select the appropriate
+category.
+
+"RubyForge tracker":http://rubyforge.org/tracker/?group_id=4281
+
+Wherever feasible, <b><i>please</i></b> submit a complete RSpec specification that we can run, such as
+the following example:
+
+<ruby>
+describe "My Problem" do
+  it "can be reproduced as follows" do
+    # Why doesn't this work?
+    # (This is just a silly example)
+    true.should be_true
+  end
+end
+</ruby>
+
+This will make us more likely to look at it quickly.
+
+h3. Feature Requests
+
+Interested in a new feature that you would find useful but don't wish
+to develop yourself? Please submit it in a Feature Request.
+
+h3. Patches
+
+Interested in a new feature that you've already written or want to write?
+Please submit a patch, but please follow these guidelines.
+
+* patch against svn://rubyforge.org/var/svn/aquarium/trunk (do not patch against a released gem)
+* include specs!
+* include docs!
+* run "rake website" on your patched source (it runs the specs and generates the docs).
+* create a patch with "svn diff > description_of_patch.diff"
+* create a new ticket in the "RubyForge tracker":http://rubyforge.org/tracker/?group_id=4281
+* attach the diff file to the ticket. <b><i>Don't forget to tick the checkbox or your patch will get lost!</i></b>
+
+h3. Bugs
+
+We want to hear about any bugs that you find, but we can't address them
+if we can't reproduce them. If you submit a Bug report, be sure to include:
+
+* The Aquarium version (either a versioned release or svn revision number).
+* Any other relevant software versions, OSes, <i>etc.</i>
+* A failing spec <b>and</b> code that demonstrate the failure. While code snippets alone are better than nothing, what we really prefer are modifications to Aquarium's own specs, as a unified diff file.
+
+h3. Thank You!
+
+Thanks for your interest in Aquarium!

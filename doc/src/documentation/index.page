@@ -1,0 +1,8 @@
+h2. Documentation
+
+See the "README":../rdoc/files/README.html, the "Examples":../examples.html, the "API":API/index.html section, and the many <span class="keyword">RSpec</span> files for all the details.
+
+For more information on <span class="keyword">Aspect-Oriented Programming</span>, start with Dean Wampler's web site, "aspectprogramming.com":http://aspectprogramming.com, and "aosd.net":http://www.aosd.net.
+
+Finally, see the "RubyForge project page":http://rubyforge.org/projects/aquarium/ and sign up for one of the "mailing lists":http://rubyforge.org/mail/?group_id=4281.
+
