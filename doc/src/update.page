@@ -1,0 +1,14 @@
+---
+title: Update
+inMenu: true
+---
+
+h2. Updating the <span class="keyword">Aquarium</span> gem
+
+There are no incompatibilities between versions at this time, so you should be able to update
+without difficulty.
+
+<pre>
+gem update aquarium
+</pre>
+
