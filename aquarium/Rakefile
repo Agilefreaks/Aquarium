@@ -179,6 +179,16 @@ task :publish_website => [:verify_user, :website] do
   end
 end
 
+desc "Upload Website archive to RubyForge"
+task :archive_website => [:verify_user, :website] do
+  publisher = Rake::SshDirPublisher.new(
+    "aquarium-website@rubyforge.org",
+    "/var/www/gforge-projects/#{PKG_NAME}/#{Spec::VERSION::TAG}",
+    "../doc/output"
+  )
+  publisher.upload
+end
+
 desc "Publish gem+tgz+zip on RubyForge. You must make sure lib/version.rb is aligned with the CHANGELOG file"
 task :publish_packages => [:verify_user, :package] do
   release_files = FileList[
