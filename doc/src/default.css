@@ -4,7 +4,12 @@ body {
   margin: 0;
   margin-bottom: 25px;
   padding: 0;
-  background-image: url(images/background.jpg);
+  background-image: url(images/background2_paper.jpg);
+  /*background-image: url(images/background.jpg);*/
+  /*background-image: url(images/superimposition2.jpg);*/
+  /*background-image: url(images/on_a_dark_edge.jpg);*/
+  background-position: top left;
+  background-repeat: repeat-y;   /* no-repeat; */
   background-color: #859C9B; /* #BBCCCF; #f0f0f0; */
   font-family: "Lucida Grande", "Bitstream Vera Sans", "Verdana";
   font-size: 13px;
@@ -107,7 +112,7 @@ pre.ruby {
 
 #title {
   font-size: 36px;
-  color: #220;
+  color: #CBD6FF;
   font-family: "Times Roman", "Lucida Grande", "Bitstream Vera Sans", "Verdana";
   font-weight: bold;
   text-align: left;
