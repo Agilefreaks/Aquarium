@@ -15,17 +15,17 @@ module Aquarium
       end
       
       def precondition *args, &contract_block
-        message = handle_message_arg *args
+        message = handle_message_arg args
         add_advice :before, "precondition", message, *args, &contract_block
       end
 
       def postcondition *args, &contract_block
-        message = handle_message_arg *args
+        message = handle_message_arg args
         add_advice :after_returning, "postcondition", message, *args, &contract_block
       end
 
       def invariant *args, &contract_block
-        message = handle_message_arg *args
+        message = handle_message_arg args
         around *args do |jp, *args2|
           DesignByContract.test_condition "invariant failure (before invocation): #{message}", jp, *args2, &contract_block
           jp.proceed
@@ -47,7 +47,7 @@ module Aquarium
         end
       end
       
-      def handle_message_arg *args
+      def handle_message_arg args
         options = args[-1]
         return unless options.kind_of?(Hash)
         message = options[:message]

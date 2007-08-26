@@ -109,7 +109,7 @@ module Aquarium
       #   <tt>:writers</tt>, and/or <tt>:writer</tt> (synonymous). By default, both
       #   readers and writers are matched.
       def initialize *options, &block
-        process_input *options, &block
+        process_input options, &block
         init_pointcuts
         return if specification[:noop]
         advise_join_points
@@ -151,15 +151,15 @@ module Aquarium
   
       protected
 
-      def process_input *options, &block
-        @original_options = *options
-        make_specification *options, &block
+      def process_input options, &block
+        @original_options = options
+        make_specification options, &block
         @verbose = @specification[:verbose] || false
         @log     = @specification[:log] || ""
         validate_specification
       end  
   
-      def make_specification *options, &block
+      def make_specification options, &block
         opts = options.dup
         rationalize_parameters opts
         @specification = Aquarium::Utils::MethodUtils.method_args_to_hash(*opts) {|option| ""} # set other hash values to an empty string

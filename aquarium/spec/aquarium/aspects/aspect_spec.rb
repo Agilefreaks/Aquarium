@@ -512,6 +512,33 @@ describe Aspect, "#new with :after advice" do
     end 
     do_watchful_public_protected_private 
   end
+  it "should ignore the value returned by the advice" do
+    class ReturningValue
+      def doit args
+        args + ["d"]
+      end
+    end
+    ary = %w[a b c]
+    ReturningValue.new.doit(ary).should == %w[a b c d]
+    @aspect = Aspect.new :after, :type => ReturningValue, :method => :doit do |jp, *args|
+      %w[aa] + jp.context.returned_value + %w[e]
+    end 
+    ReturningValue.new.doit(ary).should == %w[a b c d]
+  end
+
+  it "should all the advice to assign a new return value" do
+    class ReturningValue
+      def doit args
+        args + ["d"]
+      end
+    end
+    ary = %w[a b c]
+    ReturningValue.new.doit(ary).should == %w[a b c d]
+    @aspect = Aspect.new :after, :type => ReturningValue, :method => :doit do |jp, *args|
+      jp.context.returned_value = %w[aa] + jp.context.returned_value + %w[e]
+    end 
+    ReturningValue.new.doit(ary).should == %w[aa a b c d e]
+  end
 end
 
 describe Aspect, "#new with :after_returning advice" do
@@ -540,6 +567,34 @@ describe Aspect, "#new with :after_returning advice" do
       @advice_called += 1
     end 
     do_watchful_public_protected_private 
+  end
+  
+  it "should ignore the value returned by the advice" do
+    class ReturningValue
+      def doit args
+        args + ["d"]
+      end
+    end
+    ary = %w[a b c]
+    ReturningValue.new.doit(ary).should == %w[a b c d]
+    @aspect = Aspect.new :after_returning, :type => ReturningValue, :method => :doit do |jp, *args|
+      %w[aa] + jp.context.returned_value + %w[e]
+    end 
+    ReturningValue.new.doit(ary).should == %w[a b c d]
+  end
+
+  it "should all the advice to assign a new return value" do
+    class ReturningValue
+      def doit args
+        args + ["d"]
+      end
+    end
+    ary = %w[a b c]
+    ReturningValue.new.doit(ary).should == %w[a b c d]
+    @aspect = Aspect.new :after_returning, :type => ReturningValue, :method => :doit do |jp, *args|
+      jp.context.returned_value = %w[aa] + jp.context.returned_value + %w[e]
+    end 
+    ReturningValue.new.doit(ary).should == %w[aa a b c d e]
   end
 end
 
@@ -817,6 +872,20 @@ describe Aspect, "#new with :around advice" do
     override_block_called.should be_true
     orig_block_called.should be_false
     watchful.public_watchful_method_args.should == [:a4, :a5, :a6]
+  end
+  
+  it "should return the value returned by the advice" do
+    class ReturningValue
+      def doit args
+        args + ["d"]
+      end
+    end
+    ary = %w[a b c]
+    ReturningValue.new.doit(ary).should == %w[a b c d]
+    @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, *args|
+      %w[aa] + jp.proceed + %w[e]
+    end 
+    ReturningValue.new.doit(ary).should == %w[aa a b c d e]
   end
 
   def do_around_spec *args_passed_to_proceed
