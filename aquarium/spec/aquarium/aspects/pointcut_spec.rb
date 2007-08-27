@@ -146,6 +146,16 @@ describe Aquarium::Aspects::Pointcut, " (objects specified)" do
         Aquarium::Aspects::JoinPoint.new(:object => pro, :method_name => :protected_instance_test_method),
         Aquarium::Aspects::JoinPoint.new(:object => pub, :method_name => :public_instance_test_method)])
   end  
+  
+  it "does confuse strings specified with :objects as type names." do
+    string = "mystring"
+    lambda { Aquarium::Aspects::Pointcut.new :object => string, :methods => :capitalize }.should raise_error(NameError)
+  end  
+  
+  it "does confuse symbols specified with :objects as type names." do
+    symbol = :mystring
+    lambda { Aquarium::Aspects::Pointcut.new :object => symbol, :methods => :capitalize }.should raise_error(NameError)
+  end  
 end
 
 describe Aquarium::Aspects::Pointcut, " (types or objects specified with public instance methods)" do
