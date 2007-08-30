@@ -31,7 +31,7 @@ task :default => [:verify_rcov]
 
 desc "Run all specs"
 Spec::Rake::SpecTask.new do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb']
+  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
   t.spec_opts = ['--options', 'spec.opts']
   t.rcov = true
   t.rcov_dir = '../doc/output/coverage'
@@ -40,7 +40,7 @@ end
 
 desc "Run all specs and store html output in doc/output/report.html"
 Spec::Rake::SpecTask.new('spec_html') do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb']
+  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
   t.spec_opts = ['--format html:../doc/output/report.html','--backtrace']
 end
 

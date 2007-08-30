@@ -25,37 +25,141 @@ describe Aquarium::Aspects::JoinPoint, "#initialize with invalid parameters" do
   end
 end
   
-describe Aquarium::Aspects::JoinPoint, "#initialize with invalid parameters" do
+describe Aquarium::Aspects::JoinPoint, "#initialize with parameters that specify class vs. instance methods" do
   it "should assume the :method_name refers to an instance method, by default." do
     jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split
-    jp.is_instance_method?.should be_true
+    jp.instance_method?.should be_true
   end
   
-  it "should treat the :method_name as refering to an instance method if :is_instance_method is specified as true." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :is_instance_method => true
-    jp.is_instance_method?.should be_true
+  it "should treat the :method_name as refering to an instance method if :instance_method is specified as true." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => true
+    jp.instance_method?.should be_true
   end
   
-  it "should treat the :method_name as refering to a class method if :is_instance_method is specified as false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :is_instance_method => false
-    jp.is_instance_method?.should be_false
+  it "should treat the :method_name as refering to a class method if :instance_method is specified as false." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => false
+    jp.instance_method?.should be_false
   end
 
-  it "should treat the :method_name as refering to an instance method if :is_class_method is specified as false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :is_class_method => false
-    jp.is_instance_method?.should be_true
+  it "should treat the :method_name as refering to an instance method if :class_method is specified as false." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :class_method => false
+    jp.instance_method?.should be_true
   end
   
-  it "should treat the :method_name as refering to a class method if :is_class_method is specified as true." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :is_class_method => true
-    jp.is_instance_method?.should be_false
+  it "should treat the :method_name as refering to a class method if :class_method is specified as true." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :class_method => true
+    jp.instance_method?.should be_false
   end
   
-  it "should treat give precedence to :is_instance_method if appears with :is_class_method." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :is_instance_method => false, :is_class_method => true
-    jp.is_instance_method?.should be_false
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :is_instance_method => true, :is_class_method => false
-    jp.is_instance_method?.should be_true
+  it "should treat give precedence to :instance_method if appears with :class_method." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => false, :class_method => true
+    jp.instance_method?.should be_false
+    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => true, :class_method => false
+    jp.instance_method?.should be_true
+  end
+end
+  
+describe Aquarium::Aspects::JoinPoint, "#visibility" do
+  class ProtectionExample
+    def public_instance_method; end
+    protected
+    def protected_instance_method; end
+    private
+    def private_instance_method; end
+    class << self; self; end.class_eval do
+      public
+      def public_class_method; end
+      private
+      def private_class_method; end
+    end    
+  end
+  
+  it "should return :public for public instance methods." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_method
+    jp.visibility.should == :public
+  end
+  
+  it "should return :public for public instance methods, when only instance methods are specified." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_method, :instance_method => true
+    jp.visibility.should == :public
+  end
+  
+  it "should return :public for public class methods, when only class methods are specified using :instance_method => false." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_class_method, :instance_method => false
+    jp.visibility.should == :public
+  end
+
+  it "should return :public for public instance methods, when only instance methods are specified using :class_method => false." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_method, :class_method => false
+    jp.visibility.should == :public
+  end
+  
+  it "should return :public for public class methods, when only class methods are specified." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_class_method, :class_method => true
+    jp.visibility.should == :public
+  end
+
+  it "should return :protected for protected instance methods." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_method
+    jp.visibility.should == :protected
+  end
+  
+  it "should return :protected for protected instance methods, when only instance methods are specified." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_method, :instance_method => true
+    jp.visibility.should == :protected
+  end
+  
+  it "should return nil for protected class methods, when only class methods are specified using :instance_method => false." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_class_method, :instance_method => false
+    jp.visibility.should == nil
+  end
+
+  it "should return :protected for protected instance methods, when only instance methods are specified using :class_method => false." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_method, :class_method => false
+    jp.visibility.should == :protected
+  end
+  
+  it "should return nil for protected class methods, when only class methods are specified." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_class_method, :class_method => true
+    jp.visibility.should == nil
+  end
+
+  it "should return :private for private instance methods." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_method
+    jp.visibility.should == :private
+  end
+  
+  it "should return :private for private instance methods, when only instance methods are specified." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_method, :instance_method => true
+    jp.visibility.should == :private
+  end
+  
+  it "should return :private for private class methods, when only class methods are specified using :instance_method => false." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_class_method, :instance_method => false
+    jp.visibility.should == :private
+  end
+
+  it "should return :private for private instance methods, when only instance methods are specified using :class_method => false." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_method, :class_method => false
+    jp.visibility.should == :private
+  end
+  
+  it "should return :private for private class methods, when only class methods are specified." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_class_method, :class_method => true
+    jp.visibility.should == :private
+  end
+  
+  it "should return nil for non-existent methods." do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo
+    jp.visibility.should == nil
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo, :instance_method => true
+    jp.visibility.should == nil
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo, :instance_method => false
+    jp.visibility.should == nil
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo, :class_method => true
+    jp.visibility.should == nil
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo, :class_method => false
+    jp.visibility.should == nil
   end
 end
   

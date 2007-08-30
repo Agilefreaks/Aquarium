@@ -41,7 +41,7 @@ module Aquarium
         begin
           @proc.call jp, *args
         rescue => e
-          class_or_instance_method_separater = jp.is_instance_method? ? "#" : "."
+          class_or_instance_method_separater = jp.instance_method? ? "#" : "."
           context_message = "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
           backtrace = e.backtrace
           e2 = e.exception(context_message + e.message)
@@ -80,7 +80,7 @@ module Aquarium
       def initialize options = {}
         super(options) { |jp, *args| 
           block_for_method = jp.context.block_for_method
-          invoking_object = jp.is_instance_method? ? jp.context.advised_object : jp.type
+          invoking_object = jp.instance_method? ? jp.context.advised_object : jp.type
           method = invoking_object.method(@alias_method_name)
           block_for_method.nil? ? 
             method.call(*args) : 

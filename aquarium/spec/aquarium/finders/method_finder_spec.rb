@@ -237,14 +237,13 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
   
   it "should find all class methods matching a regular expression for types when :class is used." do
     # Have to add some rspec methods to the expected lists!
-    rspec_expected = %w[received_message?]
     expected = {}
-    expected[Kernel] = (rspec_expected + %w[chomp! chop! class_variable_defined? const_defined? respond_to?]).sort.map {|m| m.intern}
+    expected[Kernel] = [:chomp!, :chop!, :respond_to?]
     [Object, Module, Class].each do |clazz|
-      expected[clazz] = (rspec_expected + %w[class_variable_defined? const_defined? respond_to?]).sort.map {|m| m.intern}
+      expected[clazz] = [:respond_to?]
     end
     class_array = [Kernel, Module, Object, Class]
-    actual = Aquarium::Finders::MethodFinder.new.find :types => class_array, :methods => [/^[cr].*\?$/, /^[cr].*\!$/], :options => :class
+    actual = Aquarium::Finders::MethodFinder.new.find :types => class_array, :methods => [/^resp.*\?$/, /^ch.*\!$/], :options => :class
     class_array.each do |c|
       actual.matched[c].should == Set.new(expected[c])
     end

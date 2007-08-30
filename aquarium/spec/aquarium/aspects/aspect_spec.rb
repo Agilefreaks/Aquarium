@@ -955,6 +955,27 @@ describe Aspect, "#unadvise" do
   end
 end
 
+describe "invariant protection level of methods under advising and unadvising", :shared => true do
+  it "should keep the protection level of an advised methods unchanged." do
+    %w[public protected private].each do |protection|
+      meta   = "#{protection}_instance_methods"
+      method = "#{protection}_watchful_method"
+      Watchful.send(meta).should include(method)
+      aspect = Aspect.new(:after, :type => Watchful, :method => method.intern) {|jp, *args| true }
+      Watchful.send(meta).should include(method)
+      aspect.unadvise
+      Watchful.send(meta).should include(method)
+    end
+  end  
+end
+
+describe Aspect, "Advising methods should keep the protection level of an advised methods unchanged." do
+  it_should_behave_like("invariant protection level of methods under advising and unadvising")
+end
+describe Aspect, "Unadvising methods should restore the original protection level of the methods." do
+  it_should_behave_like("invariant protection level of methods under advising and unadvising")
+end
+
 describe Aspect, "#eql?" do
   before(:all) do
     @advice = Proc.new {}

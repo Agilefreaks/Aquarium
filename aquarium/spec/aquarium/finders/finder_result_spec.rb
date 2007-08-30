@@ -119,7 +119,7 @@ describe Aquarium::Finders::FinderResult, "#<<" do
   it "should return self." do
     result1 = Aquarium::Finders::FinderResult.new
     result = result1 << Aquarium::Finders::FinderResult.new
-    result.object_id.should be_equal(result1.object_id )
+    result.object_id.should == result1.object_id
   end
   
   it "should merge the value of the other FinderResult#not_matched into self's not_matched value." do

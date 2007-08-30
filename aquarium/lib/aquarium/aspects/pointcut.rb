@@ -59,7 +59,7 @@ module Aquarium
       # <tt>:attribute  => attribute || [attribute_list]</tt>::
       #   One or an array of attribute names and/or regular expessions to match. 
       #   This is syntactic sugar for the corresponding attribute readers and/or writers
-      #   methods, as specified using the <tt>:attrbute_options. Any matches will be
+      #   methods, as specified using the <tt>:attrbute_options</tt>. Any matches will be
       #   joined with the matched :methods.</tt>.
       #
       # <tt>:attribute_options => [options]</tt>::
@@ -202,13 +202,13 @@ module Aquarium
       end
 
       def add_join_points which_join_points_list, results_hash, type_or_object_sym
-        is_instance_method = @specification[:method_options].include?(:class) ? false : true
+        instance_method = @specification[:method_options].include?(:class) ? false : true
         results_hash.each_pair do |type_or_object, method_name_list|
           method_name_list.each do |method_name|
             which_join_points_list << Aquarium::Aspects::JoinPoint.new(
               type_or_object_sym => type_or_object, 
               :method_name => method_name,
-              :is_instance_method => is_instance_method)
+              :instance_method => instance_method)
           end
         end
       end

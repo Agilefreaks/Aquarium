@@ -240,9 +240,9 @@ module Aquarium
         alias_method_name = (saved_method_name join_point).intern
         return if private_method_defined? join_point.type_or_object, alias_method_name
         type_to_advise.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
-          #{static_method_prefix join_point.is_instance_method?}
+          #{static_method_prefix join_point.instance_method?}
           #{alias_original_method_text alias_method_name, join_point}
-          #{static_method_suffix join_point.is_instance_method?}
+          #{static_method_suffix join_point.instance_method?}
         EVAL_WRAPPER
         Aspect.set_advice_chain join_point.type_or_object, join_point.method_name, Aquarium::Aspects::AdviceChainNodeFactory.make_node(
           :aspect => nil,  # Belongs to all aspects that might advise this join point!
@@ -252,15 +252,15 @@ module Aquarium
           advice_chain = Aspect.get_advice_chain join_point.type_or_object, join_point.method_name
       end
       
-      def static_method_prefix is_instance_method
-        return "" if is_instance_method
+      def static_method_prefix instance_method
+        return "" if instance_method
         <<-EOF
           class << self
         EOF
       end
 
-      def static_method_suffix is_instance_method
-        return "" if is_instance_method
+      def static_method_suffix instance_method
+        return "" if instance_method
         <<-EOF
           end
         EOF
@@ -271,7 +271,7 @@ module Aquarium
       # idiom when invoking it.
       def alias_original_method_text alias_method_name, join_point
         self_name = join_point.type.nil? ? "self" : join_point.type.name
-        target_self = join_point.is_instance_method? ? "self" : join_point.type.name
+        target_self = join_point.instance_method? ? "self" : join_point.type.name
         <<-EOF
         alias_method :#{alias_method_name}, :#{join_point.method_name}
         def #{join_point.method_name} *args, &block_for_method
@@ -280,6 +280,7 @@ module Aquarium
           advice_join_point = Aspect.make_advice_join_point static_join_point, #{target_self}, args, block_for_method
           advice_chain.call advice_join_point, *args
         end
+        #{join_point.visibility.to_s} :#{join_point.method_name}
         private :#{alias_method_name}
         EOF
       end
@@ -288,7 +289,7 @@ module Aquarium
         self_name = join_point.type.nil? ? "self" : join_point.type.name
         <<-EOF
         alias_method :#{join_point.method_name}, :#{alias_method_name}
-        public :#{join_point.method_name}
+        #{join_point.visibility.to_s} :#{join_point.method_name}
         undef_method :#{alias_method_name}
         EOF
       end
@@ -345,9 +346,9 @@ module Aquarium
       def restore_type_method join_point
         alias_method_name = (saved_method_name join_point).intern
         join_point.type.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
-          #{static_method_prefix join_point.is_instance_method?}
+          #{static_method_prefix join_point.instance_method?}
           #{unalias_original_method_text alias_method_name, join_point}
-          #{static_method_suffix join_point.is_instance_method?}
+          #{static_method_suffix join_point.instance_method?}
           #{remove_advice_chain_class_variable_text alias_method_name, join_point}
         EVAL_WRAPPER
       end

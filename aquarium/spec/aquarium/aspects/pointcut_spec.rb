@@ -11,8 +11,8 @@ def common_setup
   @pub_jp   = Aquarium::Aspects::JoinPoint.new :type => ClassWithPublicInstanceMethod,    :method_name => :public_instance_test_method
   @pro_jp   = Aquarium::Aspects::JoinPoint.new :type => ClassWithProtectedInstanceMethod, :method_name => :protected_instance_test_method
   @pri_jp   = Aquarium::Aspects::JoinPoint.new :type => ClassWithPrivateInstanceMethod,   :method_name => :private_instance_test_method
-  @cpub_jp  = Aquarium::Aspects::JoinPoint.new :type => ClassWithPublicClassMethod,       :method_name => :public_class_test_method, :is_class_method => true
-  @cpri_jp  = Aquarium::Aspects::JoinPoint.new :type => ClassWithPrivateClassMethod,      :method_name => :private_class_test_method, :is_class_method => true
+  @cpub_jp  = Aquarium::Aspects::JoinPoint.new :type => ClassWithPublicClassMethod,       :method_name => :public_class_test_method, :class_method => true
+  @cpri_jp  = Aquarium::Aspects::JoinPoint.new :type => ClassWithPrivateClassMethod,      :method_name => :private_class_test_method, :class_method => true
   @apro_jp  = Aquarium::Aspects::JoinPoint.new :type => ClassWithProtectedInstanceMethod, :method_name => :all
   @apri_jp  = Aquarium::Aspects::JoinPoint.new :type => ClassWithPrivateInstanceMethod,   :method_name => :all
   @acpub_jp = Aquarium::Aspects::JoinPoint.new :type => ClassWithPublicClassMethod,       :method_name => :all
@@ -231,7 +231,7 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with public 
     pc = Aquarium::Aspects::Pointcut.new :objects => pub, :method_options => [:public, :class, :suppress_ancestor_methods]
     pc.join_points_matched.size.should == 0
     pc.join_points_not_matched.size.should == 1
-    pc.join_points_not_matched.should eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pub, :method_name => :all, :is_class_method => true)]))
+    pc.join_points_not_matched.should eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pub, :method_name => :all, :class_method => true)]))
   end
 end
 
@@ -249,7 +249,7 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with private
   it "should support MethodFinder's :private and :class options for the specified objects, which will return no methods." do
     pri = ClassWithPrivateInstanceMethod.new
     pc = Aquarium::Aspects::Pointcut.new :objects => pri, :method_options => [:private, :class, :suppress_ancestor_methods]
-    pc.join_points_not_matched.should eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pri, :method_name => :all, :is_class_method => true)]))
+    pc.join_points_not_matched.should eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pri, :method_name => :all, :class_method => true)]))
     pc.join_points_not_matched.size.should == 1
   end
 end
@@ -318,23 +318,23 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with attribu
   end
   
   it "should match attribute specifications for types that are prefixed with @." do
-    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^@attr/]
+    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^@attr.*ClassWithAttribs/]
     pc.join_points_matched.should == @expected_for_types
   end
   
   it "should match attribute specifications for objects that are prefixed with @." do
-    pc = Aquarium::Aspects::Pointcut.new :object => @object_of_ClassWithAttribs, :attributes => [/^@attr/]
+    pc = Aquarium::Aspects::Pointcut.new :object => @object_of_ClassWithAttribs, :attributes => [/^@attr.*ClassWithAttribs/]
     pc.join_points_matched.should == @expected_for_objects
   end
   
   it "should match attribute specifications that are regular expressions of symbols." do
-    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^:attr/]
+    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^:attr.*ClassWithAttribs/]
     pc.join_points_matched.should == @expected_for_types
   end
   
   it "should match attribute specifications for objects that are regular expressions of symbols." do
     object = ClassWithAttribs.new
-    pc = Aquarium::Aspects::Pointcut.new :object => object, :attributes => [/^:attr/]
+    pc = Aquarium::Aspects::Pointcut.new :object => object, :attributes => [/^:attr.*ClassWithAttribs/]
     pc.join_points_matched.should == Set.new([
       Aquarium::Aspects::JoinPoint.new(:object => object, :method_name => :attrRW_ClassWithAttribs),
       Aquarium::Aspects::JoinPoint.new(:object => object, :method_name => :attrRW_ClassWithAttribs=),
@@ -343,13 +343,13 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with attribu
   end
   
   it "should match public attribute readers and writers for types when both the :readers and :writers options are specified." do
-    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers, :writers]
+    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr.*ClassWithAttribs/], :attribute_options => [:readers, :writers]
     pc.join_points_matched.should == @expected_for_types
   end
   
   it "should match public attribute readers and writers for objects when both the :readers and :writers options are specified." do
     object = ClassWithAttribs.new
-    pc = Aquarium::Aspects::Pointcut.new :object => object, :attributes => [/^:attr/], :attribute_options => [:readers, :writers]
+    pc = Aquarium::Aspects::Pointcut.new :object => object, :attributes => [/^:attr.*ClassWithAttribs/], :attribute_options => [:readers, :writers]
     pc.join_points_matched.should == Set.new([
       Aquarium::Aspects::JoinPoint.new(:object => object, :method_name => :attrRW_ClassWithAttribs),
       Aquarium::Aspects::JoinPoint.new(:object => object, :method_name => :attrRW_ClassWithAttribs=),
@@ -358,7 +358,7 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with attribu
   end
   
   it "should match public attribute readers for types only when the :readers option is specified." do
-    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers]
+    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr.*ClassWithAttribs/], :attribute_options => [:readers]
     pc.join_points_matched.should == Set.new([
       Aquarium::Aspects::JoinPoint.new(:type => "ClassWithAttribs", :method_name => :attrRW_ClassWithAttribs),
       Aquarium::Aspects::JoinPoint.new(:type => "ClassWithAttribs", :method_name => :attrR_ClassWithAttribs)])
@@ -366,14 +366,14 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with attribu
   
   it "should match public attribute readers for objects only when the :readers option is specified." do
     object = ClassWithAttribs.new
-    pc = Aquarium::Aspects::Pointcut.new :object => object, :attributes => [/^:attr/], :attribute_options => [:readers]
+    pc = Aquarium::Aspects::Pointcut.new :object => object, :attributes => [/^:attr.*ClassWithAttribs/], :attribute_options => [:readers]
     pc.join_points_matched.should == Set.new([
       Aquarium::Aspects::JoinPoint.new(:object => object, :method_name => :attrRW_ClassWithAttribs),
       Aquarium::Aspects::JoinPoint.new(:object => object, :method_name => :attrR_ClassWithAttribs)])
   end
   
   it "should match public attribute writers for types only when the :writers option is specified." do
-    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
+    pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr.*ClassWithAttribs/], :attribute_options => [:writers]
     pc.join_points_matched.should == Set.new([
       Aquarium::Aspects::JoinPoint.new(:type => "ClassWithAttribs", :method_name => :attrRW_ClassWithAttribs=),
       Aquarium::Aspects::JoinPoint.new(:type => "ClassWithAttribs", :method_name => :attrW_ClassWithAttribs=)])
@@ -381,7 +381,7 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with attribu
   
   it "should match public attribute writers for objects only when the :writers option is specified." do
     object = ClassWithAttribs.new
-    pc = Aquarium::Aspects::Pointcut.new :object => object, :attributes => [/^:attr/], :attribute_options => [:writers]
+    pc = Aquarium::Aspects::Pointcut.new :object => object, :attributes => [/^:attr.*ClassWithAttribs/], :attribute_options => [:writers]
     pc.join_points_matched.should == Set.new([
       Aquarium::Aspects::JoinPoint.new(:object => object, :method_name => :attrRW_ClassWithAttribs=),
       Aquarium::Aspects::JoinPoint.new(:object => object, :method_name => :attrW_ClassWithAttribs=)])

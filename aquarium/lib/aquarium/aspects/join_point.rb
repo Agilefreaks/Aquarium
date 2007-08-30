@@ -67,19 +67,20 @@ module Aquarium
         end    
       end
 
-      attr_accessor :type, :object, :method_name, :context
+      attr_accessor :type, :object, :method_name, :visibility, :context
   
-      def is_instance_method?
-        @is_instance_method
+      def instance_method?
+        @instance_method
       end
       
       def initialize options = {}
         @type        = options[:type]
         @object      = options[:object]
         @method_name = options[:method_name] || options[:method]
-        @is_instance_method = options[:is_instance_method]
-        is_class_method = options[:is_class_method].nil? ? false : options[:is_class_method]
-        @is_instance_method = (!is_class_method) if @is_instance_method.nil?
+        @instance_method = options[:instance_method]
+        class_method = options[:class_method].nil? ? false : options[:class_method]
+        @instance_method = (!class_method) if @instance_method.nil?
+        @visibility = Aquarium::Utils::MethodUtils.visibility(type_or_object, @method_name, class_or_instance_method_flag)
         assert_valid options
       end
   
@@ -91,7 +92,7 @@ module Aquarium
       def type_or_object
         @type || @object
       end
-  
+      
       # TODO while convenient, it couples advice-type information where it doesn't belong!
       def proceed *args, &block
         context.method(:proceed).call self, *args, &block
@@ -120,7 +121,7 @@ module Aquarium
         return result unless result == 0
         result = (self.method_name.nil? && other.method_name.nil?) ? 0 : self.method_name.to_s <=> other.method_name.to_s 
         return result unless result == 0
-        result = self.is_instance_method? == other.is_instance_method?
+        result = self.instance_method? == other.instance_method?
         return 1 unless result == true
         result = (self.context.nil? && other.context.nil?) ? 0 : self.context <=> other.context 
         return result
@@ -134,7 +135,7 @@ module Aquarium
       alias :=== :eql?
   
       def inspect
-        "JoinPoint: {type = #{type.inspect}, object = #{object.inspect}, method_name = #{method_name}, is_instance_method? #{is_instance_method?}, context = #{context.inspect}}"
+        "JoinPoint: {type = #{type.inspect}, object = #{object.inspect}, method_name = #{method_name}, instance_method? #{instance_method?}, context = #{context.inspect}}"
       end
   
       alias :to_s :inspect
@@ -142,6 +143,7 @@ module Aquarium
   
       protected
   
+      # Since JoinPoints can be declared for non-existent methods, tolerate "nil" for the visibility.
       def assert_valid options
         error_message = ""
         error_message << "Must specify a :method_name. "            unless method_name
@@ -149,7 +151,11 @@ module Aquarium
         error_message << "Can't specify both a :type or :object. "  if     (type and object)
         bad_attributes(error_message, options) if error_message.length > 0
       end
-  
+
+      def class_or_instance_method_flag
+        @instance_method ? :instance_method_only : :class_method_only
+      end
+    
       public
   
       NIL_OBJECT = Aquarium::Utils::NilObject.new  
