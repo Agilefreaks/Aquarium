@@ -61,51 +61,48 @@ end
   
 describe Aquarium::Aspects::JoinPoint, "#visibility" do
   class ProtectionExample
-    def public_instance_method; end
+    def public_instance_m; end
     protected
-    def protected_instance_method; end
+    def protected_instance_m; end
     private
-    def private_instance_method; end
-    class << self; self; end.class_eval do
-      public
-      def public_class_method; end
-      private
-      def private_class_method; end
-    end    
+    def private_instance_m; end
+    def self.public_class_m; end
+    def self.private_class_m; end
+    private_class_method :private_class_m
   end
   
   it "should return :public for public instance methods." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_method
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_m
     jp.visibility.should == :public
   end
   
   it "should return :public for public instance methods, when only instance methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_method, :instance_method => true
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_m, :instance_method => true
     jp.visibility.should == :public
   end
   
   it "should return :public for public class methods, when only class methods are specified using :instance_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_class_method, :instance_method => false
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_class_m, :instance_method => false
     jp.visibility.should == :public
   end
 
   it "should return :public for public instance methods, when only instance methods are specified using :class_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_method, :class_method => false
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_m, :class_method => false
     jp.visibility.should == :public
   end
   
   it "should return :public for public class methods, when only class methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_class_method, :class_method => true
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_class_m, :class_method => true
     jp.visibility.should == :public
   end
 
   it "should return :protected for protected instance methods." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_method
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m
     jp.visibility.should == :protected
   end
   
   it "should return :protected for protected instance methods, when only instance methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_method, :instance_method => true
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m, :instance_method => true
     jp.visibility.should == :protected
   end
   
@@ -115,7 +112,7 @@ describe Aquarium::Aspects::JoinPoint, "#visibility" do
   end
 
   it "should return :protected for protected instance methods, when only instance methods are specified using :class_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_method, :class_method => false
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m, :class_method => false
     jp.visibility.should == :protected
   end
   
@@ -125,27 +122,27 @@ describe Aquarium::Aspects::JoinPoint, "#visibility" do
   end
 
   it "should return :private for private instance methods." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_method
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_m
     jp.visibility.should == :private
   end
   
   it "should return :private for private instance methods, when only instance methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_method, :instance_method => true
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_m, :instance_method => true
     jp.visibility.should == :private
   end
   
   it "should return :private for private class methods, when only class methods are specified using :instance_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_class_method, :instance_method => false
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_class_m, :instance_method => false
     jp.visibility.should == :private
   end
 
   it "should return :private for private instance methods, when only instance methods are specified using :class_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_method, :class_method => false
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_m, :class_method => false
     jp.visibility.should == :private
   end
   
   it "should return :private for private class methods, when only class methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_class_method, :class_method => true
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_class_m, :class_method => true
     jp.visibility.should == :private
   end
   

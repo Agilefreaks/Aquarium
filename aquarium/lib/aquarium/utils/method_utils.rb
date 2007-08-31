@@ -20,7 +20,7 @@ module Aquarium
         meta_method_suffixes.each do |suffix|
           %w[public protected private].each do |protection|
             meta_method = "#{protection}_#{suffix}"
-            if type_or_instance.send(meta_method).include?(method_sym.to_s)
+            if find_method(type_or_instance, method_sym, meta_method)
               return protection.intern
             end
           end
@@ -29,6 +29,10 @@ module Aquarium
       end
 
       private
+      def self.determine_meta_method_suffixes2 type_or_instance, class_or_instance_only
+        ["method_defined"]
+      end
+      
       def self.determine_meta_method_suffixes type_or_instance, class_or_instance_only
         limits = class_or_instance_only.nil? ? [:instance_method_only, :class_method_only] : [class_or_instance_only]
         meta_method_suffixes = []
@@ -41,6 +45,14 @@ module Aquarium
           end
         end
         meta_method_suffixes
+      end
+      
+      def self.find_method2 type_or_instance, method_sym, meta_method
+        type_or_instance.send(meta_method, method_sym.to_s)
+      end
+      
+      def self.find_method type_or_instance, method_sym, meta_method
+        type_or_instance.send(meta_method).include?(method_sym.to_s)
       end
     end
   end
