@@ -1,12 +1,22 @@
 # A simple Design by Contract module. Adds advice to test that the contract, which is specified with
 # a block passes. Note that it doesn't attempt to handle the correct behavior under contract 
 # inheritance (TODO).
-
+# Warning: This module automatically includes Aquarium::Aspects::DSL::AspectDSL into the class with the contract. 
 require 'aquarium'
 
 module Aquarium
   module Extras
     module DesignByContract
+      include Aquarium::Aspects
+      
+      # module_eval do
+      #   include Aquarium::Aspects::DSL::AspectDSL
+      # end
+      
+      # def self.append_features mod
+      #   (class << mod; self; end).send(:include, Aquarium::Aspects::DSL::AspectDSL)
+      #   super
+      # end
       
       class ContractError < Exception
         def initialize(message)
@@ -26,10 +36,10 @@ module Aquarium
 
       def invariant *args, &contract_block
         message = handle_message_arg args
-        around *args do |jp, *args2|
-          DesignByContract.test_condition "invariant failure (before invocation): #{message}", jp, *args2, &contract_block
+        Aspect.new make_args(:around, *args) do |jp, *params|
+          DesignByContract.test_condition "invariant failure (before invocation): #{message}", jp, *params, &contract_block
           jp.proceed
-          DesignByContract.test_condition "invariant failure (after invocation): #{message}", jp, *args2, &contract_block
+          DesignByContract.test_condition "invariant failure (after invocation): #{message}", jp, *params, &contract_block
         end
       end
 
@@ -42,9 +52,16 @@ module Aquarium
       end
       
       def add_advice kind, test_kind, message, *args, &contract_block
-        self.send(kind, *args) do |jp, *args2|
-          DesignByContract.test_condition "#{test_kind} failure: #{message}", jp, *args2, &contract_block
+        Aspect.new make_args(kind, *args) do |jp, *params|
+          DesignByContract.test_condition "#{test_kind} failure: #{message}", jp, *params, &contract_block
         end
+      end
+      
+      def make_args advice_kind, *args
+        args2 = args.dup.unshift advice_kind
+        args2 << {} unless args2.last.kind_of?(Hash)
+        args2.last[:type] = self.name
+        args2
       end
       
       def handle_message_arg args

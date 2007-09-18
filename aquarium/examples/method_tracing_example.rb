@@ -36,7 +36,9 @@ foo1.do_it :b1, :b2
 bar1 = Aquarium::Bar.new :a3, :a4
 bar1.do_something_else :b3, :b4
 
-around :types => [Aquarium::Foo, Aquarium::Bar], :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
+include Aquarium::Aspects
+
+Aspect.new :around, :types => [Aquarium::Foo, Aquarium::Bar], :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
   p "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}"
   execution_point.proceed
   p "Leaving:  #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}"
@@ -49,7 +51,7 @@ foo2.do_it :b5, :b6
 bar1 = Aquarium::Bar.new :a7, :a8
 bar1.do_something_else :b7, :b8
 
-around :types => [Aquarium::Foo, Aquarium::Bar], :methods => :initialize, :method_options => :private do |execution_point, *args|
+Aspect.new :around, :types => [Aquarium::Foo, Aquarium::Bar], :methods => :initialize, :method_options => :private do |execution_point, *args|
   p "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}"
   execution_point.proceed
   p "Leaving:  #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}"

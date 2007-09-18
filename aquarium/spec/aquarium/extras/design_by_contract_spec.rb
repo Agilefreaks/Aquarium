@@ -3,6 +3,7 @@ require 'aquarium/extras/design_by_contract'
 
 describe Aquarium::Extras::DesignByContract, "precondition" do
   class PreCond
+    include Aquarium::Extras::DesignByContract   
     def action *args
     end
     
@@ -22,6 +23,7 @@ end
 
 describe Aquarium::Extras::DesignByContract, "postcondition" do
   class PostCond
+    include Aquarium::Extras::DesignByContract    
     def action *args
     end
     
@@ -43,6 +45,7 @@ end
 
 describe Aquarium::Extras::DesignByContract, "invariant" do
   class InvarCond
+    include Aquarium::Extras::DesignByContract    
     def initialize 
       @invar = 0
     end

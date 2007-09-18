@@ -64,7 +64,7 @@ Here is an example that traces invocations of all public instance methods of the
 		p "Leaving: #{execution_point.type.name}##{execution_point.method_name}"
 	end
 
-The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, etc.) Here is the same example using the convenience DSL that adds aspectual behavior to Object.
+The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, etc.) Here is the same example using the convenience DSL that adds aspectual behavior to Object (available only if you require aquarium/aspects/dsl/aspect_dsl', since other toolkits, like Rails, define similar methods on Object!).
 
 	require 'aquarium'
 	around :types => [Foo, Bar], :methods => :all do |execution_point, *args|

@@ -160,7 +160,7 @@ module Aquarium
       end  
   
       def make_specification options, &block
-        opts = options.dup
+        opts = options.flatten.dup
         rationalize_parameters opts
         @specification = Aquarium::Utils::MethodUtils.method_args_to_hash(*opts) {|option| ""} # set other hash values to an empty string
         use_default_object_if_defined unless (types_given? || objects_given? || pointcuts_given?)
@@ -418,9 +418,9 @@ module Aquarium
       end
   
       def self.advice_chain_attr_name type_or_object, method_name
-        type_or_object_key = self.make_type_or_object_key(type_or_object)
+        type_or_object_key = Aquarium::Utils::NameUtils.make_type_or_object_key(type_or_object)
         class_or_object_prefix = is_type?(type_or_object) ? "class_" : ""
-        valid_name = self.make_valid_attr_name_from_method_name method_name
+        valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name method_name
         "#{self.aspect_method_prefix}#{class_or_object_prefix}advice_chain_#{type_or_object_key}_#{valid_name}"
       end
   
@@ -429,24 +429,8 @@ module Aquarium
       end
   
       def saved_method_name join_point
-        to_key = Aspect.make_type_or_object_key(join_point.type_or_object)
+        to_key = Aquarium::Utils::NameUtils.make_type_or_object_key(join_point.type_or_object)
         "#{Aspect.aspect_method_prefix}saved_#{to_key}_#{join_point.method_name}"
-      end
-  
-      def self.make_type_or_object_key type_or_object
-        if is_type?(type_or_object) 
-          make_valid_type_name type_or_object.name
-        else
-          "#{make_valid_type_name(type_or_object.class.name)}_#{type_or_object.object_id}"
-        end
-      end
-  
-      def self.make_valid_type_name type_name
-        type_name.gsub(/:/, '_')
-      end
-      
-      def self.make_valid_attr_name_from_method_name method_name
-        method_name.to_s.gsub("=","equalsign").gsub("?", "questionmark").gsub("!", "exclamation").gsub("~", "tilde").intern
       end
   
       def specified_advice_kinds

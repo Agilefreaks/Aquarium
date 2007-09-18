@@ -12,6 +12,7 @@ require 'aquarium'
 
 module Aquarium
   class ClassWithStateAndBehavior
+    include Aquarium::Aspects::DSL::AspectDSL
     def initialize *args
       @state = args
       p "Initializing: #{args.inspect}"
@@ -24,9 +25,11 @@ module Aquarium
   end
 end
 
+include Aquarium::Aspects
+
 # Observe state changes in the class, using the class-defined pointcut.
 
-observer = after :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, *args|
+observer = Aspect.new :after, :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, *args|
   p "State has changed. "
   p "  New state is #{jp.context.advised_object.state.inspect}"
   p "  Equivalent to *args: #{args.inspect}"

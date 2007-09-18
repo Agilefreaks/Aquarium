@@ -6,8 +6,10 @@ require File.dirname(__FILE__) + '/../spec_example_classes'
 require File.dirname(__FILE__) + '/concurrently_accessed'
 require 'aquarium/aspects'
 
+include Aquarium::Aspects
+
 def make_aspect method, advice_kind, type_or_object_key, type_or_object
-  advise(advice_kind, :pointcut => {type_or_object_key => type_or_object, :method => method}) do |jp, *args|
+  Aspect.new advice_kind, :pointcut => {type_or_object_key => type_or_object, :method => method} do |jp, *args|
     @invoked << type_or_object_key
     jp.proceed if advice_kind == :around
   end

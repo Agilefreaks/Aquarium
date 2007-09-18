@@ -1,3 +1,49 @@
+== Version 0.1.5
+
+Bug fixes:
+13514	Protected and private methods are made public when advised and left that way when unadvised
+13650	Loading Aquarium interferes with Rails filters
+13864	Bug with negative object_id
+
+Enhancements:
+13392	Convert examples to specs.
+13463	Support running in JRuby
+
+Fixing 13650 required an API change, which is why I've tagged this release "0.1.5" instead of something like "0.1.1" (and the changes don't seem big enough to warrant "0.2.0"...).
+
+Previously, requiring "aquarium.rb" in the top-level "lib" directory would implicitly require lib/aquarium/aspects/dsl/aspect_dsl.rb, which
+has Object include the AspectDSL module. This module adds methods like :before and :after to Object. Unfortunately, those methods collide with methods of the same name that Rails adds to Object. It was also a bit presumptuous of me to assume that everyone wanted those methods on Object ;)
+
+In this release, aspect_dsl.rb is still implicitly included and it still defines the AspectDSL module. Now, however, it does not include the AspectDSL module in Object. Instead, if you want this behavior for all types, you must require the new lib/aquarium/aspects/dsl/object_dsl.rb explicitly. 
+
+As an alternative, if you just want the AspectDSL module included selectively in certain types, then do the following:
+
+class MyClass   # reopen "MyClass"
+	# Add the methods as _class_ methods
+	include Aquarium::Aspects::DSL::AspectDSL
+end
+</ruby>
+
+or, use (class|module)_eval:
+<ruby>
+require 'aquarium/aspects/dsl/aspect_dsl'
+
+MyClass.class_eval do
+	# Add the methods as _class_ methods
+	include Aquarium::Aspects::DSL::AspectDSL
+end
+</ruby>
+
+To add the methods as _instance_ methods on individual objects:
+
+<ruby>
+object = MyClass.new
+object.extend(Aquarium::Aspects::DSL::AspectDSL)
+</ruby>
+
+
+Note: as discussed "here":http://practicalruby.blogspot.com/2007/02/reopen-with-moduleeval.html, using <code>class_eval</code> or <code>module_eval</code> is safer that just reopening a class if you're not sure that "MyClass" has actually been defined yet. However, in our particular case, it probably doesn't matter, as AspectDSL doesn't change anything about the type, like aliasing existing methods. Still, we can't guarantee that this won't change in the future.
+
 == Version 0.1.0
 
 This is the initial version.

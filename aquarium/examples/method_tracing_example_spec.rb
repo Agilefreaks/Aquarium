@@ -54,7 +54,7 @@ end
 
 describe "An example with advice on the public instance methods (excluding ancestor methods) of Foo" do
   it "should trace all calls to the public methods defined by Foo" do
-    aspect = around :type => Aquarium::Foo, :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Foo, :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
       o = execution_point.context.advised_object
       o.log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}"
       execution_point.proceed
@@ -74,7 +74,7 @@ end
 
 describe "An example with advice on the public instance methods (excluding ancestor methods) of Bar" do
   it "should not trace any calls to the public methods defined by the included BarModule" do
-    aspect = around :type => Aquarium::Bar, :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Bar, :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
       o = execution_point.context.advised_object
       o.log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}"
       execution_point.proceed
@@ -90,7 +90,7 @@ end
 
 describe "An example with advice on the public instance methods (including ancestor methods) of Bar" do
   it "should trace all calls to the public methods defined by the included BarModule" do
-    aspect = around :type => Aquarium::Bar, :methods => /^do_/ do |execution_point, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Bar, :methods => /^do_/ do |execution_point, *args|
       o = execution_point.context.advised_object
       o.log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}"
       execution_point.proceed
@@ -112,7 +112,7 @@ end
 describe "An example with advice on the private initialize method of Foo and Bar" do
   it "should trace all calls to initialize" do
     before_methods = Aquarium::Foo.private_instance_methods.sort #- Object.private_methods.sort
-    aspect = around :types => [Aquarium::Foo, Aquarium::Bar], :methods => :initialize, :method_options => :private do |execution_point, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :types => [Aquarium::Foo, Aquarium::Bar], :methods => :initialize, :method_options => :private do |execution_point, *args|
       o = execution_point.context.advised_object
       o.log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}"
       execution_point.proceed

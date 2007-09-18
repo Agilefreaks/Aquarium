@@ -39,7 +39,7 @@ end
 describe "An example of a class' method_missing with around advice" do
   it "should only handle invocations not processed by the around advice." do
     @intercepted_message = nil
-    aspect = around :type => Aquarium::Echo, :method => :method_missing do |join_point, sym, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Echo, :method => :method_missing do |join_point, sym, *args|
       if sym == :log 
         @intercepted_message = "log: #{args.join(" ")}" 
       else

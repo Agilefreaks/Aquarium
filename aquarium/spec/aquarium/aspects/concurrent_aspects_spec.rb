@@ -5,6 +5,8 @@ require File.dirname(__FILE__) + '/../spec_example_classes'
 require File.dirname(__FILE__) + '/concurrently_accessed'
 require 'aquarium/aspects'
 
+include Aquarium::Aspects
+
 module ConcurrentAspectsSpecSupport
   def add_m_then_remove_n_aspects_and_run iteration, for_type
     reset_attrs
@@ -69,11 +71,11 @@ module ConcurrentAspectsSpecSupport
     method = @advice_kinds[n] == :after_raising ? :invoke_raises : :invoke
     @advice_invocation_counts[n] = 0
     if for_type 
-      pointcut = Aquarium::Aspects::Pointcut.new(:methods => method, :type => ConcurrentlyAccessed)
+      pointcut = Pointcut.new(:methods => method, :type => ConcurrentlyAccessed)
     else
-      pointcut = Aquarium::Aspects::Pointcut.new(:methods => method, :object => @accessed)
+      pointcut = Pointcut.new(:methods => method, :object => @accessed)
     end
-    @aspects[n] = advise @advice_kinds[n], :pointcut => pointcut do |jp, *args|
+    @aspects[n] = Aspect.new @advice_kinds[n], :pointcut => pointcut do |jp, *args|
       @contexts[n] = jp.context
       @argss[n]    = *args
       @advice_invocation_counts[n] += 1
