@@ -1,10 +1,14 @@
 == Upgrading existing code to Aquarium-0.1.5
 
-This is mostly a bug-fix release, but it did have to introduce one API change, as described in the CHANGES. In particular, the aspect "DSL" methods are no longer automatically to Object, as some of their names overlap with methods added by Rails. 
+This is mostly a bug-fix release, but it did have to introduce one API change, as described in the 
+CHANGES. In particular, the aspect "DSL" methods are no longer automatically to Object, as some of 
+their names overlap with methods added by Rails. 
 
-Now, if you want these methods added to Object, you must require the new lib/aquarium/aspects/dsl/object_dsl.rb explicitly. 
+Now, if you want these methods added to Object, you must require the new 
+lib/aquarium/aspects/dsl/object_dsl.rb explicitly. 
 
-As an alternative, if you just want these methods added selectively in certain types, then do the following:
+As an alternative, if you just want these methods added selectively in certain types, then do the 
+following:
 
 <ruby>
 require 'aquarium/aspects/dsl/aspect_dsl'

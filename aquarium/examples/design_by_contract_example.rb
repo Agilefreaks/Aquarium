@@ -3,9 +3,8 @@
 # specifying the contract of use for a class or module and testing it at runtime (usually
 # during the testing process)
 # This example is adapted from spec/extras/design_by_contract_spec.rb.
-# Note: the DesignByContract module uses the AspectDSL module. The #precondition, #postcondition,
-# and #invariant methods shown below delegate to AspectDSL methods. Those methods implicitly use
-# "self" as the :object to advise. 
+# Note: the DesignByContract module adds the #precondition, #postcondition, and #invariant
+# methods shown below to Object and they use "self" as the :object to advise.  
  
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 require 'aquarium/extras/design_by_contract'

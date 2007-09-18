@@ -5,8 +5,7 @@ inMenu: true
 
 h2. Updating the <span class="keyword">Aquarium</span> gem
 
-There are no incompatibilities between versions at this time, so you should be able to update
-without difficulty.
+There are one API incompatibility between version 0.1.5 and 0.1.0. Because of incompatibilities with Rails, requiring the top-level <code>aquarium.rb</code> no longer adds methods to Object. Instead, if you want the convenience ("DSL") methods on Object or on a particular class, you have to include <code>Aquarium::Aspects::DSL::AspectDSL</code>. See "Changes":changes.html for details.
 
 <pre>
 gem update aquarium

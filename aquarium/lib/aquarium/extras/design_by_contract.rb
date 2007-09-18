@@ -1,23 +1,15 @@
 # A simple Design by Contract module. Adds advice to test that the contract, which is specified with
 # a block passes. Note that it doesn't attempt to handle the correct behavior under contract 
 # inheritance (TODO).
-# Warning: This module automatically includes Aquarium::Aspects::DSL::AspectDSL into the class with the contract. 
+# Warning: This module automatically includes Aquarium::Aspects::DSL::AspectDSL into the class with 
+# the contract and it adds the :precondition, :postcondition, and the :invariant methods to Object! 
 require 'aquarium'
 
 module Aquarium
   module Extras
     module DesignByContract
       include Aquarium::Aspects
-      
-      # module_eval do
-      #   include Aquarium::Aspects::DSL::AspectDSL
-      # end
-      
-      # def self.append_features mod
-      #   (class << mod; self; end).send(:include, Aquarium::Aspects::DSL::AspectDSL)
-      #   super
-      # end
-      
+            
       class ContractError < Exception
         def initialize(message)
           super

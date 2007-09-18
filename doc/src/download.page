@@ -9,16 +9,18 @@ There are several ways to download <span class="keyword">Aquarium</span>. Which 
 
 h3. Rubygems
 
-This is the preferred approach. Non-windows users may have to use sudo. Download the latest with:
+This is the preferred approach. Non-windows users may have to use sudo. Install or update to the latest with:
 
 <pre>
 gem install aquarium
+gem update aquarium
 </pre>  
 
 or if you want an older version:
 
 <pre>
 gem install aquarium -v 0.1.0
+gem update aquarium -v 0.1.0
 </pre>  
 
 h3. Direct download

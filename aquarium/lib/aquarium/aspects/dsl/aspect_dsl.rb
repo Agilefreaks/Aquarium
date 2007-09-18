@@ -58,10 +58,6 @@ module Aquarium
           end
           opts
         end
-      
-        def self.get_correct_class object
-          Aquarium::Utils::TypeUtils.is_type?(object) ? (class << object; self; end) : object.class
-        end
       end
       
     end

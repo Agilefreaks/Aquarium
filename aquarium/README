@@ -53,7 +53,7 @@ Many of AspectJ's behaviors that aren't currently supported are planned for futu
 
 Several complete examples are provided in the "examples" directory.
 
-In most cases, you can either declare the appropriate classes or use the optional DSL, which adds methods to Object.
+In most cases, you can either declare the appropriate classes or use the optional DSL, which adds methods to classes, objects, or even Object itself.
 
 Here is an example that traces invocations of all public instance methods of the classes or modules Foo and Bar.
 
@@ -64,9 +64,9 @@ Here is an example that traces invocations of all public instance methods of the
 		p "Leaving: #{execution_point.type.name}##{execution_point.method_name}"
 	end
 
-The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, etc.) Here is the same example using the convenience DSL that adds aspectual behavior to Object (available only if you require aquarium/aspects/dsl/aspect_dsl', since other toolkits, like Rails, define similar methods on Object!).
+The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, etc.) Here is the same example using the convenience DSL that adds aspect methods to Object (available only if you require aquarium/aspects/dsl/object_dsl', since other toolkits, like Rails, define similar methods on Object!).
 
-	require 'aquarium'
+	require 'aquarium/aspects/dsl/object_dsl'
 	around :types => [Foo, Bar], :methods => :all do |execution_point, *args|
 		p "Entering: #{execution_point.type.name}##{execution_point.method_name}"
 		execution_point.proceed
@@ -75,9 +75,25 @@ The advice to execute at each join point is the block. The pointcut is the set o
 
 See "examples/method_tracing_example.rb" for a more detailed version of this example.
 
+If you don't want to add these methods to Object, you can also add them individually to modules, classes, or objects:
+
+	require 'aquarium/aspects/dsl/aspect_dsl'
+	...
+	module MyModule
+		include Aquarium::Aspects::DSL::AspectDSL
+	end
+
+	class MyClass
+		include Aquarium::Aspects::DSL::AspectDSL
+	end
+
+	my_object = MyOtherClass.new
+	my_object.extend (Aquarium::Aspects::DSL::AspectDSL)
+
 If you use the DSL inside a class and omit the :type(s) and :object(s) options, "self" is assumed.
 
 	class Foo
+		include Aquarium::Aspects::DSL::AspectDSL
 		...
 		def critical_operation *args
 			...
@@ -92,7 +108,7 @@ If you use the DSL inside a class and omit the :type(s) and :object(s) options, 
 		end
 	end
 
-Here are some more succinct examples, illustrating the API.
+Here are some more succinct examples, illustrating the API (using the DSL methods).
 
 You can pass in pointcuts defined elsewhere:
 

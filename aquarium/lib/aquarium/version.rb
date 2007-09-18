@@ -2,16 +2,14 @@ module Aquarium
   module VERSION
     def self.build_tag
       tag = "REL_" + [MAJOR, MINOR, TINY].join('_')
-      unless RELEASE_CANDIDATE.nil? or RELEASE_CANDIDATE.empty?
-        tag << "_" << RELEASE_CANDIDATE
-      end
+      tag << "_" << RELEASE_CANDIDATE  unless RELEASE_CANDIDATE.nil? or RELEASE_CANDIDATE.empty?
       tag
     end
 
     unless defined? MAJOR
       MAJOR  = 0
       MINOR  = 1
-      TINY   = 0
+      TINY   = 5
       RELEASE_CANDIDATE = nil
       
       # RANDOM_TOKEN: 0.598704893979657

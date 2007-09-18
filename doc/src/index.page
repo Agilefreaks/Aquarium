@@ -19,17 +19,23 @@ the domain to the persistence approach in separate "components" and programmatic
 or declaratively modify the model objects to synchronize state changes with the 
 persistent memory of the state.
  
+See also the "RubyForge project page":http://rubyforge.org/projects/aquarium/.
+
 h2. How to Use Aquarium
 
 <span class="keyword">Aquarium</span> provides a <span class="keyword">Domain Specific Language</span> (DSL) with which you can express "aspectual" system behaviour in a modular way, _i.e.,_ using a succinct language and without repeating yourself all over your code base!
 
 Imagine you want to trace all invocations of the public, instance methods in all classes whose names end with "Service". Here's how you can implement that behavior in <span class="keyword">Aquarium<span>:
 
-<ruby>before :types => /Service$/, :methods => :all do |execution_point, *args|
-  log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
-end
-after :types => /Service$/, :methods => :all do |execution_point, *args|
-  log "Leaving: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+<ruby>
+class ServiceTracer
+	include Aquarium::Aspects::DSL::AspectsDSL
+	before :types => /Service$/, :methods => :all do |execution_point, *args|
+	  log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+	end
+	after :types => /Service$/, :methods => :all do |execution_point, *args|
+	  log "Leaving: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+	end
 end
 </ruby>
 
@@ -37,14 +43,16 @@ The <code>#before</code> advice adds behavior that is invoked before each method
 
 The <code>#after</code> advice adds similar behavior the is invoked after each method is invoked.
 
-Note that <code>#before</code> and <code>#after</code> are methods added to <code>Object</code>, by default.
-
 A more succinct implementation of this behavior uses <code>#around</code> advice:
 
-<ruby>around :types => /Service$/, :methods => :all do |execution_point, *args|
-  log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
-  execution_point.proceed
-  log "Leaving: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+<ruby>
+class ServiceTracer
+	include Aquarium::Aspects::DSL::AspectsDSL
+	around :types => /Service$/, :methods => :all do |execution_point, *args|
+	  log "Entering: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+	  execution_point.proceed
+	  log "Leaving: #{execution_point.type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+	end
 end
 </ruby>
 
