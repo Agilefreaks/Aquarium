@@ -39,19 +39,20 @@ There are two disadvantages of the term <span class="keyword">advice</span>. One
 
 h4. Usage
 
-Aspects are implemented as classes and you can either create instances of them or use the convenient methods that are added to <code>Object</code>, by default. For example, the following two expressions are equivalent:
+Aspects are implemented as classes and you can either create instances of them or use the convenient methods that are added to <code>Object</code>, by default. For example, the following two sections of code are equivalent:
 
 <ruby>
 aspect1 = Aspect.new :before, :types => /*Service$/, :methods => :all do |join_point, *args|
   log("calling #{join_point.inspect}")
 end
 
+include Aquarium::Aspects::DSL::AspectDSL
 aspect2 = before :types => /*Service$/, :methods => :all do |join_point, *args|
   log("calling #{join_point.inspect}")
 end
 </ruby>
 
-Both examples add <span class="keyword">before advice</span> (which logs the invocations of the methods) to all the public methods in all classes and modules whose name ends with <code>Service</code>. Note that while the second form is using what is effectively an instance method on the current <code>self</code>, it has no affect on <code>self</code>.
+Both examples add <span class="keyword">before advice</span> (which logs the invocations of the methods) to all the public methods in all classes and modules whose name ends with <code>Service</code>. Note that while the second form is using what is effectively an instance method on the current <code>self</code>, it has no effect on <code>self</code>.
 
 Here is a similar example that advises just a single instance of the <code>MyService</code> class.
 
