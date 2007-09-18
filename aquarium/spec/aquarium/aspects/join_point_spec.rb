@@ -159,6 +159,21 @@ describe Aquarium::Aspects::JoinPoint, "#visibility" do
     jp.visibility.should == nil
   end
 end
+
+describe Aquarium::Aspects::JoinPoint, "#target_type" do
+  it "should return the type at the JoinPoint" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo
+    jp.target_type.should be_eql(ProtectionExample)
+  end
+end
+  
+describe Aquarium::Aspects::JoinPoint, "#target_object" do
+  it "should return the object at the JoinPoint" do
+    example = ProtectionExample.new
+    jp = Aquarium::Aspects::JoinPoint.new :object => example, :method => :foo
+    jp.target_object.should be_eql(example)
+  end
+end
   
 describe Aquarium::Aspects::JoinPoint, "#dup" do
   it "should duplicate the fields in the join point." do

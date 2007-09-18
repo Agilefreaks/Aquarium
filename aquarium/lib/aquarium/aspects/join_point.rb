@@ -67,16 +67,39 @@ module Aquarium
         end    
       end
 
-      attr_accessor :type, :object, :method_name, :visibility, :context
-  
+      %w[type object].each do |attr|
+        class_eval <<-EOF
+          # Deprecated, as JoinPoint#type overrides Module#type in a non-substitutable way!
+          # JoinPoint#target_#{attr} will be removed in the next release.
+          # Use JoinPoint#target_#{attr} instead
+          def #{attr}
+            p "WARNING: JoinPoint##{attr} is deprecated. It will be removed in the next release."
+            target_#{attr}
+          end
+          # Deprecated
+          def #{attr}= new_#{attr}
+            p "WARNING: JoinPoint##{attr}= is deprecated. It will be removed in the next release."
+            target_#{attr}= new_#{attr}
+          end
+        EOF
+      end
+      
+      attr_accessor :target_type, :target_object, :method_name, :visibility, :context
+      
+      # For "symmetry" with JoinPoint#target_type
+      alias_method  :object, :target_object
+
+      # For "symmetry" with JoinPoint#target_type=
+      alias_method  :object=, :target_object=
+      
       def instance_method?
         @instance_method
       end
       
       def initialize options = {}
-        @type        = options[:type]
-        @object      = options[:object]
-        @method_name = options[:method_name] || options[:method]
+        @target_type     = options[:type]
+        @target_object   = options[:object]
+        @method_name     = options[:method_name] || options[:method]
         @instance_method = options[:instance_method]
         class_method = options[:class_method].nil? ? false : options[:class_method]
         @instance_method = (!class_method) if @instance_method.nil?
@@ -84,13 +107,8 @@ module Aquarium
         assert_valid options
       end
   
-      # deal with warnings for Object#type being obsolete:
-      def get_type
-        @type
-      end
-  
       def type_or_object
-        @type || @object
+        @target_type || @target_object
       end
       
       # TODO while convenient, it couples advice-type information where it doesn't belong!
@@ -114,10 +132,10 @@ module Aquarium
         return 0 if object_id == other.object_id 
         result = self.class <=> other.class 
         return result unless result == 0
-        result = (self.get_type.nil? && other.get_type.nil?) ? 0 : self.get_type.to_s <=> other.get_type.to_s 
+        result = (self.target_type.nil? && other.target_type.nil?) ? 0 : self.target_type.to_s <=> other.target_type.to_s 
         return result unless result == 0
-        result = (self.object.object_id.nil? && other.object.object_id.nil?) ? 0 : self.object.object_id <=> other.object.object_id 
-        result = self.object.object_id <=> other.object.object_id
+        result = (self.target_object.object_id.nil? && other.target_object.object_id.nil?) ? 0 : self.target_object.object_id <=> other.target_object.object_id 
+        result = self.target_object.object_id <=> other.target_object.object_id
         return result unless result == 0
         result = (self.method_name.nil? && other.method_name.nil?) ? 0 : self.method_name.to_s <=> other.method_name.to_s 
         return result unless result == 0
@@ -135,7 +153,7 @@ module Aquarium
       alias :=== :eql?
   
       def inspect
-        "JoinPoint: {type = #{type.inspect}, object = #{object.inspect}, method_name = #{method_name}, instance_method? #{instance_method?}, context = #{context.inspect}}"
+        "JoinPoint: {type = #{target_type.inspect}, object = #{target_object.inspect}, method_name = #{method_name}, instance_method? #{instance_method?}, context = #{context.inspect}}"
       end
   
       alias :to_s :inspect
@@ -147,8 +165,8 @@ module Aquarium
       def assert_valid options
         error_message = ""
         error_message << "Must specify a :method_name. "            unless method_name
-        error_message << "Must specify either a :type or :object. " unless (type or  object)
-        error_message << "Can't specify both a :type or :object. "  if     (type and object)
+        error_message << "Must specify either a :type or :object. " unless (target_type or  target_object)
+        error_message << "Can't specify both a :type or :object. "  if     (target_type and target_object)
         bad_attributes(error_message, options) if error_message.length > 0
       end
 

@@ -1,4 +1,10 @@
-== Upgrading existing code to Aquarium-0.1.5
+== Upgrading to Aquarium-0.1.6
+
+As described in the CHANGES, the JoinPoint#type, JoinPoint#type=, JoinPoint#object, and JoinPoint#object=
+are now deprecated. Client code that uses these methods will still work, but warning messages will be 
+written to STDOUT. See CHANGES for more details. 
+
+== Upgrading to Aquarium-0.1.5
 
 This is mostly a bug-fix release, but it did have to introduce one API change, as described in the 
 CHANGES. In particular, the aspect "DSL" methods are no longer automatically to Object, as some of 

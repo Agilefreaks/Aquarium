@@ -236,7 +236,7 @@ module Aquarium
       end
   
       def add_advice_framework join_point
-        type_to_advise = join_point.type || (class << join_point.object; self; end)
+        type_to_advise = join_point.target_type || (class << join_point.target_object; self; end)
         alias_method_name = (saved_method_name join_point).intern
         return if private_method_defined? join_point.type_or_object, alias_method_name
         type_to_advise.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
@@ -270,8 +270,8 @@ module Aquarium
       # of the advised classes. This also means that we have to use the Class.method(name).call()
       # idiom when invoking it.
       def alias_original_method_text alias_method_name, join_point
-        self_name = join_point.type.nil? ? "self" : join_point.type.name
-        target_self = join_point.instance_method? ? "self" : join_point.type.name
+        self_name = join_point.target_type.nil? ? "self" : join_point.target_type.name
+        target_self = join_point.instance_method? ? "self" : join_point.target_type.name
         <<-EOF
         alias_method :#{alias_method_name}, :#{join_point.method_name}
         def #{join_point.method_name} *args, &block_for_method
@@ -286,7 +286,7 @@ module Aquarium
       end
       
       def unalias_original_method_text alias_method_name, join_point
-        self_name = join_point.type.nil? ? "self" : join_point.type.name
+        self_name = join_point.target_type.nil? ? "self" : join_point.target_type.name
         <<-EOF
         alias_method :#{join_point.method_name}, :#{alias_method_name}
         #{join_point.visibility.to_s} :#{join_point.method_name}
@@ -295,7 +295,7 @@ module Aquarium
       end
   
       def remove_advice_chain_class_variable_text alias_method_name, join_point
-        self_name = join_point.type.nil? ? "self" : join_point.type.name
+        self_name = join_point.target_type.nil? ? "self" : join_point.target_type.name
         <<-EOF
         advice_chain_name = :@@#{Aspect.advice_chain_attr_name join_point.type_or_object, join_point.method_name}
         remove_class_variable advice_chain_name
@@ -345,7 +345,7 @@ module Aquarium
   
       def restore_type_method join_point
         alias_method_name = (saved_method_name join_point).intern
-        join_point.type.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
+        join_point.target_type.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
           #{static_method_prefix join_point.instance_method?}
           #{unalias_original_method_text alias_method_name, join_point}
           #{static_method_suffix join_point.instance_method?}
@@ -358,14 +358,14 @@ module Aquarium
       
       def restore_object_method join_point
         saved = saved_method_name join_point
-        singleton = class << join_point.object; self; end
+        singleton = class << join_point.target_object; self; end
         singleton.class_eval do
           alias_method join_point.method_name, saved
           public join_point.method_name
           undef_method saved.intern
         end
         advice_chain_name = "@#{Aspect.advice_chain_attr_name join_point.type_or_object, join_point.method_name}".intern
-        join_point.object.method(:remove_instance_variable).call advice_chain_name
+        join_point.target_object.method(:remove_instance_variable).call advice_chain_name
       end
 
       def self.set_advice_chain type_or_object, method_name, advice_chain

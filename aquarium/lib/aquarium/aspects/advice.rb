@@ -80,7 +80,7 @@ module Aquarium
       def initialize options = {}
         super(options) { |jp, *args| 
           block_for_method = jp.context.block_for_method
-          invoking_object = jp.instance_method? ? jp.context.advised_object : jp.type
+          invoking_object = jp.instance_method? ? jp.context.advised_object : jp.target_type
           method = invoking_object.method(@alias_method_name)
           block_for_method.nil? ? 
             method.call(*args) : 

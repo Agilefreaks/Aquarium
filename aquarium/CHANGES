@@ -1,3 +1,25 @@
+== Version 0.1.6
+
+Bug fixes:
+<none>
+
+Enhancements:
+13407	Pick a better method name for JoinPoint#type, which hides the Module#type
+
+For 13407, new attribute methods have been added
+* JoinPoint#target_type 	return the type that the join_point matches.
+* JoinPoint#target_type=	set the type that the join_point matches.
+* JoinPoint#target_object 	return the object that the join_point matches.
+* JoinPoint#target_object=	set the object that the join_point matches.
+
+The following, older methods are now deprecated:
+* JoinPoint#type
+* JoinPoint#type=
+* JoinPoint#object
+* JoinPoint#object=
+
+JoinPoint#type method is deprecated because it hides Module#type, which returns the type of the corresponding object. For "symmetry", the other three methods are also now deprecated and they will be removed in a future release. Until then, all will print a warning message to STDOUT. (If you really want the type of what could be a JoinPoint object, you should use #class anyway, as Module#type is also deprecated!)
+
 == Version 0.1.5
 
 Bug fixes:
