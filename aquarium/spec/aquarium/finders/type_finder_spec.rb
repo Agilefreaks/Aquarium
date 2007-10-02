@@ -71,7 +71,7 @@ describe Aquarium::Finders::TypeFinder, "#find with :type or :name used to speci
     actual.not_matched.should == {}
   end
   
-  it "should return an empty match for a simple name (without :: namespace delimiters) that doesn't match an existing class." do
+  it "should return an empty match for a simple name (without :: namespace delimiters) that doesn't match an existing type." do
     actual = Aquarium::Finders::TypeFinder.new.find :name => :Unknown
     actual.matched.should == {}
     actual.not_matched_keys.should == [:Unknown]

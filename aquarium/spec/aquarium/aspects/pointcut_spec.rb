@@ -81,10 +81,15 @@ describe Aquarium::Aspects::Pointcut, " (types specified using regular expressio
     common_setup
   end
 
-  it "should match multiple classes using regular expressions." do
+  it "should match multiple classes using regular expressions that cover the full class names." do
     pc = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/, :method_options => :suppress_ancestor_methods
     pc.join_points_matched.should == @expected_matched_jps
     pc.join_points_not_matched.should == @expected_not_matched_jps
+  end
+
+  it "should match no classes using regular expressions that only cover partial class names." do
+    pc = Aquarium::Aspects::Pointcut.new :types => /lass.*Met/, :method_options => :suppress_ancestor_methods
+    pc.join_points_matched.should be_empty
   end
 end
 

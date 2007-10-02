@@ -874,7 +874,7 @@ describe Aspect, "#new with :around advice" do
     watchful.public_watchful_method_args.should == [:a4, :a5, :a6]
   end
   
-  it "should return the value returned by the advice" do
+  it "should return the value returned by the advice, NOT the value returned by the advised join point!" do
     class ReturningValue
       def doit args
         args + ["d"]
@@ -883,9 +883,28 @@ describe Aspect, "#new with :around advice" do
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
     @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, *args|
-      %w[aa] + jp.proceed + %w[e]
+      jp.proceed
+      %w[aa bb cc]
     end 
-    ReturningValue.new.doit(ary).should == %w[aa a b c d e]
+    ReturningValue.new.doit(ary).should == %w[aa bb cc]
+  end
+
+  it "should return the value returned by the advised join point only if the advice returns the value" do
+    class ReturningValue
+      def doit args
+        args + ["d"]
+      end
+    end
+    ary = %w[a b c]
+    ReturningValue.new.doit(ary).should == %w[a b c d]
+    @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, *args|
+      begin
+        jp.proceed
+      ensure
+        %w[aa bb cc]
+      end
+    end 
+    ReturningValue.new.doit(ary).should == %w[a b c d]
   end
 
   def do_around_spec *args_passed_to_proceed
