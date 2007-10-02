@@ -54,6 +54,8 @@ end
 
 describe "An example with advice on the public instance methods (excluding ancestor methods) of Foo" do
   it "should trace all calls to the public methods defined by Foo" do
+    # The "begin/ensure/end" idiom shown causes the advice to return the correct value; the result
+    # of the "proceed", rather than the value returned by "p"!
     aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Foo, :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
       begin
         o = execution_point.context.advised_object

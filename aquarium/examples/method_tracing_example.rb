@@ -55,6 +55,8 @@ foo2.do_it :b5, :b6
 bar1 = Aquarium::Bar.new :a7, :a8
 bar1.do_something_else :b7, :b8
 
+# The "begin/ensure/end" idiom shown causes the advice to return the correct value; the result
+# of the "proceed", rather than the value returned by "p"!
 Aspect.new :around, :types => [Aquarium::Foo, Aquarium::Bar], :methods => :initialize, 
     :method_options => :private do |execution_point, *args|
   begin
