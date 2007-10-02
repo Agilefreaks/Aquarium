@@ -29,9 +29,12 @@ module Aquarium
       def invariant *args, &contract_block
         message = handle_message_arg args
         Aspect.new make_args(:around, *args) do |jp, *params|
-          DesignByContract.test_condition "invariant failure (before invocation): #{message}", jp, *params, &contract_block
-          jp.proceed
-          DesignByContract.test_condition "invariant failure (after invocation): #{message}", jp, *params, &contract_block
+          begin
+            DesignByContract.test_condition "invariant failure (before invocation): #{message}", jp, *params, &contract_block
+            jp.proceed
+          ensure
+            DesignByContract.test_condition "invariant failure (after invocation): #{message}", jp, *params, &contract_block
+          end
         end
       end
 

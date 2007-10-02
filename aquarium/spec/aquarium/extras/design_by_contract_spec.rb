@@ -51,9 +51,11 @@ describe Aquarium::Extras::DesignByContract, "invariant" do
     end
     attr_reader :invar
     def good_action
+      "good"
     end
     def bad_action
       @invar = 1
+      "bad"
     end
     
     invariant :methods => /action$/, :message => "Must not change the @invar value." do |jp, *args|
@@ -67,5 +69,9 @@ describe Aquarium::Extras::DesignByContract, "invariant" do
   
   it "should add advice that does not raise if the invariant is satisfied" do
     InvarCond.new.good_action
+  end
+  
+  it "should return the value returned by the checked method when the invariant is satisfied" do
+    InvarCond.new.good_action.should == "good"
   end
 end
