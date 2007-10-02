@@ -153,7 +153,7 @@ module Aquarium
       alias :=== :eql?
   
       def inspect
-        "JoinPoint: {type = #{target_type.inspect}, object = #{target_object.inspect}, method_name = #{method_name}, instance_method? #{instance_method?}, context = #{context.inspect}}"
+        "JoinPoint: {target_type = #{target_type.inspect}, target_object = #{target_object.inspect}, method_name = #{method_name}, instance_method? #{instance_method?}, context = #{context.inspect}}"
       end
   
       alias :to_s :inspect
