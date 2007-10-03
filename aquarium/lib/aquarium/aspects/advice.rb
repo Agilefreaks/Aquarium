@@ -74,6 +74,9 @@ module Aquarium
       NIL_OBJECT = Aquarium::Utils::NilObject.new
     end
 
+    # When invoking the original method, we use object.send(original_method_name, *args)
+    # rather than object.method(...).call(*args). The latter fails when the original method
+    # calls super. This is a Ruby bug: http://www.ruby-forum.com/topic/124276
     class NoAdviceChainNode < AdviceChainNode
       # Note that we extract the block passed to the original method call, if any, 
       # from the context and pass it to method invocation.
@@ -83,8 +86,13 @@ module Aquarium
           invoking_object = jp.instance_method? ? jp.context.advised_object : jp.target_type
           method = invoking_object.method(@alias_method_name)
           block_for_method.nil? ? 
-            method.call(*args) : 
-            method.call(*args, &block_for_method)
+            invoking_object.send(@alias_method_name, *args) : 
+            invoking_object.send(@alias_method_name, *args, &block_for_method)
+          # Buggy!!
+          # method = invoking_object.method(@alias_method_name)
+          # block_for_method.nil? ? 
+          #   method.call(*args) : 
+          #   method.call(*args, &block_for_method)
         }
       end
     end
