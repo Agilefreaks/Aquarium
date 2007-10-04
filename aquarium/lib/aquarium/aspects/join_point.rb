@@ -85,6 +85,7 @@ module Aquarium
       end
       
       attr_accessor :target_type, :target_object, :method_name, :visibility, :context
+      attr_reader   :instance_or_class_method
       
       # For "symmetry" with JoinPoint#target_type
       alias_method  :object, :target_object
@@ -96,19 +97,35 @@ module Aquarium
         @instance_method
       end
       
+      def class_method?
+        !@instance_method
+      end
+      
       def initialize options = {}
         @target_type     = options[:type]
         @target_object   = options[:object]
         @method_name     = options[:method_name] || options[:method]
         @instance_method = options[:instance_method]
-        class_method = options[:class_method].nil? ? false : options[:class_method]
+        class_method     = options[:class_method].nil? ? false : options[:class_method]
         @instance_method = (!class_method) if @instance_method.nil?
+        @instance_or_class_method  = @instance_method ? :instance : :class
         @visibility = Aquarium::Utils::MethodUtils.visibility(type_or_object, @method_name, class_or_instance_method_flag)
         assert_valid options
       end
   
       def type_or_object
         @target_type || @target_object
+      end
+      
+      alias_method :target_type_or_object, :type_or_object
+
+      def exists?
+        type_or_object_sym = @target_type ? :type : :object
+        results = Aquarium::Finders::MethodFinder.new.find type_or_object_sym => type_or_object, 
+                            :method => method_name, 
+                            :options => [visibility, instance_or_class_method]
+        raise Exception("MethodFinder returned more than one item! #{results.inspect}") if (results.matched.size + results.not_matched.size) != 1
+        return results.matched.size == 1 ? true : false
       end
       
       # TODO while convenient, it couples advice-type information where it doesn't belong!
@@ -171,7 +188,7 @@ module Aquarium
       end
 
       def class_or_instance_method_flag
-        @instance_method ? :instance_method_only : :class_method_only
+        "#{instance_or_class_method.to_s}_method_only".intern
       end
     
       public

@@ -1,6 +1,8 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
 require File.dirname(__FILE__) + '/../spec_example_classes'
+require 'aquarium/utils/invalid_options'
 require 'aquarium/extensions/hash'
+require 'aquarium/aspects/join_point'
 require 'aquarium/aspects/pointcut'
 require 'aquarium/utils'
 
@@ -21,7 +23,13 @@ def common_setup
   @expected_not_matched_jps = Set.new [@apro_jp, @apri_jp, @acpub_jp, @acpri_jp]
 end
 
-describe Aquarium::Aspects::Pointcut, " (empty)" do
+describe Aquarium::Aspects::Pointcut, "#new (invalid arguments)" do
+  it "should raise if an unknown argument is specified" do
+    lambda { Aquarium::Aspects::Pointcut.new :foo => :bar }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+end
+
+describe Aquarium::Aspects::Pointcut, "#new (empty)" do
   it "should match no join points by default." do
     pc = Aquarium::Aspects::Pointcut.new
     pc.should be_empty
@@ -49,6 +57,16 @@ describe Aquarium::Aspects::Pointcut, " (empty)" do
   
   it "should match no join points if objects = nil specified." do
     pc = Aquarium::Aspects::Pointcut.new :objects => nil
+    pc.should be_empty
+  end
+  
+  it "should match no join points if join_points = nil specified." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => nil
+    pc.should be_empty
+  end
+  
+  it "should match no join points if join_points = [] specified." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => []
     pc.should be_empty
   end
 end
@@ -444,6 +462,35 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with attribu
   end  
 end
 
+describe Aquarium::Aspects::Pointcut, " (join points specified)" do
+  setup do
+    common_setup
+    @anClassWithPublicInstanceMethod = ClassWithPublicInstanceMethod.new
+    @expected_matched = [@pub_jp, @pro_jp, @pri_jp, @cpub_jp, @cpri_jp,
+        Aquarium::Aspects::JoinPoint.new(:object => @anClassWithPublicInstanceMethod, :method => :public_instance_test_method)]
+    @expected_not_matched = [
+      Aquarium::Aspects::JoinPoint.new(:type   => ClassWithPublicInstanceMethod,    :method => :foo),
+      Aquarium::Aspects::JoinPoint.new(:object => @anClassWithPublicInstanceMethod, :method => :foo)]
+  end
+
+  it "should return matches only for existing join points." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => (@expected_matched + @expected_not_matched)
+    pc.join_points_matched.should == Set.new(@expected_matched)
+  end
+
+  it "should return non-matches for non-existing join points." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => (@expected_matched + @expected_not_matched)
+    pc.join_points_not_matched.should == Set.new(@expected_not_matched)
+  end
+
+  it "should ignore :methods, :attributes, :method_options, and :attribute_options for the join points specified." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => (@expected_matched + @expected_not_matched),
+      :methods => :kind_of?, :attributes => :name, :method_options => [:class], :attribute_options => [:readers]
+    pc.join_points_matched.should == Set.new(@expected_matched)
+    pc.join_points_not_matched.should == Set.new(@expected_not_matched)
+  end
+end
+
 describe Aquarium::Aspects::Pointcut, " (methods that end in non-alphanumeric characters)" do
   class ClassWithFunkyMethodNames
     def huh?; true; end
@@ -691,7 +738,7 @@ describe "Aquarium::Aspects::Pointcut#eql?" do
   end
 end
 
-describe "Aquarium::Aspects::Pointcut#candidate_types" do
+describe Aquarium::Aspects::Pointcut, "#candidate_types" do
   setup do
     common_setup
   end
@@ -721,7 +768,7 @@ describe "Aquarium::Aspects::Pointcut#candidate_types" do
   end
 end
 
-describe "Aquarium::Aspects::Pointcut#candidate_objects" do
+describe Aquarium::Aspects::Pointcut, "#candidate_objects" do
   setup do
     common_setup
   end
@@ -736,7 +783,36 @@ describe "Aquarium::Aspects::Pointcut#candidate_objects" do
   end
 end
 
-describe "Aquarium::Aspects::Pointcut#specification" do
+describe Aquarium::Aspects::Pointcut, "#candidate_join_points" do
+  setup do
+    common_setup
+  end
+  
+  it "should return only candidate non-matching join points for the input join points that do not exist." do
+    anClassWithPublicInstanceMethod = ClassWithPublicInstanceMethod.new
+    example_jps = [
+      Aquarium::Aspects::JoinPoint.new(:type   => ClassWithPublicInstanceMethod,   :method => :foo),
+      Aquarium::Aspects::JoinPoint.new(:object => anClassWithPublicInstanceMethod, :method => :foo)]
+    pc = Aquarium::Aspects::Pointcut.new :join_points => example_jps
+    pc.candidate_join_points.matched.size.should == 0
+    pc.candidate_join_points.not_matched[example_jps[0]].should_not be_nil
+    pc.candidate_join_points.not_matched[example_jps[1]].should_not be_nil
+  end
+  
+  it "should return only candidate matching join points for the input join points that do exist." do
+    anClassWithPublicInstanceMethod = ClassWithPublicInstanceMethod.new
+    example_jps = [
+      Aquarium::Aspects::JoinPoint.new(:type   => ClassWithPublicInstanceMethod,   :method => :public_instance_test_method),
+      Aquarium::Aspects::JoinPoint.new(:object => anClassWithPublicInstanceMethod, :method => :public_instance_test_method)]
+    pc = Aquarium::Aspects::Pointcut.new :join_points => example_jps
+    pc.candidate_join_points.matched.size.should == 2
+    pc.candidate_join_points.matched[example_jps[0]].should_not be_nil
+    pc.candidate_join_points.matched[example_jps[1]].should_not be_nil
+    pc.candidate_join_points.not_matched.size.should == 0
+  end
+end
+
+describe Aquarium::Aspects::Pointcut, "#specification" do
   setup do
     common_setup
     @expected_specification_subset = {
@@ -747,15 +823,15 @@ describe "Aquarium::Aspects::Pointcut#specification" do
 
   it "should return ':attribute_options => []', by default, if no arguments are given." do
     pc = Aquarium::Aspects::Pointcut.new
-    pc.specification.should == { :types => @empty_set, :objects => @empty_set, :default_object => @empty_set,
-      :methods => Set.new([:all]), :method_options => Set.new([]), 
+    pc.specification.should == { :types => @empty_set, :objects => @empty_set, :join_points => @empty_set,
+      :methods => Set.new([:all]), :method_options => Set.new([]), :default_object => @empty_set,
       :attributes => @empty_set, :attribute_options => @empty_set }
   end
 
   it "should return the input :types and :type arguments combined into an array keyed by :types." do
     pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :type => String
-    pc.specification.should == { :types => Set.new(@example_types + [String]), :objects => @empty_set, :default_object => @empty_set,
-      :methods => Set.new([:all]), :method_options => Set.new([]), 
+    pc.specification.should == { :types => Set.new(@example_types + [String]), :objects => @empty_set, :join_points => @empty_set,
+      :methods => Set.new([:all]), :method_options => Set.new([]), :default_object => @empty_set,
       :attributes => @empty_set, :attribute_options => @empty_set } 
   end
   
@@ -763,36 +839,36 @@ describe "Aquarium::Aspects::Pointcut#specification" do
     example_objs = @example_types.map {|t| t.new}
     s1234 = "1234"
     pc = Aquarium::Aspects::Pointcut.new :objects => example_objs, :object => s1234
-    pc.specification.should == { :types => @empty_set, :objects => Set.new(example_objs + [s1234]), :default_object => @empty_set,
-      :methods => Set.new([:all]), :method_options => Set.new([]), 
+    pc.specification.should == { :types => @empty_set, :objects => Set.new(example_objs + [s1234]), :join_points => @empty_set,
+      :methods => Set.new([:all]), :method_options => Set.new([]), :default_object => @empty_set,
       :attributes => @empty_set, :attribute_options => @empty_set } 
   end
 
   it "should return the input :methods and :method arguments combined into an array keyed by :methods." do
     pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :methods => /^get/, :method => "dup"
-    pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :default_object => @empty_set,
-      :methods => Set.new([/^get/, "dup"]), :method_options => Set.new([]), 
+    pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :join_points => @empty_set,
+      :methods => Set.new([/^get/, "dup"]), :method_options => Set.new([]), :default_object => @empty_set,
       :attributes => @empty_set, :attribute_options => @empty_set } 
   end
   
   it "should return the input :method_options verbatim." do
     pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :methods => /^get/, :method => "dup", :method_options => [:instance, :public]
-    pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :default_object => @empty_set,
-      :methods => Set.new([/^get/, "dup"]), :method_options => Set.new([:instance, :public]), 
+    pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :join_points => @empty_set,
+      :methods => Set.new([/^get/, "dup"]), :method_options => Set.new([:instance, :public]), :default_object => @empty_set,
       :attributes => @empty_set, :attribute_options => @empty_set } 
   end
   
   it "should return the input :methods and :method arguments combined into an array keyed by :methods." do
     pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :attributes => /^state/, :attribute => "name"
-    pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :default_object => @empty_set,
-      :methods => @empty_set, :method_options => Set.new([]), 
+    pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :join_points => @empty_set,
+      :methods => @empty_set, :method_options => Set.new([]), :default_object => @empty_set,
       :attributes => Set.new([/^state/, "name"]), :attribute_options => @empty_set } 
   end
   
   it "should return the input :attributes, :attribute and :attribute_options arguments, verbatim." do
     pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :attributes => /^state/, :attribute => "name", :attribute_options => :reader
-    pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :default_object => @empty_set,
-      :methods => @empty_set, :method_options => Set.new([]), 
+    pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :join_points => @empty_set,
+      :methods => @empty_set, :method_options => Set.new([]), :default_object => @empty_set,
       :attributes => Set.new([/^state/, "name"]), :attribute_options => Set.new([:reader]) } 
   end
 end

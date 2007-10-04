@@ -72,6 +72,18 @@ describe Aspect, "#new arguments for specifying the types and methods" do
     aspect1.advice.should              eql(aspect2.advice)
     aspect1.unadvise
   end
+
+  it "should advise an equivalent join point when :type => T and :method => m is used or :pointcut => join_point is used, where join_point matches :type => T and :method => m." do
+    # pending "working on Pointcut.new first."
+    advice = proc {|jp,*args| "advice"}
+    aspect1 = Aspect.new :after, :type => Watchful, :method => :public_watchful_method, &advice
+    join_point = Aquarium::Aspects::JoinPoint.new :type => Watchful, :method => :public_watchful_method
+    aspect2 = Aspect.new :after, :pointcut => join_point, &advice
+    aspect1.join_points_matched.should eql(aspect2.join_points_matched)
+    aspect1.advice.should              eql(aspect2.advice)
+    aspect1.unadvise
+  end
+
 end
 
 describe Aspect, "#new arguments for specifying the objects and methods" do

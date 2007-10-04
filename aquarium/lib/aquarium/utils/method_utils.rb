@@ -37,7 +37,7 @@ module Aquarium
         limits = class_or_instance_only.nil? ? [:instance_method_only, :class_method_only] : [class_or_instance_only]
         meta_method_suffixes = []
         limits.each do |limit|
-          if (type_or_instance.kind_of?(Class) || type_or_instance.kind_of?(Module))
+          if (is_type? type_or_instance)
             meta_method_suffixes << "instance_methods" if limit == :instance_method_only
             meta_method_suffixes << "methods"          if limit == :class_method_only
           else
@@ -45,6 +45,10 @@ module Aquarium
           end
         end
         meta_method_suffixes
+      end
+      
+      def self.is_type? type_or_instance
+        type_or_instance.kind_of?(Class) || type_or_instance.kind_of?(Module)
       end
       
       def self.find_method2 type_or_instance, method_sym, meta_method

@@ -70,10 +70,11 @@ module Aquarium
         init_specification options
         init_candidate_types 
         init_candidate_objects
+        init_candidate_join_points
         init_join_points
       end
   
-      attr_reader :join_points_matched, :join_points_not_matched, :specification, :candidate_types, :candidate_objects
+      attr_reader :join_points_matched, :join_points_not_matched, :specification, :candidate_types, :candidate_objects, :candidate_join_points
   
       # Two Considered equivalent only if the same join points matched and not_matched sets are equal, 
       # the specifications are equal, and the candidate types and candidate objects are equal.
@@ -111,15 +112,17 @@ module Aquarium
   
       protected
   
-      attr_writer :join_points_matched, :join_points_not_matched, :specification, :candidate_types, :candidate_objects
+      attr_writer :join_points_matched, :join_points_not_matched, :specification, :candidate_types, :candidate_objects, :candidate_join_points
 
       def init_specification options
         @specification = {}
         options ||= {} 
+        validate_options options
         @specification[:method_options] = Set.new(make_array(options[:method_options]))
         @specification[:attribute_options] = Set.new(make_array(options[:attribute_options]) )
         @specification[:types]   = Set.new(make_array(options[:types], options[:type]))
         @specification[:objects] = Set.new(make_array(options[:objects], options[:object]))
+        @specification[:join_points] = Set.new(make_array(options[:join_points], options[:join_point]))
         @specification[:default_object] = Set.new(make_array(options[:default_object]))
         use_default_object_if_defined unless (types_given? || objects_given?)
         @specification[:attributes] = Set.new(make_array(options[:attributes], options[:attribute]))
@@ -130,6 +133,12 @@ module Aquarium
       def init_methods_specification options
         @specification[:methods] = Set.new(make_array(options[:methods], options[:method]))
         @specification[:methods].add(:all) if @specification[:methods].empty? and @specification[:attributes].empty?
+      end
+      
+      def validate_options options
+        knowns = %w[object objects type types join_point join_points method methods attribute attributes method_options attribute_options default_object].map {|x| x.intern}
+        unknowns = options.keys - knowns
+        raise Aquarium::Utils::InvalidOptions.new("Unknown options specified: #{unknowns.inspect}") if unknowns.size > 0
       end
   
       def self.read_only attribute_options
@@ -148,7 +157,7 @@ module Aquarium
         attribute_options.include?(:writers)  || attribute_options.include?(:writer)
       end
   
-      %w[types objects methods attributes method_options attribute_options].each do |name|
+      %w[types objects join_points methods attributes method_options attribute_options].each do |name|
         class_eval(<<-EOF, __FILE__, __LINE__)
           def #{name}_given
             @specification[:#{name}]
@@ -164,7 +173,7 @@ module Aquarium
   
       def init_candidate_types 
         explicit_types, type_regexps_or_names = @specification[:types].partition do |type|
-          type.kind_of?(Module) || type.kind_of?(Class)
+          is_type? type
         end
         @candidate_types = Aquarium::Finders::TypeFinder.new.find :types => type_regexps_or_names
         @candidate_types.append_matched(make_hash(explicit_types) {|x| Set.new([])})  # Append already-known types
@@ -175,33 +184,53 @@ module Aquarium
         @specification[:objects].each {|o| object_hash[o] = Set.new([])}
         @candidate_objects = Aquarium::Finders::FinderResult.new object_hash
       end
+      
+      def init_candidate_join_points
+        @candidate_join_points = Aquarium::Finders::FinderResult.new 
+        @specification[:join_points].each do |jp|
+          if jp.exists?
+            @candidate_join_points.matched[jp] = Set.new([])
+          else
+            @candidate_join_points.not_matched[jp] = Set.new([])
+          end
+        end
+      end
   
       def init_join_points
         @join_points_matched = Set.new
         @join_points_not_matched = Set.new
-        results = find_methods_for_types make_all_method_names
-        add_join_points @join_points_matched, results.matched, :type
-        add_join_points @join_points_not_matched, results.not_matched, :type
-        results = find_methods_for_objects make_all_method_names
-        add_join_points @join_points_matched, results.matched, :object
-        add_join_points @join_points_not_matched, results.not_matched, :object
+        find_join_points_for :type, candidate_types, make_all_method_names
+        find_join_points_for :object, candidate_objects, make_all_method_names
+        add_join_points_for_candidate_join_points
       end
 
-      def find_methods_for_types which_methods
-        return Aquarium::Finders::FinderResult::NIL_OBJECT if candidate_types.matched.size == 0
-        Aquarium::Finders::MethodFinder.new.find :types => candidate_types.matched_keys, 
+      def is_type? candidate_type
+        candidate_type.kind_of?(Module) || candidate_type.kind_of?(Class)
+      end
+
+      def add_join_points_for_candidate_join_points 
+        @join_points_matched     += @candidate_join_points.matched.keys
+        @join_points_not_matched += @candidate_join_points.not_matched.keys
+      end
+      
+      def find_join_points_for type_or_object_sym, candidates, method_names
+        results = find_methods_for type_or_object_sym, candidates, method_names
+        add_join_points results, type_or_object_sym
+      end
+      
+      def find_methods_for type_or_object_sym, candidates, which_methods
+        return Aquarium::Finders::FinderResult::NIL_OBJECT if candidates.matched.size == 0
+        Aquarium::Finders::MethodFinder.new.find type_or_object_sym => candidates.matched_keys, 
                               :methods => which_methods, 
                               :options => @specification[:method_options].to_a
       end
-  
-      def find_methods_for_objects which_methods
-        return Aquarium::Finders::FinderResult::NIL_OBJECT if candidate_objects.matched.size == 0
-        Aquarium::Finders::MethodFinder.new.find :objects => candidate_objects.matched_keys, 
-                              :methods => which_methods, 
-                              :options => @specification[:method_options].to_a
-      end
 
-      def add_join_points which_join_points_list, results_hash, type_or_object_sym
+      def add_join_points search_results, type_or_object_sym
+        add_join_points_to @join_points_matched,     search_results.matched,     type_or_object_sym
+        add_join_points_to @join_points_not_matched, search_results.not_matched, type_or_object_sym
+      end
+      
+      def add_join_points_to which_join_points_list, results_hash, type_or_object_sym
         instance_method = @specification[:method_options].include?(:class) ? false : true
         results_hash.each_pair do |type_or_object, method_name_list|
           method_name_list.each do |method_name|

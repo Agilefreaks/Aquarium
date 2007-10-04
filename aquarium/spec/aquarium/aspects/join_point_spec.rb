@@ -9,6 +9,17 @@ class Dummy
   def count; 0; end
 end
 
+class ProtectionExample
+  def public_instance_m; end
+  protected
+  def protected_instance_m; end
+  private
+  def private_instance_m; end
+  def self.public_class_m; end
+  def self.private_class_m; end
+  private_class_method :private_class_m
+end
+
 describe Aquarium::Aspects::JoinPoint, "#initialize with invalid parameters" do
   
   it "should require either a :type or an :object parameter when creating." do
@@ -29,48 +40,44 @@ describe Aquarium::Aspects::JoinPoint, "#initialize with parameters that specify
   it "should assume the :method_name refers to an instance method, by default." do
     jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split
     jp.instance_method?.should be_true
+    jp.class_method?.should be_false
   end
   
   it "should treat the :method_name as refering to an instance method if :instance_method is specified as true." do
     jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => true
     jp.instance_method?.should be_true
+    jp.class_method?.should be_false
   end
   
   it "should treat the :method_name as refering to a class method if :instance_method is specified as false." do
     jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => false
     jp.instance_method?.should be_false
+    jp.class_method?.should be_true
   end
 
   it "should treat the :method_name as refering to an instance method if :class_method is specified as false." do
     jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :class_method => false
     jp.instance_method?.should be_true
+    jp.class_method?.should be_false
   end
   
   it "should treat the :method_name as refering to a class method if :class_method is specified as true." do
     jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :class_method => true
     jp.instance_method?.should be_false
+    jp.class_method?.should be_true
   end
   
   it "should treat give precedence to :instance_method if appears with :class_method." do
     jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => false, :class_method => true
     jp.instance_method?.should be_false
+    jp.class_method?.should be_true
     jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => true, :class_method => false
     jp.instance_method?.should be_true
+    jp.class_method?.should be_false
   end
 end
   
 describe Aquarium::Aspects::JoinPoint, "#visibility" do
-  class ProtectionExample
-    def public_instance_m; end
-    protected
-    def protected_instance_m; end
-    private
-    def private_instance_m; end
-    def self.public_class_m; end
-    def self.private_class_m; end
-    private_class_method :private_class_m
-  end
-  
   it "should return :public for public instance methods." do
     jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_m
     jp.visibility.should == :public
@@ -289,6 +296,67 @@ describe Aquarium::Aspects::JoinPoint, "#make_current_context_join_point when th
   end
 end
 
+describe Aquarium::Aspects::JoinPoint, "#type_or_object" do
+  it "should return the type if the object is nil" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
+    jp.type_or_object.should eql(String)
+  end
+
+  it "should return the object if the type is nil" do
+    jp = Aquarium::Aspects::JoinPoint.new :object => String.new, :method_name => :split
+    jp.type_or_object.should eql("")
+  end
+end
+
+describe Aquarium::Aspects::JoinPoint, "#exists?" do
+  it "should return false if the join point represents a non-existent join point for an instance method in the runtime environment" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :foo
+    jp.exists?.should be_false
+  end
+
+  it "should return false if the join point represents a non-existent join point for a class method in the runtime environment" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :foo, :class_method => true
+    jp.exists?.should be_false
+  end
+
+  it "should return true if the join point represents a real join point for a public instance method in the runtime environment" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :public_instance_m
+    jp.exists?.should be_true
+  end
+
+  it "should return true if the join point represents a real join point for a protected instance method in the runtime environment" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :protected_instance_m
+    jp.exists?.should be_true
+  end
+
+  it "should return true if the join point represents a real join point for a private instance method in the runtime environment" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :private_instance_m
+    jp.exists?.should be_true
+  end
+
+  it "should return true if the join point represents a real join point for a public class method in the runtime environment" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :public_class_m, :class_method => true
+    jp.exists?.should be_true
+  end
+
+  it "should return true if the join point represents a real join point for a private class method in the runtime environment" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :private_class_m, :class_method => true
+    jp.exists?.should be_true
+  end
+
+  class ProtectionExample2
+    def public_instance_m; end
+    protected
+    def protected_instance_m; end
+    private
+    def private_instance_m; end
+    def self.public_class_m; end
+    def self.private_class_m; end
+    private_class_method :private_class_m
+  end
+  
+end
+
 describe Aquarium::Aspects::JoinPoint, "#make_current_context_join_point when the Aquarium::Aspects::JoinPoint::Context object is not nil" do
   it "should return a new join_point that contains the non-context information of the advised_object plus an updated Aquarium::Aspects::JoinPoint::Context with the specified context information." do
     jp  = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
@@ -308,18 +376,6 @@ describe Aquarium::Aspects::JoinPoint, "#make_current_context_join_point when th
     jp_after.context.parameters.should        == [","]
     jp_after.context.returned_value.should    == ["12", "34", "56"]
     jp_after.context.raised_exception.should  == exception
-  end
-end
-
-describe Aquarium::Aspects::JoinPoint, "#type_or_object" do
-  it "should return the type if the object is nil" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
-    jp.type_or_object.should eql(String)
-  end
-
-  it "should return the object if the type is nil" do
-    jp = Aquarium::Aspects::JoinPoint.new :object => String.new, :method_name => :split
-    jp.type_or_object.should eql("")
   end
 end
 

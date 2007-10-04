@@ -60,7 +60,7 @@ module Aquarium
       # <tt>:pointcut  => pointcut || [pointcut_list]</tt>::
       # <tt>:within_pointcut  => pointcut || [pointcut_list]</tt>::
       # <tt>:within_pointcuts => pointcut || [pointcut_list]</tt>::
-      #   One or an array of Pointcut objects. Mutually-exclusive with the :types, :objects,
+      #   One or an array of Pointcut or JoinPoint objects. Mutually-exclusive with the :types, :objects,
       #   :methods, :attributes, :method_options, and :attribute_options parameters.
       #
       # <tt>:types => type || [type_list]</tt>::
@@ -177,6 +177,8 @@ module Aquarium
           pointcuts_given.each do |pointcut|
             if pointcut.kind_of?(Aquarium::Aspects::Pointcut)
               pointcuts << pointcut 
+            elsif pointcut.kind_of?(Aquarium::Aspects::JoinPoint)
+              pointcuts << Aquarium::Aspects::Pointcut.new(:join_point => pointcut) 
             else
               pointcuts << Aquarium::Aspects::Pointcut.new(pointcut) 
             end
