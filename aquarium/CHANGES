@@ -1,10 +1,46 @@
 == Version 0.1.6
 
 Bug fixes:
-<none>
+14353	Advising subclass method that calls super raises exception when method executed
+14356	Regexps for types must cover the whole name, which is inconsistent with method/attribute regexps
+14384	Design by Contract "extra" does not return correct value "invar" handling
 
+14353 was kind of bad, but it's actually a Ruby bug with a good workaround. If you 
+advised a method that called "super", Ruby would use the wrong method name to lookup the
+class in the parent. See the bug description for the details.
+
+For 14356, type regular expressions now match on parts of names; they don't have to match
+the whole name. The exception is regular expressions with module separators "::". In this
+case, it seems to make more sense for the regular expression to be interpreted as follows:
+If the expression is /A::B::C::D/, then for the the outermost types, the expression behaves
+as /^.*A/, for the types between two "::", the expressions behave as /^B$/ and /^C$/, and
+the trailing expression behaves as /D.*$/.
+
+14384 was an easy mistake to make with "around" advice; you have to remember to return the 
+result of the "join_point.proceed" call, unless you specifically won't to change the returned
+value! Here are two ways to do it:
+
+	do_something_before(...)
+	result = join_point.proceed
+	do_something_after(...)
+	return result
+
+or
+	
+	begin
+		do_something_before(...)
+		join_point.proceed
+	ensure
+		do_something_after(...)
+	end
+
+The latter approach looks "asymmetrical" and it will behave differently if "proceed" raises!
+However, it eliminates the temporary, if you find that desirable.
+ 
 Enhancements:
 13407	Pick a better method name for JoinPoint#type, which hides the Module#type
+14385	Pointcut.new should accept a :join_point => jp argument
+14386	Aspect.new ..., :pointcut => should accept a join point object
 
 For 13407, new attribute methods have been added
 * JoinPoint#target_type 	return the type that the join_point matches.
@@ -12,13 +48,17 @@ For 13407, new attribute methods have been added
 * JoinPoint#target_object 	return the object that the join_point matches.
 * JoinPoint#target_object=	set the object that the join_point matches.
 
-The following, older methods are now deprecated:
+The following, older methods are now deprecated and will be removed in the 0.2.0 release (#14053):
 * JoinPoint#type
 * JoinPoint#type=
 * JoinPoint#object
 * JoinPoint#object=
 
-JoinPoint#type method is deprecated because it hides Module#type, which returns the type of the corresponding object. For "symmetry", the other three methods are also now deprecated and they will be removed in a future release. Until then, all will print a warning message to STDOUT. (If you really want the type of what could be a JoinPoint object, you should use #class anyway, as Module#type is also deprecated!)
+JoinPoint#type method is deprecated because it hides Module#type, which returns the type of 
+the corresponding object. For "symmetry", the other three methods are also now deprecated and 
+they will be removed in a future release. Until then, all will print a warning message to 
+STDOUT. (If you really want the type of what could be a JoinPoint object, you should use #class
+anyway, as Module#type is also deprecated!)
 
 == Version 0.1.5
 
