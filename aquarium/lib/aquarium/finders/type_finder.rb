@@ -29,6 +29,26 @@ module Aquarium
       #
       # Actually, there is actually no difference between <tt>:types</tt>, 
       # <tt>:type</tt>, <tt>:names</tt>, and <tt>:name</tt>. The extra forms are "sugar"...
+      #
+      # Because of the special sigificance of the module ("namespace") separator "::", the rules
+      # for the regular expressions are as follows. Assume that "subexp" is a "sub regular
+      # expression" that results if you split on the separator "::".
+      #
+      # A full regexp with no "::"::
+      #   Allow partial matches, <i>i.e.</i>, as if you wrote <tt>/^.*#{regexp}.*$/.</tt>
+      # 
+      # A subexp before the first "::"::
+      #   It behaves as <tt>/^.*#{subexp}::.../</tt>, meaning that the end of "subexp" 
+      #   must be followed by "::".
+      #
+      # A subexp after the last "::"::
+      #   It behaves as <tt>/...::#{subexp}$/</tt>, meaning that the beginning of "subexp"
+      #   must immediately follow a "::".
+      #
+      # For a subexp between two "::"::
+      #   It behaves as <tt>/...::#{subexp}::.../</tt>, meaning that the subexp must match 
+      #   the whole name between the "::" exactly.
+      #
       def find options = {}
         result = Aquarium::Finders::FinderResult.new
         unknown_options = []
