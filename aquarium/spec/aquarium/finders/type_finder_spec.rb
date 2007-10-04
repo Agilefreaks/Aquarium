@@ -11,13 +11,13 @@ describe Aquarium::Finders::TypeFinder, "#find" do
     lambda { Aquarium::Finders::TypeFinder.new.find "foo" }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
   
-  it "should return no matched and no unmatched expressions by default (i.e., the input is empty)." do
+  it "should return no matched types and no unmatched type expressions by default (i.e., the input is empty)." do
     actual = Aquarium::Finders::TypeFinder.new.find
     actual.matched.should == {}
     actual.not_matched.should == {}
   end
   
-  it "should return no matched and no unmatched expressions if the input hash is empty." do
+  it "should return no matched types and no unmatched type expressions if the input hash is empty." do
     actual = Aquarium::Finders::TypeFinder.new.find {}
     actual.matched.should == {}
     actual.not_matched.should == {}
@@ -61,12 +61,20 @@ end
 
 class Outside
   class Inside1; end
-  class Inside2; end
+  class Inside2
+    class ReallyInside; end
+  end
 end
 
 describe Aquarium::Finders::TypeFinder, "#find with :type or :name used to specify a single type" do
-  it "should find a type matching a simple name (without :: namespace delimiters) using its name." do
+  it "should find a type matching a simple name (without :: namespace delimiters) using its name and the :type option." do
     actual = Aquarium::Finders::TypeFinder.new.find :type => :Object
+    actual.matched_keys.should == [Object]
+    actual.not_matched.should == {}
+  end
+  
+  it "should find a type matching a simple name (without :: namespace delimiters) using its name and the :name option." do
+    actual = Aquarium::Finders::TypeFinder.new.find :name => :Object
     actual.matched_keys.should == [Object]
     actual.not_matched.should == {}
   end
@@ -84,7 +92,7 @@ describe Aquarium::Finders::TypeFinder, "#find with :type or :name used to speci
   end
 end
   
-describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :name used to specify one or more names and/or regular expressions" do
+describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :name used to specify one or more names" do
   it "should find types matching simple names (without :: namespace delimiters) using their names." do
     expected_found_types  = [Class, Kernel, Module, Object]
     expected_unfound_exps = %w[TestCase Unknown1 Unknown2]
@@ -92,15 +100,7 @@ describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :
     actual.matched_keys.sort.should == expected_found_types.sort
     actual.not_matched_keys.should == expected_unfound_exps
   end
-  
-  it "should find types matching simple names (without :: namespace delimiters) using lists of regular expressions." do
-    expected_found_types  = [Class, Kernel, Module, Object]
-    expected_unfound_exps = [/Unknown2/, /^.*TestCase.*$/, /^Unknown1/]
-    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /Clas{2}/, /^.*TestCase.*$/, /^Unknown1/, /Unknown2/]
-    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
-    actual.not_matched_keys.sort.should == expected_unfound_exps.sort
-  end
-  
+
   it "should find types with :: namespace delimiters using their names." do
     expected_found_types  = [Outside::Inside1, Outside::Inside2]
     expected_unfound_exps = %w[Foo::Bar::Baz]
@@ -108,13 +108,52 @@ describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :
     actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
     actual.not_matched_keys.sort.should == expected_unfound_exps.sort
   end
+end
+  
+describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :name used to specify one or more regular expressions" do
+  it "should find types matching simple names (without :: namespace delimiters) using lists of regular expressions." do
+    expected_found_types  = [Class, Kernel, Module, Object]
+    expected_unfound_exps = [/Unknown2/, /^.*TestCase.*$/, /^Unknown1/]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/, /^.*TestCase.*$/, /^Unknown1/, /Unknown2/]
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched_keys.sort.should == expected_unfound_exps.sort
+  end
+  
+  it "should find types matching simple names (without :: namespace delimiters) using regular expressions that match parts of the names." do
+    expected_found_types  = [FalseClass, Module, TrueClass]
+    expected_unfound_exps = []
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/eClass$/, /^Modu/]
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched_keys.sort.should == expected_unfound_exps.sort
+  end
   
   it "should find types with :: namespace delimiters using lists of regular expressions." do
-    expected_found_types  = [Outside::Inside1, Outside::Inside2]
+    expected_found_types  = [Outside::Inside1, Outside::Inside2, Outside::Inside2::ReallyInside]
     expected_unfound_exps = [/^.*Fo+::.*Bar+::Baz.$/]
-    actual = Aquarium::Finders::TypeFinder.new.find :types => [/^.*Fo+::.*Bar+::Baz.$/, /Outside::.*1$/, "Out.*::In.*2"]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/^.*Fo+::.*Bar+::Baz.$/, /Outside::.*1$/, /Out.*::In.*2/, /Out.*::In.*2::R.*/]
     actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
     actual.not_matched_keys.should == expected_unfound_exps
+  end
+  
+  it "should allow a partial trailing name before the first :: namespace delimiter in a regular expression." do
+    expected_found_types  = [Outside::Inside1, Outside::Inside2]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/side::In.*/]
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched_keys.size.should == 0
+  end
+  
+  it "should allow a partial leading name after the last :: namespace delimiter in a regular expression." do
+    expected_found_types  = [Outside::Inside1, Outside::Inside2, Outside::Inside2::ReallyInside]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/side::In/, /side::Inside2::Real/]
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched_keys.size.should == 0
+  end
+  
+  it "should require a full name-matching regular expression between :: namespace delimiters." do
+    expected_found_types  = [Outside::Inside2::ReallyInside]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/side::In::Real/]
+    actual.matched_keys.size.should == 0
+    actual.not_matched_keys.should == [/side::In::Real/]
   end
 end
 
@@ -131,7 +170,7 @@ describe Aquarium::Finders::TypeFinder, "#find_all_by" do
   it "should find types with :: namespace delimiters using lists of regular expressions." do
     expected_found_types  = [Outside::Inside1, Outside::Inside2]
     expected_unfound_exps = [/^.*Fo+::.*Bar+::Baz.$/]
-    actual = Aquarium::Finders::TypeFinder.new.find_all_by [/^.*Fo+::.*Bar+::Baz.$/, /Outside::.*1$/, "Out.*::In.*2"]
+    actual = Aquarium::Finders::TypeFinder.new.find_all_by [/^.*Fo+::.*Bar+::Baz.$/, /Outside::.*1$/, /Out.*::In.*2/]
     actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
     actual.not_matched_keys.should == expected_unfound_exps
   end
@@ -204,6 +243,13 @@ describe Aquarium::Finders::TypeFinder, "#find_by_type" do
     actual = tf.find_by_name Outside::Inside1
     actual.matched_keys.should == [Outside::Inside1]
     actual.not_matched_keys.should == []
+  end
+end
+
+# TODO refactor this protected method into a new class.
+describe Aquarium::Finders::TypeFinder, "#get_type_from_parent should" do
+  it "should raise if a type doesn't exist that matches the constant" do
+    lambda {Aquarium::Finders::TypeFinder.new.send(:get_type_from_parent, Aquarium::Finders, "Nonexistent", /Non/)}.should raise_error(NameError)
   end
 end
  

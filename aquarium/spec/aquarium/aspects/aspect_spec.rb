@@ -805,17 +805,75 @@ describe Aspect, "#new with :around advice" do
   end
 
   it "should advise subclass invocations of methods advised in the superclass." do
+    module AdvisingSuperClass
+      class SuperClass
+        def public_method *args
+          yield *args if block_given?
+        end
+        protected
+        def protected_method *args
+          yield *args if block_given?
+        end
+        private
+        def private_method *args
+          yield *args if block_given?
+        end
+      end
+      class SubClass < SuperClass
+      end
+    end
+    
     context = nil
-    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, *args|
+    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSuperClass::SuperClass, :methods => [:public_method]} do |jp, *args|
       context = jp.context
     end 
-    child = WatchfulChild.new
+    child = AdvisingSuperClass::SubClass.new
     public_block_called = false
     protected_block_called = false
     private_block_called = false
-    child.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| fail }
-    child.send(:protected_watchful_method, :b1, :b2, :b3) {|*args| protected_block_called = true}
-    child.send(:private_watchful_method, :c1, :c2, :c3) {|*args| private_block_called = true}
+    child.public_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| fail }
+    child.send(:protected_method, :b1, :b2, :b3) {|*args| protected_block_called = true}
+    child.send(:private_method, :c1, :c2, :c3) {|*args| private_block_called = true}
+    public_block_called.should be_false  # proceed is never called!
+    protected_block_called.should be_true
+    private_block_called.should be_true
+    context.advised_object.should == child
+    context.advice_kind.should == :around
+    context.returned_value.should == nil
+    context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+    context.raised_exception.should == nil
+  end
+
+  it "should advise subclass invocations of methods advised in the subclass that are defined in the superclass." do
+    module AdvisingSubClass
+      class SuperClass
+        def public_method *args
+          yield *args if block_given?
+        end
+        protected
+        def protected_method *args
+          yield *args if block_given?
+        end
+        private
+        def private_method *args
+          yield *args if block_given?
+        end
+      end
+      class SubClass < SuperClass
+      end
+    end
+    
+    context = nil
+    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSubClass::SuperClass, :methods => [:public_method]} do |jp, *args|
+      context = jp.context
+    end 
+    child = AdvisingSubClass::SubClass.new
+    public_block_called = false
+    protected_block_called = false
+    private_block_called = false
+    child.public_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| fail }
+    child.send(:protected_method, :b1, :b2, :b3) {|*args| protected_block_called = true}
+    child.send(:private_method, :c1, :c2, :c3) {|*args| private_block_called = true}
     public_block_called.should be_false  # proceed is never called!
     protected_block_called.should be_true
     private_block_called.should be_true

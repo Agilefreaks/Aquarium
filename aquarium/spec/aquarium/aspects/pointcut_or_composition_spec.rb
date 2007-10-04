@@ -32,12 +32,14 @@ describe "Aquarium::Aspects::Pointcut#and" do
    
   it "should return a new Aquarium::Aspects::Pointcut whose join points are the union of the left- and right-hand side Aquarium::Aspects::Pointcuts for type-based Aquarium::Aspects::Pointcuts." do
     pc1 = Aquarium::Aspects::Pointcut.new :types => ClassWithAttribs, :attributes => [/^attr/], :attribute_options => [:writers, :suppress_ancestor_methods]
-    pc2 = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/, :method_options => :suppress_ancestor_methods
+    # "[^F]" excludes the ClassWithFunkyMethodNames...
+    pc2 = Aquarium::Aspects::Pointcut.new :types => /Class[^F]+Method/, :method_options => :suppress_ancestor_methods
     pc = pc1.or pc2
     jp1 = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method => :attrRW_ClassWithAttribs=
     jp2 = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method => :attrW_ClassWithAttribs=
-    jp3 = Aquarium::Aspects::JoinPoint.new :type => ClassWithPublicInstanceMethod, :method => :public_instance_test_method
-    pc.join_points_matched.should == Set.new([jp1, jp2, jp3])
+    jp3 = Aquarium::Aspects::JoinPoint.new :type => ClassWithPublicInstanceMethod,  :method => :public_instance_test_method
+    jp4 = Aquarium::Aspects::JoinPoint.new :type => ClassWithPublicInstanceMethod2, :method => :public_instance_test_method2
+    pc.join_points_matched.should == Set.new([jp1, jp2, jp3, jp4])
     pc.join_points_not_matched.should == @not_matched_jps
   end
    

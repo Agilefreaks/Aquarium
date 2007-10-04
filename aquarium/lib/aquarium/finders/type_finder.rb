@@ -41,7 +41,7 @@ module Aquarium
           end
         end
         raise Aquarium::Utils::InvalidOptions.new("Unknown options: #{unknown_options.inspect}.") if unknown_options.size > 0
-        return result
+        result
       end
   
       # For a name (not a regular expression), return the corresponding type.
@@ -68,11 +68,10 @@ module Aquarium
         expressions.each do |expression|
           expr = strip expression
           next if empty expr
-          result_for_expression = find_namespace_matched expr
-          if result_for_expression.size > 0
-            result.append_matched result_for_expression
+          if expr.kind_of? Regexp
+            result << find_namespace_matched(expr)
           else
-            result.append_not_matched({expression => Set.new([])})
+            result << find_by_name(expr)
           end
         end
         result
@@ -94,24 +93,33 @@ module Aquarium
       end
   
       def find_namespace_matched expression
-        return {} if expression.nil?
+        expr = expression.kind_of?(Regexp) ? expression.source : expression.to_s
+        return nil if expr.empty?
         found_types = [Module]
-        expr = expression.class.eql?(Regexp) ? expression.source : expression.to_s
-        return {} if expr.empty?
-        expr.split("::").each do |subexp|
-          found_types = find_next_types found_types, subexp
+        split_expr = expr.split("::")
+        split_expr.each_with_index do |subexp, index|
+          next if subexp.size == 0
+          found_types = find_next_types found_types, subexp, (index == 0), (index == (split_expr.size - 1))
           break if found_types.size == 0
         end
-        make_return_hash found_types, []
+        if found_types.size > 0
+          Aquarium::Finders::FinderResult.new make_return_hash(found_types, [])
+        else
+          Aquarium::Finders::FinderResult.new :not_matched => {expression => Set.new([])}
+        end
       end
 
-      def find_next_types parent_types, subname
-        # grep <parent>.constants because "subname" may be a regexp string!.
+      def find_next_types enclosing_types, subexp, suppress_lh_ctrl_a, suppress_rh_ctrl_z
+        # grep <parent>.constants because "subexp" may be a regexp string!.
         # Then use const_get to get the type itself.
         found_types = []
-        parent_types.each do |parent|
-          matched = parent.constants.grep(/^#{subname}$/)
-          matched.each {|m| found_types << parent.const_get(m)}
+        lhs = suppress_lh_ctrl_a ? "" : "\\A"
+        rhs = suppress_rh_ctrl_z ? "" : "\\Z"
+        regexp = /#{lhs}#{subexp}#{rhs}/
+        enclosing_types.each do |parent|
+          parent.constants.grep(regexp).each do |m| 
+            found_types << get_type_from_parent(parent, m, regexp)
+          end
         end
         found_types
       end
@@ -121,6 +129,17 @@ module Aquarium
         h[:not_matched] = unmatched if unmatched.size > 0
         found.each {|x| h[x] = Set.new([])}
         h
+      end
+
+      protected
+      def get_type_from_parent parent, name, regexp
+        begin
+          parent.const_get(name)
+        rescue => e
+          msg  = "ERROR: for enclosing type '#{parent.inspect}', #{parent.inspect}.constants.grep(/#{regexp.source}/) returned a list including #{name.inspect}."
+          msg += "However, #{parent.inspect}.const_get('#{name}') raised exception #{e}. Please report this bug to the Aquarium team. Thanks."
+          raise e.exception(msg)
+        end
       end
     end
   end

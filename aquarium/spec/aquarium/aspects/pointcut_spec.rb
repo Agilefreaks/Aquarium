@@ -82,14 +82,15 @@ describe Aquarium::Aspects::Pointcut, " (types specified using regular expressio
   end
 
   it "should match multiple classes using regular expressions that cover the full class names." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/, :method_options => :suppress_ancestor_methods
+    pc = Aquarium::Aspects::Pointcut.new :types => /Class.*Method\Z/, :method_options => :suppress_ancestor_methods
     pc.join_points_matched.should == @expected_matched_jps
     pc.join_points_not_matched.should == @expected_not_matched_jps
   end
 
-  it "should match no classes using regular expressions that only cover partial class names." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /lass.*Met/, :method_options => :suppress_ancestor_methods
-    pc.join_points_matched.should be_empty
+  it "should match classes using regular expressions that only cover partial class names." do
+    pc = Aquarium::Aspects::Pointcut.new :types => /lass.*Pro.*Inst.*Met/, :method_options => [:public, :protected, :suppress_ancestor_methods]
+    pc.join_points_matched.should == Set.new([@pro_jp])
+    pc.join_points_not_matched.size.should == 0
   end
 end
 
@@ -616,8 +617,8 @@ describe Aquarium::Aspects::Pointcut, "#eql?" do
   end
 
   it "should return false if the not_matched types are different." do
-    pc1 = Aquarium::Aspects::Pointcut.new  :types => /Foo/
-    pc2 = Aquarium::Aspects::Pointcut.new  :types => /Bar/
+    pc1 = Aquarium::Aspects::Pointcut.new  :types => :UnknownFoo
+    pc2 = Aquarium::Aspects::Pointcut.new  :types => :UnknownBar
     pc1.should_not eql(pc2)
   end
 
