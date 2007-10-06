@@ -4,7 +4,7 @@ orderInfo: 4
 inMenu: true
 ---
 
-h2. Aquarium
+h2. Aquarium License
 
 <br>
 <pre>{includeFile: {filename: ../../aquarium/MIT-LICENSE, processOutput: false}}</pre>
