@@ -61,8 +61,9 @@ Here is an example that traces invocations of all public instance methods of the
 	require 'aquarium'
 	Aspect.new :around, :types => [Foo, Bar], :methods => :all do |execution_point, *args|
 		p "Entering: #{execution_point.target_type.name}##{execution_point.method_name}"
-		execution_point.proceed
+		result = execution_point.proceed
 		p "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}"
+		result  # block needs to return the result of the "proceed"!
 	end
 
 The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, etc.) Here is the same example using the convenience DSL that adds aspect methods to Object (available only if you require aquarium/aspects/dsl/object_dsl', since other toolkits, like Rails, define similar methods on Object!).
@@ -70,8 +71,9 @@ The advice to execute at each join point is the block. The pointcut is the set o
 	require 'aquarium/aspects/dsl/object_dsl'
 	around :types => [Foo, Bar], :methods => :all do |execution_point, *args|
 		p "Entering: #{execution_point.target_type.name}##{execution_point.method_name}"
-		execution_point.proceed
+		result = execution_point.proceed
 		p "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}"
+		result  # block needs to return the result of the "proceed"!
 	end
 
 See "examples/method_tracing_example.rb" for a more detailed version of this example.
@@ -104,8 +106,9 @@ If you use the DSL inside a class and omit the :type(s) and :object(s) options, 
 	class Foo
 		around :critical_operation do |execution_point, *args|
 			p "Entering: Foo#critical_operation"
-			execution_point.proceed
+			result = execution_point.proceed
 			p "Leaving: Foo#critical_operation"
+			result
 		end
 	end
 
@@ -157,6 +160,12 @@ very much like the :method options. Note that :all is NOT supported in this case
 	around :attributes = /^foo/, ...
 	around :attributes = [/^foo/, /bar$/], ...
 
+You can specify a "Pointcut" that encapsulates one or more pre-defined Pointcuts or JoinPoints.
+
+	around :pointcut = pc, ...                                     # for pre-defined pointcut "pc"
+	around :pointcuts = [pc, ...], ...                             # for pre-defined pointcut list
+	around :pointcut = {:type => T, :method => :m}, ...            # same as around :type => T, :method => :m, ..
+
 You can advice methods before execution:
 
 	before :types => ...
@@ -194,8 +203,9 @@ You can pass a block as the advice. Notice that all advice blocks and Procs (see
 
 	around :type => [...], :methods => :all do |join_point, *args|
 	  advice_to_execute_before_the_jp
-	  join_point.proceed	# Invoke the join point, passing *args implicitly (you can override...)
+	  result = join_point.proceed	# Invoke the join point, passing *args implicitly (you can override...)
 	  advice_to_execute_after_the_jp
+	  result     # return the result of the "proceed", unless you override the value.
 	end
 	around(:type => [...], :methods => :all) {|join_point, *args| ...}  # (...) necessary for precedence...
 

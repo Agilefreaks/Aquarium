@@ -1,1 +1,6 @@
+---
+title: Changes
+orderInfo: 3
+inMenu: true
+---
 <pre>{includeFile: {filename: ../../aquarium/CHANGES, processOutput: false}}</pre>

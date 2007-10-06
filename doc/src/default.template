@@ -21,21 +21,18 @@
 
 <div id="page">
   <div id="header">
-    <p id="title">Aquarium {version: }</p>
+    <h1 id="title">Aquarium&nbsp;{version: }</h1>
   </div>
-  <div id="logo">
 
   <div class="breadcrumb-menu">
     {menu: {menuStyle: breadcrumbs}}
   </div>
 
   <div id="content">
-    <div id="sidebar-logo">
-    </div>
     {block: }
     
     <div id="footer">
-      
+    <div id="copyright">Copyright &copy; 2007, Aquarium Development Team, All Rights Reserved</div>
     </div>
   </div>
 </div>

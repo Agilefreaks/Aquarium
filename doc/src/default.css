@@ -1,6 +1,7 @@
 /* Some properties are defined in environment.rb and dynamically included here. */  
 
 body {
+  width: 900px;
   margin: 0;
   margin-bottom: 25px;
   padding: 0;
@@ -9,7 +10,7 @@ body {
   /*background-image: url(images/superimposition2.jpg);*/
   /*background-image: url(images/on_a_dark_edge.jpg);*/
   background-position: top left;
-  background-repeat: repeat-y;   /* no-repeat; */
+  background-repeat: repeat-y; 
   background-color: #859C9B; /* #BBCCCF; #f0f0f0; */
   font-family: "Lucida Grande", "Bitstream Vera Sans", "Verdana";
   font-size: 13px;
@@ -109,10 +110,10 @@ pre.ruby {
   padding-left: 15px;
   padding-right: 20px;
 }
-
 #title {
   font-size: 36px;
-  color: #CBD6FF;
+  background-image: url(images/banner.jpg);
+  color: #EFF; /*#CBD6FF;*/
   font-family: "Times Roman", "Lucida Grande", "Bitstream Vera Sans", "Verdana";
   font-weight: bold;
   text-align: left;
@@ -125,12 +126,12 @@ h1 {
 }
 
 #content {
+  width: 900px;
   float: left;
   background-color: #eed;
-  border: 3px solid #aaa;
+  border: 2px solid #aaa;
   border-top: none;
   padding: 25px;
-  width: 900px;
 }
 
 #sidebar-logo {

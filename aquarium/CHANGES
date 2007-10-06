@@ -4,6 +4,7 @@ Bug fixes:
 14353	Advising subclass method that calls super raises exception when method executed
 14356	Regexps for types must cover the whole name, which is inconsistent with method/attribute regexps
 14384	Design by Contract "extra" does not return correct value "invar" handling
+13410	Fix funky navigation bar on website
 
 14353 was kind of bad, but it's actually a Ruby bug with a good workaround. If you 
 advised a method that called "super", Ruby would use the wrong method name to lookup the
@@ -17,7 +18,7 @@ as /^.*A/, for the types between two "::", the expressions behave as /^B$/ and /
 the trailing expression behaves as /D.*$/.
 
 14384 was an easy mistake to make with "around" advice; you have to remember to return the 
-result of the "join_point.proceed" call, unless you specifically won't to change the returned
+result of the "join_point.proceed" call, unless you specifically want to change the returned
 value! Here are two ways to do it:
 
 	do_something_before(...)

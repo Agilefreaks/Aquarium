@@ -1,7 +1,7 @@
 index.page:
   directoryName: Home
   orderInfo: 1
-upgrade.page:
+install.page:
   orderInfo: 2
 examples.page:
   orderInfo: 3
@@ -12,24 +12,22 @@ documentation/index.page:
 documentation/API/:
   orderInfo: 30
 documentation/API/aspects.page:
-  orderInfo: 20
+  orderInfo: 102
 documentation/API/join_points_and_pointcuts.page:
   title: Join Points and Pointcuts
-  orderInfo: 21
+  orderInfo: 103
 documentation/API/finders.page:
-  orderInfo: 22
+  orderInfo: 104
 documentation/API/extensions.page:
-  orderInfo: 23
+  orderInfo: 105
 documentation/API/utils.page:
-  orderInfo: 24
+  orderInfo: 106
 documentation/API/extras.page:
-  orderInfo: 35
-license.page:
-  orderInfo: 11
+  orderInfo: 107
 changes.page:
+  orderInfo: 11
+license.page:
   orderInfo: 12
-download.page:
-  orderInfo: 213
 community/:
   orderInfo: 30
 community/index.page:
@@ -52,4 +50,4 @@ documentation/report.html:
 documentation/rdoc.html:
   title: RDoc
   url: ../rdoc/index.html
-  orderInfo: 60
+  orderInfo: 57
