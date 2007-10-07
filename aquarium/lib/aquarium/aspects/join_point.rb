@@ -26,7 +26,7 @@ module Aquarium
         end
     
         def proceed enclosing_join_point, *args, &block
-          raise "JoinPoint#proceed can only be called if @proceed_proc is set." unless @proceed_proc
+          raise "It looks like you tried to call \"JoinPoint#proceed\" (or \"JoinPoint::Context#proceed\") from within advice that isn't \"around\" advice. Only around advice can call proceed. (Specific error: JoinPoint#proceed cannot be called because no \"@proceed_proc\" attribute was set on the corresponding JoinPoint::Context object.)" unless @proceed_proc
           args = parameters if (args.nil? or args.size == 0)
           enclosing_join_point.context.block_for_method = block if block 
           proceed_proc.call enclosing_join_point, *args
