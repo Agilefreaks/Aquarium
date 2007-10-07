@@ -42,6 +42,7 @@ Enhancements:
 13407	Pick a better method name for JoinPoint#type, which hides the Module#type
 14385	Pointcut.new should accept a :join_point => jp argument
 14386	Aspect.new ..., :pointcut => should accept a join point object
+14440	Add good warning message when "proceed" used for non-around advice
 
 For 13407, new attribute methods have been added
 * JoinPoint#target_type 	return the type that the join_point matches.
