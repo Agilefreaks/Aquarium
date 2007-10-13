@@ -19,6 +19,7 @@ class Aquarium::Aspects::Pointcut
   end
   
   alias :union :or
+  alias :| :or
   
   def and pointcut2
     result = Aquarium::Aspects::Pointcut.new
@@ -33,4 +34,5 @@ class Aquarium::Aspects::Pointcut
   end
   
   alias :intersection :and  
+  alias :& :and
 end

@@ -88,8 +88,7 @@ module Aquarium
          join_points_not_matched == other.join_points_not_matched) 
       end
   
-      alias :==  :eql?
-      alias :=== :eql?
+      alias :== :eql?
   
       def empty?
         return join_points_matched.empty? && join_points_not_matched.empty?

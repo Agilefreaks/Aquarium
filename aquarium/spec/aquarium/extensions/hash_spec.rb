@@ -40,20 +40,20 @@ describe "intersection of hashes", :shared => true do
   end
   
   it "should return the same hash if intersected with itself." do
-    @hash.intersection(@hash).should == @hash
+    @hash.and(@hash).should == @hash
   end 
 
   it "should return the same hash if intersected with an equivalent hash." do
-    @hash.intersection({:a => 'a', :b => [:b1, :b2], :c => 'c'}).should == @hash
+    @hash.and({:a => 'a', :b => [:b1, :b2], :c => 'c'}).should == @hash
   end 
 
   it "should return an empty hash if one of the input hashes is empty." do
-    {}.intersection(@hash).should == {}
+    {}.and(@hash).should == {}
   end 
 
   it "should return the common subset hash for two, non-equivalent hashes." do
     hash2 = {:b =>:b1, :c => 'c', :d => 'd'}
-    @hash.intersection(hash2){|value1, value2| Set.new(make_array(value1)).intersection(Set.new(make_array(value2)))}.should == {:b =>Set.new([:b1]), :c => 'c'}
+    @hash.and(hash2){|value1, value2| Set.new(make_array(value1)).intersection(Set.new(make_array(value2)))}.should == {:b =>Set.new([:b1]), :c => 'c'}
   end 
 end
 
@@ -63,6 +63,14 @@ end
 
 describe Hash, "#and" do
   it_should_behave_like "intersection of hashes"
+end
+
+describe Hash, "#&" do
+  it_should_behave_like "intersection of hashes"
+  
+  it "should support operator-style usage" do
+    ({:a => ['a', 'a2'], :c => 'c'} & {:a => ['a'], :b => [:b1, :b2], :c => 'c'}).should == {:a => ['a'], :c => 'c'}
+  end
 end
 
 describe "union of hashes", :shared => true do
@@ -107,6 +115,14 @@ end
 
 describe Hash, "#or" do
   it_should_behave_like "union of hashes"
+end  
+
+describe Hash, "#or" do
+  it_should_behave_like "union of hashes"
+  
+  it "should support operator-style usage" do
+    ({:a => ['a1'], :d => 'd'} | {:a => ['a2'], :b => [:b1, :b2], :c => 'c'}).should == {:a => ['a1', 'a2'], :b => [:b1, :b2], :c => 'c', :d => 'd'}
+  end
 end
 
 describe Hash, "#eql_when_keys_compared?" do

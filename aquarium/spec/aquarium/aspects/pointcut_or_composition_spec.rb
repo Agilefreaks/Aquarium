@@ -5,7 +5,7 @@ require 'aquarium/extensions'
 require 'aquarium/aspects/pointcut'
 require 'aquarium/aspects/pointcut_composition'
 
-describe "Aquarium::Aspects::Pointcut#and" do
+describe "Union of Pointcuts", :shared => true do
   include Aquarium::Utils::HashUtils
   
   before(:each) do
@@ -108,6 +108,37 @@ describe "Aquarium::Aspects::Pointcut#and" do
     pc3 = Aquarium::Aspects::Pointcut.new :objects => pub
     pc123a = (pc1.or(pc2)).or(pc3)
     pc123b = pc1.or(pc2.or(pc3))
+    pc123a.should eql(pc123b)
+  end
+
+end
+
+describe Aquarium::Aspects::Pointcut, "#or" do
+  it_should_behave_like "Union of Pointcuts"
+end
+
+describe Aquarium::Aspects::Pointcut, "#|" do
+  include Aquarium::Utils::HashUtils
+ 
+  it_should_behave_like "Union of Pointcuts"
+
+  it "should be associativity for type-based Aquarium::Aspects::Pointcuts." do 
+    pc1 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers]
+    pc3 = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/
+    pc123a = (pc1 | pc2) | pc3
+    pc123b = pc1 | (pc2 | pc3)
+    pc123a.should eql(pc123b)
+  end
+   
+  it "should be associativity for object-based Aquarium::Aspects::Pointcuts." do 
+    cwa = ClassWithAttribs.new
+    pub = ClassWithPublicInstanceMethod.new 
+    pc1 = Aquarium::Aspects::Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Aquarium::Aspects::Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:readers]
+    pc3 = Aquarium::Aspects::Pointcut.new :objects => pub
+    pc123a = (pc1 | pc2) | pc3
+    pc123b = pc1 | (pc2 | pc3)
     pc123a.should eql(pc123b)
   end
 end

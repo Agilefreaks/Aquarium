@@ -4,48 +4,57 @@ module Aquarium
   module Extensions
     module HashHelper
   
-      # Intersection of self with a second hash, which returns a new hash. 
-      # If the same key is present in both, but the values are
-      # not "==" or "eql?", then the optional block is invoked to compute the intersection
-      # of the two values. If no block is given, it is assumed that the two key-value pairs
-      # should not be considered overlapping.
-      def intersection other_hash
+      def and other_hash
         return {} if other_hash.nil? or other_hash.empty?
         keys2 = Set.new(self.keys).intersection(Set.new(other_hash.keys))
         result = {}
         keys2.each do |key|
-          values1 = self[key]
-          values2 = other_hash[key]
-          if values1 == values2 or values1.eql?(values2)
-            result[key] = values1
-          else block_given?
-            result[key] = yield values1, values2
+          value1 = self[key]
+          value2 = other_hash[key]
+          if value1 == value2 or value1.eql?(value2)
+            result[key] = value1
+          elsif block_given?
+            result[key] = yield value1, value2
+          elsif value1.class == value2.class && value1.respond_to?(:&)
+            result[key] = (value1 & value2)
           end
         end
         result
       end
   
-      alias :and :intersection
+      alias :intersection :and 
+      alias :& :and 
 
-      # Union of self with a second hash, which returns a new hash. If both hashes have
-      # the same key, the value will be the result of evaluating the given block. If no
-      # block is given, the result will be same behavior that "merge" provides; the 
-      # value in the second hash "wins".
-      def union other_hash
+      # Union of self with a second hash, which returns a new hash. It's different from
+      # Hash#merge in that it attempts to merge non-equivalent values for the same key,
+      # if they are of the same type and respond to #| or a block is given that merges the
+      # two values. Otherwise, it behaves like Hash#merge.
+      def or other_hash
+        return self if other_hash.nil?
         result = {}
-        self.each {|key, value| result[key] = value}    
-        return result if other_hash.nil? or other_hash.empty?
-        other_hash.each do |key, value| 
-          if result[key].nil? or ! block_given?
-            result[key] = value
-          else
-            result[key] = yield result[key], value
+        new_keys = self.keys | other_hash.keys
+        new_keys.each do |key|
+          value1 = self[key]
+          value2 = other_hash[key]
+          if value1.nil? and not value2.nil?
+            result[key] = value2
+          elsif (not value1.nil?) and value2.nil?
+            result[key] = value1
+          elsif value1 == value2 or value1.eql?(value2)
+            result[key] = value1 
+          elsif block_given?
+            result[key] = yield value1, value2
+          elsif value1.class == value2.class && value1.respond_to?(:|)
+            result[key] = value1 | value2
+          else  # Hash#merge behavior
+            result[key] = value2
           end
         end
         result
       end
-  
-      alias :or :union
+      
+      alias :union :or
+      alias :| :or
   
       # It appears that Hash#== uses Object#== (i.e., self.object_id == other.object_id) when
       # comparing hash keys. (Array#== uses the overridden #== for the elements.)
