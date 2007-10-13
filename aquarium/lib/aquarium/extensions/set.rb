@@ -13,12 +13,14 @@ class Set
 
   alias :eql? :==
 
+  # It seems that Set#| should work, but for some reason, it doesn't.
   def union_using_eql_comparison other
     first = dup
     second = other.dup
     first.size > second.size ? do_union(first, second) : do_union(second, first)
   end
 
+  # It seems that Set#& should work, but for some reason, it doesn't.
   def intersection_using_eql_comparison other
     first = dup
     second = other.dup
