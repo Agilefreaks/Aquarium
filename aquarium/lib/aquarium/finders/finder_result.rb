@@ -105,7 +105,7 @@ module Aquarium
       def hash_intersection hash1, hash2
         return {} if hash1.nil? or hash2.nil?
         hash1.intersection(hash2) do |value1, value2| 
-          make_set(value1).intersection_using_eql_comparison(make_set(value2))
+          make_set(value1) & (make_set(value2))
         end
       end
 
@@ -113,7 +113,7 @@ module Aquarium
         return hash1 if hash2.nil? or hash2.empty?
         return hash2 if hash1.nil? or hash1.empty?
         hash1.union(hash2) do |value1, value2| 
-          make_set(value1).union_using_eql_comparison(make_set(value2))
+          make_set(value1) | (make_set(value2))
         end
       end
     end

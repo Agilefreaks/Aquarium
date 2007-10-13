@@ -24,7 +24,8 @@ class Aquarium::Aspects::Pointcut
   def and pointcut2
     result = Aquarium::Aspects::Pointcut.new
     result.specification           = specification.and(pointcut2.specification) do |value1, value2| 
-      value1.intersection_using_eql_comparison value2
+      value1 & value2
+      # value1.intersection_using_eql_comparison value2
     end
     result.join_points_matched     = join_points_matched.intersection_using_eql_comparison      pointcut2.join_points_matched
     result.join_points_not_matched = join_points_not_matched.intersection_using_eql_comparison  pointcut2.join_points_not_matched

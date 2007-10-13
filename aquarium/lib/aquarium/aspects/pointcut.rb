@@ -172,7 +172,7 @@ module Aquarium
   
       def init_candidate_types 
         explicit_types, type_regexps_or_names = @specification[:types].partition do |type|
-          is_type? type
+          Aquarium::Utils::TypeUtils.is_type? type
         end
         @candidate_types = Aquarium::Finders::TypeFinder.new.find :types => type_regexps_or_names
         @candidate_types.append_matched(make_hash(explicit_types) {|x| Set.new([])})  # Append already-known types
@@ -201,10 +201,6 @@ module Aquarium
         find_join_points_for :type, candidate_types, make_all_method_names
         find_join_points_for :object, candidate_objects, make_all_method_names
         add_join_points_for_candidate_join_points
-      end
-
-      def is_type? candidate_type
-        candidate_type.kind_of?(Module) || candidate_type.kind_of?(Class)
       end
 
       def add_join_points_for_candidate_join_points 

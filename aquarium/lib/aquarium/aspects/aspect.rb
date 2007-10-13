@@ -338,7 +338,7 @@ module Aquarium
       end
   
       def remove_advice_framework_for join_point
-        if Aspect.is_type?(join_point.type_or_object)
+        if Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object)
           restore_type_method   join_point
         else
           restore_object_method join_point
@@ -355,15 +355,12 @@ module Aquarium
         EVAL_WRAPPER
       end
       
-      def do_restore_type_method join_point
-      end
-      
       def restore_object_method join_point
         saved = saved_method_name join_point
         singleton = class << join_point.target_object; self; end
         singleton.class_eval do
           alias_method join_point.method_name, saved
-          public join_point.method_name
+          send join_point.visibility, join_point.method_name
           undef_method saved.intern
         end
         advice_chain_name = "@#{Aspect.advice_chain_attr_name join_point.type_or_object, join_point.method_name}".intern
@@ -371,13 +368,13 @@ module Aquarium
       end
 
       def self.set_advice_chain type_or_object, method_name, advice_chain
-        self.is_type?(type_or_object) ? 
+        Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? 
           self.set_type_advice_chain(type_or_object, method_name, advice_chain) : 
           self.set_object_advice_chain(type_or_object, method_name, advice_chain)
       end
   
       def self.get_advice_chain type_or_object, method_name
-        self.is_type?(type_or_object) ? 
+        Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? 
           self.get_type_advice_chain(type_or_object, method_name) : 
           self.get_object_advice_chain(type_or_object, method_name)
       end
@@ -412,7 +409,7 @@ module Aquarium
       end
     
       def private_method_defined? type_or_object, method_name
-        if Aspect.is_type? type_or_object
+        if Aquarium::Utils::TypeUtils.is_type? type_or_object
           type_or_object.private_instance_methods.include? method_name.to_s
         else
           type_or_object.private_methods.include? method_name.to_s
@@ -421,7 +418,7 @@ module Aquarium
   
       def self.advice_chain_attr_name type_or_object, method_name
         type_or_object_key = Aquarium::Utils::NameUtils.make_type_or_object_key(type_or_object)
-        class_or_object_prefix = is_type?(type_or_object) ? "class_" : ""
+        class_or_object_prefix = Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? "class_" : ""
         valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name method_name
         "#{self.aspect_method_prefix}#{class_or_object_prefix}advice_chain_#{type_or_object_key}_#{valid_name}"
       end
@@ -548,12 +545,8 @@ module Aquarium
         end
       end
       
-      def self.is_type? type_or_object
-        type_or_object.kind_of?(Class) or type_or_object.kind_of?(Module)
-      end
-  
       def self.type_or_object_string type_or_object
-        is_type?(type_or_object) ? "type" : "object"
+        Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? "type" : "object"
       end
   
       def bad_options message

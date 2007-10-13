@@ -167,7 +167,7 @@ module Aquarium
       end
   
       def make_methods_reflection_method_names type_or_object, root_method_name
-        is_type = type_or_object.instance_of?(Class) || type_or_object.instance_of?(Module)
+        is_type = Aquarium::Utils::TypeUtils.is_type?(type_or_object)
         scope_prefixes = []
         class_instance_prefixes = []
         @specification.each do |opt, value|
@@ -178,7 +178,7 @@ module Aquarium
           when "instance"
             class_instance_prefixes += is_type ? [opt_string + "_"] : [""]
           when "class"
-            # We want to use the "bare" (public_|private_|)<root_method_name> calls 
+            # We want to use the "bare" (public|private)_<root_method_name> calls 
             # to get class methods, because we will invoke these methods on class objects!
             # For instances, class methods aren't supported.
             class_instance_prefixes += [""] if is_type
@@ -200,13 +200,13 @@ module Aquarium
         results
       end
   
-      def reflect_methods type_or_object, reflect_method
-        if type_or_object.kind_of?(String) or type_or_object.kind_of?(Symbol)
-          eval "#{type_or_object.to_s}.#{reflect_method}"
+      def reflect_methods object, reflect_method
+        if object.kind_of?(String) or object.kind_of?(Symbol)
+          eval "#{object.to_s}.#{reflect_method}"
         else
-          return [] unless type_or_object.respond_to? reflect_method
-          m = type_or_object.method reflect_method
-          m.call type_or_object
+          return [] unless object.respond_to? reflect_method
+          method = object.method reflect_method
+          method.call object
         end
       end
   

@@ -1,3 +1,5 @@
+require 'aquarium/utils/type_utils'
+
 module Aquarium
   module Utils
     module MethodUtils
@@ -29,15 +31,12 @@ module Aquarium
       end
 
       private
-      def self.determine_meta_method_suffixes2 type_or_instance, class_or_instance_only
-        ["method_defined"]
-      end
       
       def self.determine_meta_method_suffixes type_or_instance, class_or_instance_only
         limits = class_or_instance_only.nil? ? [:instance_method_only, :class_method_only] : [class_or_instance_only]
         meta_method_suffixes = []
         limits.each do |limit|
-          if (is_type? type_or_instance)
+          if (Aquarium::Utils::TypeUtils.is_type? type_or_instance)
             meta_method_suffixes << "instance_methods" if limit == :instance_method_only
             meta_method_suffixes << "methods"          if limit == :class_method_only
           else
@@ -45,14 +44,6 @@ module Aquarium
           end
         end
         meta_method_suffixes
-      end
-      
-      def self.is_type? type_or_instance
-        type_or_instance.kind_of?(Class) || type_or_instance.kind_of?(Module)
-      end
-      
-      def self.find_method2 type_or_instance, method_sym, meta_method
-        type_or_instance.send(meta_method, method_sym.to_s)
       end
       
       def self.find_method type_or_instance, method_sym, meta_method
