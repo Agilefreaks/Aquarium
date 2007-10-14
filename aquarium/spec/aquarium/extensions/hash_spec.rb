@@ -4,31 +4,28 @@ require 'aquarium/extensions/hash'
 require 'aquarium/utils/array_utils'
 require 'aquarium/utils/hash_utils'
 require 'set'
-
-describe Hash, "#intersection" do
-  include Aquarium::Utils::ArrayUtils
-  include Aquarium::Utils::HashUtils
-
-  before(:each) do
-    @hash = {:a => 'a', :b => [:b1, :b2], :c => 'c'}
-  end
   
-  it "should return the same hash if intersected with itself." do
-    @hash.intersection(@hash).should == @hash
-  end 
+class CC
+  include Comparable
+  def initialize i
+    @value = i
+  end
+  attr_reader :value
+  def == other
+    value == other.value
+  end
+  def <=>
+    value <=> other.value
+  end
+end
 
-  it "should return the same hash if intersected with an equivalent hash." do
-    @hash.intersection({:a => 'a', :b => [:b1, :b2], :c => 'c'}).should == @hash
-  end 
-
-  it "should return an empty hash if one of the input hashes is empty." do
-    {}.intersection(@hash).should == {}
-  end 
-
-  it "should return the common subset hash for two, non-equivalent hashes." do
-    hash2 = {:b =>:b1, :c => 'c', :d => 'd'}
-    @hash.intersection(hash2){|values1, values2| Set.new(make_array(values1)).intersection(Set.new(make_array(values2)))}.should == {:b =>Set.new([:b1]), :c => 'c'}
-  end 
+def before_hash_spec
+  @c1 = CC.new(1)
+  @c2 = CC.new(2)
+  @c3 = CC.new(3)
+  @cc1 = [@c1, @c2]
+  @cc2 = [@c2, @c3]
+  @hash = {:a => ['a1'], :b => [:b1, :b2], :c => @cc1}
 end
 
 describe "intersection of hashes", :shared => true do
@@ -36,7 +33,7 @@ describe "intersection of hashes", :shared => true do
   include Aquarium::Utils::HashUtils
 
   before(:each) do
-    @hash = {:a => 'a', :b => [:b1, :b2], :c => 'c'}
+    before_hash_spec
   end
   
   it "should return the same hash if intersected with itself." do
@@ -44,17 +41,22 @@ describe "intersection of hashes", :shared => true do
   end 
 
   it "should return the same hash if intersected with an equivalent hash." do
-    @hash.and({:a => 'a', :b => [:b1, :b2], :c => 'c'}).should == @hash
+    @hash.and({:a => ['a1'], :b => [:b1, :b2], :c => @cc1}).should == @hash
   end 
 
   it "should return an empty hash if one of the input hashes is empty." do
     {}.and(@hash).should == {}
   end 
 
-  it "should return the common subset hash for two, non-equivalent hashes." do
-    hash2 = {:b =>:b1, :c => 'c', :d => 'd'}
-    @hash.and(hash2){|value1, value2| Set.new(make_array(value1)).intersection(Set.new(make_array(value2)))}.should == {:b =>Set.new([:b1]), :c => 'c'}
+  it "should return the common subset hash for two, if the values respond to #&." do
+    hash2 = {:b => [:b1], :c => @cc2, :d => ['d']}
+    @hash.and(hash2).should == {:b => [:b1], :c => [@c2]}
   end 
+
+  it "should return the common subset of hash values for partially-overlapping keys as specified by a given block." do
+    hash2 = {:b =>:b1, :c => @cc2, :d => 'd'}
+    @hash.and(hash2){|value1, value2| Set.new(make_array(value1)).intersection(Set.new(make_array(value2)))}.should == {:b => Set.new([:b1]), :c => Set.new([@c2])}
+  end
 end
 
 describe Hash, "#intersection" do
@@ -68,8 +70,8 @@ end
 describe Hash, "#&" do
   it_should_behave_like "intersection of hashes"
   
-  it "should support operator-style usage" do
-    ({:a => ['a', 'a2'], :c => 'c'} & {:a => ['a'], :b => [:b1, :b2], :c => 'c'}).should == {:a => ['a'], :c => 'c'}
+  it "should support operator-style semantics" do
+    ({:a => ['a1', 'a2'], :c => @cc1} & {:a => ['a1'], :b => [:b1, :b2], :c => @cc2}).should == {:a => ['a1'], :c => [@c2]}
   end
 end
 
@@ -78,7 +80,7 @@ describe "union of hashes", :shared => true do
   include Aquarium::Utils::HashUtils
 
   before(:each) do
-    @hash = {:a => 'a', :b => [:b1, :b2], :c => 'c'}
+    before_hash_spec
   end
   
   it "should return the same hash if unioned with itself." do
@@ -86,7 +88,7 @@ describe "union of hashes", :shared => true do
   end 
 
   it "should return the same hash if unioned with an equivalent hash." do
-    @hash.union({:a => 'a', :b => [:b1, :b2], :c => 'c'}).should == @hash
+    @hash.union({:a => ['a1'], :b => [:b1, :b2], :c => @cc1}).should == @hash
   end 
 
   it "should return a hash that is equivalent to the non-empty hash if the other hash is empty." do
@@ -98,14 +100,19 @@ describe "union of hashes", :shared => true do
     @hash.union(nil).should == @hash
   end 
 
-  it "should return a hash equivalent to the output of Hash#merge for two, non-equivalent hashes, with no block given." do
-    hash2 = {:b =>:b3, :c => 'c2', :d => 'd'}
-    @hash.union(hash2).should == {:a => 'a', :b => :b3, :c => 'c2', :d => 'd'}
+  it "should return the combined hash value, if the values respond to #|." do
+    hash2 = {:b => [:b3], :c => @cc2, :d => ['d']}
+    @hash.union(hash2).should == {:a => ['a1'], :b => [:b1, :b2, :b3], :c => [@c1, @c2, @c3], :d => ['d']}
   end 
 
-  it "should return the combined hashes for two, non-equivalent hashes, with a block given to merge values into an array." do
-    hash2 = {:b =>:b3, :c => 'c2', :d => 'd'}
-    @hash.union(hash2){|value1, value2| Set.new(make_array(value1)).union(Set.new(make_array(value2)))}.should == {:a => 'a', :b => Set.new([:b1, :b2, :b3]), :c => Set.new(['c', 'c2']), :d => 'd'}
+  it "should return a hash equivalent to the output of Hash#merge for two, non-equivalent hashes, with no block given and values don't respond to #|." do
+    hash2 = {:b => :b3, :c => @cc2, :d => 'd'}
+    @hash.union(hash2).should == {:a => ['a1'], :b => :b3, :c => [@c1, @c2, @c3], :d => 'd'}
+  end 
+
+  it "should return the combined hash values as specified by a given block." do
+    hash2 = {:b => :b3, :c => @cc2, :d => 'd'}
+    @hash.union(hash2){|value1, value2| Set.new(make_array(value1)).union(Set.new(make_array(value2)))}.should == {:a => Set.new(['a1']), :b => Set.new([:b1, :b2, :b3]), :c => Set.new([@c1, @c2, @c3]), :d => Set.new(['d'])}
   end 
 end
 
@@ -117,12 +124,80 @@ describe Hash, "#or" do
   it_should_behave_like "union of hashes"
 end  
 
-describe Hash, "#or" do
+describe Hash, "#|" do
   it_should_behave_like "union of hashes"
   
-  it "should support operator-style usage" do
-    ({:a => ['a1'], :d => 'd'} | {:a => ['a2'], :b => [:b1, :b2], :c => 'c'}).should == {:a => ['a1', 'a2'], :b => [:b1, :b2], :c => 'c', :d => 'd'}
+  it "should support operator-style semantics" do
+    ({:a => ['a1'], :d => ['d']} | {:a => ['a2'], :b => [:b1, :b2], :c => @cc2}).should == {:a => ['a1', 'a2'], :b => [:b1, :b2], :c => @cc2, :d => ['d']}
   end
+end
+
+
+describe "subtraction of hashes", :shared => true do
+  include Aquarium::Utils::ArrayUtils
+  include Aquarium::Utils::HashUtils
+  
+  before(:each) do
+    before_hash_spec
+    # override value:
+    @hash = {:a => ['a1', 'a2'], :b => [:b1, :b2], :c => @cc1}
+  end
+  
+  it "should return an empty hash if subtracted from itself." do
+    (@hash - @hash).should be_empty
+  end 
+
+  it "should return an empty hash if an equivalent hash is subtracted from it." do
+    (@hash - {:a => ['a1', 'a2'], :b => [:b1, :b2], :c => @cc1}).should be_empty
+  end 
+
+  it "should return an equivalent hash if the second hash is empty." do
+    (@hash - {}).should == @hash
+  end 
+
+  it "should return an equivalent hash if the second hash is nil." do
+    (@hash - nil).should == @hash
+  end 
+  
+  it "should return an empty hash if the first hash is empty, independent of the second hash." do
+    ({} - @hash).should be_empty
+  end 
+
+  it "should return a hash with all keys in the second hash removed, independent of the corresponding values, if no block is given." do
+    hash2 = {:b =>:b3, :c => 'c', :d => 'd'}
+    (@hash - hash2).should == {:a => ['a1', 'a2']}
+  end 
+
+  it "should return a hash with the values subtraced for partially-overlapping keys as specified by a given block." do
+    hash2 = {:b =>:b2, :c => @cc2, :d => 'd'}
+    @hash.minus(hash2) do |value1, value2| 
+      Set.new(make_array(value1)) - Set.new(make_array(value2))
+    end.should == {:a => Set.new(['a1', 'a2']), :b => Set.new([:b1]), :c => Set.new([@c1])}
+  end 
+
+  it "should be not associative." do
+    hash1 = {:a => :a1, :b =>:b1, :c => :c1, :d => :d1}
+    hash2 = {:b =>:b3, :c => 'c'}
+    hash3 = {:a =>:a4, :c => 'c'}
+    ((hash1 - hash2) - hash3).should == {:d => :d1}
+    (hash1 - (hash2 - hash3)).should == {:a => :a1, :c => :c1, :d => :d1}
+  end 
+end
+
+describe Hash, "#minus" do
+  it_should_behave_like "subtraction of hashes"
+end
+
+describe Hash, "#-" do
+  it_should_behave_like "subtraction of hashes"
+
+  it "should support operator-style semantics" do
+    hash1 = {:a => :a1, :b =>:b1, :c => :c1, :d => :d1}
+    hash2 = {:b =>:b3, :c => 'c'}
+    hash3 = {:a =>:a4, :c => 'c'}
+    ((hash1 - hash2) - hash3).should == {:d => :d1}
+    (hash1 - (hash2 - hash3)).should == {:a => :a1, :c => :c1, :d => :d1}
+  end 
 end
 
 describe Hash, "#eql_when_keys_compared?" do

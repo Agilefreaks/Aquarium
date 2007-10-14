@@ -11,10 +11,10 @@ module Aquarium
         keys2.each do |key|
           value1 = self[key]
           value2 = other_hash[key]
-          if value1 == value2 or value1.eql?(value2)
-            result[key] = value1
-          elsif block_given?
+          if block_given?
             result[key] = yield value1, value2
+          elsif value1 == value2 or value1.eql?(value2)
+            result[key] = value1
           elsif value1.class == value2.class && value1.respond_to?(:&)
             result[key] = (value1 & value2)
           end
@@ -27,8 +27,8 @@ module Aquarium
 
       # Union of self with a second hash, which returns a new hash. It's different from
       # Hash#merge in that it attempts to merge non-equivalent values for the same key,
-      # if they are of the same type and respond to #| or a block is given that merges the
-      # two values. Otherwise, it behaves like Hash#merge.
+      # using a block, if given, or if they are of the same type and respond to #|, using 
+      # #| to merge the two values. Otherwise, it behaves like Hash#merge.
       def or other_hash
         return self if other_hash.nil?
         result = {}
@@ -36,16 +36,16 @@ module Aquarium
         new_keys.each do |key|
           value1 = self[key]
           value2 = other_hash[key]
-          if value1.nil? and not value2.nil?
+          if block_given?
+            result[key] = yield value1, value2
+          elsif value1.nil? and not value2.nil?
             result[key] = value2
           elsif (not value1.nil?) and value2.nil?
             result[key] = value1
           elsif value1 == value2 or value1.eql?(value2)
             result[key] = value1 
-          elsif block_given?
-            result[key] = yield value1, value2
           elsif value1.class == value2.class && value1.respond_to?(:|)
-            result[key] = value1 | value2
+            result[key] = (value1 | value2)
           else  # Hash#merge behavior
             result[key] = value2
           end
@@ -56,6 +56,34 @@ module Aquarium
       alias :union :or
       alias :| :or
   
+      def minus other_hash
+        result = self.dup
+        return result if other_hash.nil? or other_hash.empty?
+        result.each do |key, value| 
+          if other_hash.include?(key)
+            value1 = self[key]
+            value2 = other_hash[key]
+            if block_given?
+              result[key] = yield value1, value2
+            elsif value2.nil?
+              # do nothing
+            elsif value1 == value2 or value1.eql?(value2)
+              result.delete key
+            elsif value1.class == value2.class && value1.respond_to?(:-)
+              result[key] = (value1 - value2)
+            else  # Hash#merge behavior
+              result.delete key
+            end
+          elsif block_given?
+            # Since the block might change the value's type (e.g., [] => Set...)
+            result[key] = yield result[key], nil
+          end
+        end
+        result
+      end
+
+      alias :- :minus
+
       # It appears that Hash#== uses Object#== (i.e., self.object_id == other.object_id) when
       # comparing hash keys. (Array#== uses the overridden #== for the elements.)
       def eql_when_keys_compared? other
@@ -70,7 +98,7 @@ module Aquarium
         end
         true
       end
-  
+
       def equivalent_key key
         i = keys.index(key)
         i.nil? ? nil : keys[i] 

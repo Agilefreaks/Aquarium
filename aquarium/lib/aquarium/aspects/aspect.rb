@@ -198,7 +198,6 @@ module Aquarium
         advice = @advice.to_proc
         @pointcuts.each do |pointcut|
           interesting_join_points(pointcut).each do |join_point|
-            type_or_object = Aspect.type_or_object_string join_point.type_or_object
             add_advice_framework join_point
             Aquarium::Aspects::Advice.sort_by_priority_order(specified_advice_kinds).reverse.each do |advice_kind|
               advice_chain = Aspect.get_advice_chain join_point.type_or_object, join_point.method_name
@@ -209,7 +208,7 @@ module Aquarium
       end
   
       # Ignore any inserted methods that are part of the aspect implementation,
-      # i.e., those that match the Aspect..aspect_method_prefix.
+      # i.e., those that match the prefix returned by Aspect.aspect_method_prefix.
       def interesting_join_points pointcut
         pointcut.join_points_matched.reject do |join_point| 
           join_point.method_name.to_s =~ /^#{Aspect.aspect_method_prefix}/
@@ -368,45 +367,36 @@ module Aquarium
       end
 
       def self.set_advice_chain type_or_object, method_name, advice_chain
-        Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? 
-          self.set_type_advice_chain(type_or_object, method_name, advice_chain) : 
-          self.set_object_advice_chain(type_or_object, method_name, advice_chain)
+        advice_chain_attr_sym = self.make_advice_chain_attr_sym type_or_object, method_name
+        if Aquarium::Utils::TypeUtils.is_type?(type_or_object)
+          type_or_object.class_eval do
+            class_variable_set advice_chain_attr_sym, advice_chain
+          end
+        else
+          type_or_object.instance_eval do
+            instance_variable_set advice_chain_attr_sym, advice_chain
+          end
+        end
       end
   
       def self.get_advice_chain type_or_object, method_name
-        Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? 
-          self.get_type_advice_chain(type_or_object, method_name) : 
-          self.get_object_advice_chain(type_or_object, method_name)
+        advice_chain_attr_sym = self.make_advice_chain_attr_sym type_or_object, method_name
+        if Aquarium::Utils::TypeUtils.is_type?(type_or_object) 
+          type_or_object.class_eval do
+            class_variable_get advice_chain_attr_sym
+          end
+        else
+          type_or_object.instance_eval do
+            instance_variable_get advice_chain_attr_sym
+          end
+        end
       end
   
-      def self.set_type_advice_chain type_or_object, method_name, advice_chain
-        chain_class_var = ("@@" + self.advice_chain_attr_name(type_or_object, method_name)).intern
-        type_or_object.class_eval do
-          class_variable_set chain_class_var, advice_chain
-        end
-      end
-
-      def self.set_object_advice_chain type_or_object, method_name, advice_chain
-        chain_class_var = ("@" + self.advice_chain_attr_name(type_or_object, method_name)).intern
-        type_or_object.instance_eval do
-          instance_variable_set chain_class_var, advice_chain
-        end
+      def self.make_advice_chain_attr_sym type_or_object, method_name
+        ats = Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? "@@" : "@"
+        chain_class_var = (ats + self.advice_chain_attr_name(type_or_object, method_name)).intern
       end
       
-  
-      def self.get_type_advice_chain type_or_object, method_name
-        chain_class_var = ("@@" + self.advice_chain_attr_name(type_or_object, method_name)).intern
-        type_or_object.class_eval do
-          class_variable_get chain_class_var
-        end
-      end
-  
-      def self.get_object_advice_chain type_or_object, method_name
-        chain_class_var = ("@" + self.advice_chain_attr_name(type_or_object, method_name)).intern
-        type_or_object.instance_eval do
-          instance_variable_get chain_class_var
-        end
-      end
     
       def private_method_defined? type_or_object, method_name
         if Aquarium::Utils::TypeUtils.is_type? type_or_object
@@ -545,10 +535,6 @@ module Aquarium
         end
       end
       
-      def self.type_or_object_string type_or_object
-        Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? "type" : "object"
-      end
-  
       def bad_options message
         raise Aquarium::Utils::InvalidOptions.new("Invalid options given. " + message + " (options: #{@original_options.inspect})")
       end

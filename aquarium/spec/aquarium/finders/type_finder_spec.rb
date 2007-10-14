@@ -157,6 +157,49 @@ describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :
   end
 end
 
+describe Aquarium::Finders::TypeFinder, "#find with :exclude_types" do
+  it "should exclude types specified with a regular expression." do
+    expected_found_types  = [Class, Module, Object]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_types => /^Kernel$/
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched.size.should == 0
+  end
+
+  it "should exclude types specified by name." do
+    expected_found_types  = [Class, Module]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_types => [Kernel, Object]
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched.size.should == 0
+  end
+
+  it "should not add excluded types to the #not_matched result." do
+    expected_found_types  = [Class, Module]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_types => [Kernel, Object]
+    actual.not_matched.size.should == 0
+  end
+
+  it "should be a synonym for :exclude_type." do
+    expected_found_types  = [Class, Module]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_type => [Kernel, Object]
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched.size.should == 0
+  end
+
+  it "should be a synonym for :exclude_names." do
+    expected_found_types  = [Class, Module]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_names => [Kernel, Object]
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched.size.should == 0
+  end
+
+  it "should be a synonym for :exclude_name." do
+    expected_found_types  = [Class, Module]
+    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_name => [Kernel, Object]
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched.size.should == 0
+  end
+end
+  
 describe Aquarium::Finders::TypeFinder, "#find" do
   it "should find types when types given." do
     expected_found_types  = [Outside::Inside1, Outside::Inside2]

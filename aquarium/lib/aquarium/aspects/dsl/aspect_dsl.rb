@@ -59,7 +59,6 @@ module Aquarium
           opts
         end
       end
-      
     end
   end
 end

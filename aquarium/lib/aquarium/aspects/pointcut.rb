@@ -122,6 +122,8 @@ module Aquarium
         @specification[:types]   = Set.new(make_array(options[:types], options[:type]))
         @specification[:objects] = Set.new(make_array(options[:objects], options[:object]))
         @specification[:join_points] = Set.new(make_array(options[:join_points], options[:join_point]))
+        @specification[:exclude_types] = Set.new(make_array(options[:exclude_type], options[:exclude_types]))
+        @specification[:exclude_objects] = Set.new(make_array(options[:exclude_object], options[:exclude_objects]))
         @specification[:default_object] = Set.new(make_array(options[:default_object]))
         use_default_object_if_defined unless (types_given? || objects_given?)
         @specification[:attributes] = Set.new(make_array(options[:attributes], options[:attribute]))
@@ -135,7 +137,10 @@ module Aquarium
       end
       
       def validate_options options
-        knowns = %w[object objects type types join_point join_points method methods attribute attributes method_options attribute_options default_object].map {|x| x.intern}
+        knowns = %w[object objects type types join_point join_points 
+          exclude_object exclude_objects exclude_type exclude_types exclude_join_point exclude_join_points
+          method methods attribute attributes 
+          method_options attribute_options default_object].map {|x| x.intern}
         unknowns = options.keys - knowns
         raise Aquarium::Utils::InvalidOptions.new("Unknown options specified: #{unknowns.inspect}") if unknowns.size > 0
       end
@@ -174,13 +179,20 @@ module Aquarium
         explicit_types, type_regexps_or_names = @specification[:types].partition do |type|
           Aquarium::Utils::TypeUtils.is_type? type
         end
-        @candidate_types = Aquarium::Finders::TypeFinder.new.find :types => type_regexps_or_names
-        @candidate_types.append_matched(make_hash(explicit_types) {|x| Set.new([])})  # Append already-known types
+        excluded_explicit_types, excluded_type_regexps_or_names = @specification[:exclude_types].partition do |type|
+          Aquarium::Utils::TypeUtils.is_type? type
+        end
+        possible_types = Aquarium::Finders::TypeFinder.new.find :types => type_regexps_or_names, :exclude_types => excluded_type_regexps_or_names
+        possible_types.append_matched(make_hash(explicit_types) {|x| Set.new([])})
+        @candidate_types = possible_types - Aquarium::Finders::TypeFinder.new.find(:types => excluded_type_regexps_or_names)
+        @candidate_types.matched.delete_if {|type, value| excluded_explicit_types.include? type}
       end
     
       def init_candidate_objects
         object_hash = {}
-        @specification[:objects].each {|o| object_hash[o] = Set.new([])}
+        (@specification[:objects].flatten - @specification[:exclude_objects].flatten).each do |o|
+          object_hash[o] = Set.new([])
+        end
         @candidate_objects = Aquarium::Finders::FinderResult.new object_hash
       end
       

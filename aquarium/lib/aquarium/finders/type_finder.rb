@@ -1,6 +1,7 @@
 require 'set'
 require File.dirname(__FILE__) + '/../utils/array_utils'
 require File.dirname(__FILE__) + '/../utils/invalid_options'
+require File.dirname(__FILE__) + '/../extensions/hash'
 require File.dirname(__FILE__) + '/../extensions/regexp'
 require File.dirname(__FILE__) + '/../extensions/symbol'
 require File.dirname(__FILE__) + '/finder_result'
@@ -27,6 +28,13 @@ module Aquarium
       # <tt>:name => type_or_type_name_or_regexp</tt>::
       #   Sugar for specifying one type name.
       #
+      # <tt>:exclude_type  => type_or_type_name_or_regexp</tt>::
+      # <tt>:exclude_types => type_or_type_name_or_regexp</tt>::
+      # <tt>:exclude_name  => type_or_type_name_or_regexp</tt>::
+      # <tt>:exclude_names => type_or_type_name_or_regexp</tt>::
+      #   Exclude matching types from the list. These excluded types <b>won't</b> appear
+      #   in the FinderResult#not_matched.
+      #
       # Actually, there is actually no difference between <tt>:types</tt>, 
       # <tt>:type</tt>, <tt>:names</tt>, and <tt>:name</tt>. The extra forms are "sugar"...
       #
@@ -50,18 +58,23 @@ module Aquarium
       #   the whole name between the "::" exactly.
       #
       def find options = {}
-        result = Aquarium::Finders::FinderResult.new
+        result   = Aquarium::Finders::FinderResult.new
+        excluded = Aquarium::Finders::FinderResult.new
         unknown_options = []
         options.each do |option, value|
-          case option.to_s
-          when "names", "types", "name", "type" 
-            result << find_all_by(value)
-          else
+          unless TypeFinder.is_recognized_option option
             unknown_options << option
+            next
+          end
+
+          if option.to_s =~ /^exclude_/
+            excluded << find_all_by(value)
+          else
+            result << find_all_by(value)
           end
         end
         raise Aquarium::Utils::InvalidOptions.new("Unknown options: #{unknown_options.inspect}.") if unknown_options.size > 0
-        result
+        result - excluded
       end
   
       # For a name (not a regular expression), return the corresponding type.
@@ -83,6 +96,25 @@ module Aquarium
   
       def find_all_by regexpes_or_names
         raise Aquarium::Utils::InvalidOptions.new("Input type(s) can't be nil!") if regexpes_or_names.nil?
+        find_matching regexpes_or_names
+      end
+
+      def self.is_recognized_option option_or_symbol
+        %w[name names type types exclude_type exclude_types exclude_name exclude_names].include? option_or_symbol.to_s
+      end
+  
+      private
+  
+      def strip expression
+        return nil if expression.nil? 
+        expression.respond_to?(:strip) ? expression.strip : expression
+      end
+  
+      def empty expression
+        expression.nil? || (expression.respond_to?(:empty?) && expression.empty?)
+      end
+  
+      def find_matching regexpes_or_names
         result = Aquarium::Finders::FinderResult.new
         expressions = make_array regexpes_or_names
         expressions.each do |expression|
@@ -97,21 +129,6 @@ module Aquarium
         result
       end
 
-      def self.is_recognized_option option_or_symbol
-        %w[name names type types].include? option_or_symbol.to_s
-      end
-  
-      private
-  
-      def strip expression
-        return nil if expression.nil? 
-        expression.respond_to?(:strip) ? expression.strip : expression
-      end
-  
-      def empty expression
-        expression.nil? || (expression.respond_to?(:empty?) && expression.empty?)
-      end
-  
       def find_namespace_matched expression
         expr = expression.kind_of?(Regexp) ? expression.source : expression.to_s
         return nil if expr.empty?

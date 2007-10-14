@@ -13,7 +13,7 @@ describe Aquarium::Finders::FinderResult, "#initialize" do
     result = Aquarium::Finders::FinderResult.new
     result.matched.should == {}
     result.not_matched.should == {}
-    result.empty?.should be_true
+    result.should be_empty
   end
   
   it "should accept a value for the :not_matched parameter and convert it into a hash with the input value as the key and an empty set as the corresponding value" do
@@ -158,14 +158,14 @@ describe "union of finder results", :shared => true do
     result1 = Aquarium::Finders::FinderResult.new
     result2 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
     result = result1.or result2
-    result.should eql(result2)
+    result.should be_eql(result2)
   end
   
   it "should return a FinderResult equal to the first, non-empty FinderResult if the second FinderResult is empty." do
     result1 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
     result2 = Aquarium::Finders::FinderResult.new
     result = result1.or result2
-    result.should eql(result1)
+    result.should be_eql(result1)
   end
   
   it "should return a FinderResult that is the union of self and the second FinderResult." do
@@ -180,8 +180,8 @@ describe "union of finder results", :shared => true do
     result1 = Aquarium::Finders::FinderResult.new :not_matched => {:b => 'b', :c => 'c'}, :a => [:a1, :a2]
     result2 = Aquarium::Finders::FinderResult.new :not_matched => {:b => 'b', :c => 'c'}, :a => [:a1, :a2]
     result = result1.or result2
-    result.should eql(result1)
-    result.should eql(result2)
+    result.should be_eql(result1)
+    result.should be_eql(result2)
   end    
 
   it "should be commutative." do
@@ -189,7 +189,7 @@ describe "union of finder results", :shared => true do
     result2 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
     result12 = result1.or result2
     result21 = result2.or result1
-    result12.should eql(result21)
+    result12.should be_eql(result21)
   end    
 
   it "should be associative." do
@@ -198,7 +198,7 @@ describe "union of finder results", :shared => true do
     result3 = Aquarium::Finders::FinderResult.new :c => [:c1, :c2]
     result123a = (result1.or result2).or result3
     result123b = result1.or(result2.or(result3))
-    result123a.should eql(result123b)
+    result123a.should be_eql(result123b)
   end    
 end
 
@@ -208,20 +208,32 @@ end
 describe Aquarium::Finders::FinderResult, "#or" do
   it_should_behave_like "union of finder results"
 end
+describe Aquarium::Finders::FinderResult, "#|" do
+  it_should_behave_like "union of finder results"
+
+  it "should support operator-style semantics" do
+    result1 = Aquarium::Finders::FinderResult.new :not_matched => {:b => 'b', :c => 'c'}, :a => [:a1, :a2]
+    result2 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
+    result3 = Aquarium::Finders::FinderResult.new :c => [:c1, :c2]
+    result123a = (result1 | result2) | result3
+    result123b = result1 | (result2 | result3)
+    result123a.should be_eql(result123b)
+  end    
+end
 
 describe "intersection of finder results", :shared => true do
   it "should return an empty FinderResult if self is empty." do
     result1 = Aquarium::Finders::FinderResult.new
     result2 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
     result = result1.and result2
-    result.should eql(result1)
+    result.should be_eql(result1)
   end
   
   it "should return an empty FinderResult if the second FinderResult is empty." do
     result1 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
     result2 = Aquarium::Finders::FinderResult.new
     result = result1.and result2
-    result.should eql(result2)
+    result.should be_eql(result2)
   end
   
   it "should return an empty FinderResult if there is no overlap between the two FinderResults." do
@@ -244,8 +256,8 @@ describe "intersection of finder results", :shared => true do
     result1 = Aquarium::Finders::FinderResult.new :not_matched => {:b => 'b', :c => 'c'}, :a => [:a1, :a2]
     result2 = Aquarium::Finders::FinderResult.new :not_matched => {:b => 'b', :c => 'c'}, :a => [:a1, :a2]
     result = result1.and result2
-    result.should eql(result1)
-    result.should eql(result2)
+    result.should be_eql(result1)
+    result.should be_eql(result2)
   end    
 
   it "should be commutative." do
@@ -253,7 +265,7 @@ describe "intersection of finder results", :shared => true do
     result2 = Aquarium::Finders::FinderResult.new :not_matched => {:b => [:b1, :b2]}, :a => [:a1]
     result12 = result1.and result2
     result21 = result2.and result1
-    result12.should eql(result21)
+    result12.should be_eql(result21)
   end    
 
   it "should be associative." do
@@ -262,7 +274,7 @@ describe "intersection of finder results", :shared => true do
     result3 = Aquarium::Finders::FinderResult.new :not_matched => {:b => [:b1]}, :a => [:a1]
     result123a = (result1.and result2).and result3
     result123b = result1.and(result2.and(result3))
-    result123a.should eql(result123b)
+    result123a.should be_eql(result123b)
   end    
 end
 
@@ -272,6 +284,52 @@ end
 describe Aquarium::Finders::FinderResult, "#and" do
   it_should_behave_like "intersection of finder results"
 end
+describe Aquarium::Finders::FinderResult, "#&" do
+  it_should_behave_like "union of finder results"
+
+  it "should support operator-style semantics" do
+    result1 = Aquarium::Finders::FinderResult.new :not_matched => {:b => 'b', :c => 'c'}, :a => [:a1, :a2]
+    result2 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
+    result3 = Aquarium::Finders::FinderResult.new :c => [:c1, :c2]
+    result123a = (result1 & result2) & result3
+    result123b = result1 & (result2 & result3)
+    result123a.should be_eql(result123b)
+  end    
+end
+
+
+describe "subtraction of finder results", :shared => true do
+  it "should return an empty FinderResult if self is substracted from itself." do
+    result = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
+    (result - result).should be_empty
+  end
+
+  it "should not be associative" do
+    result1 = Aquarium::Finders::FinderResult.new :a => [:a1, :a2], :b => [:b1, :b2], :not_matched => {:c => [:c1, :c2]}
+    result2 = Aquarium::Finders::FinderResult.new :a => [:a1]
+    result3 = Aquarium::Finders::FinderResult.new :not_matched => {:c => [:c1]}
+    result123a = (result1 - result2) - result3
+    result123b = result1 - (result2 - result3)
+    result123a.should_not be_eql(result123b)
+  end    
+end
+
+describe Aquarium::Finders::FinderResult, "#minus" do
+  it_should_behave_like "subtraction of finder results"
+end
+describe Aquarium::Finders::FinderResult, "#-" do
+  it_should_behave_like "subtraction of finder results"
+
+  it "should support operator-style semantics" do
+    result1 = Aquarium::Finders::FinderResult.new :a => [:a1, :a2], :b => [:b1, :b2], :not_matched => {:c => [:c1, :c2]}
+    result2 = Aquarium::Finders::FinderResult.new :b => [:b1]
+    result3 = Aquarium::Finders::FinderResult.new :not_matched => {:c => [:c1]}
+    result123a = (result1 - result2) - result3
+    result123b = result1 - (result2 - result3)
+    result123a.should_not be_eql(result123b)
+  end    
+end
+
 
 describe Aquarium::Finders::FinderResult, "#.append_matched" do
   it "should not change self, if no arguments are specified." do
@@ -328,7 +386,7 @@ describe "equality", :shared => true do
   it "should return true for two default objects." do
     result1 = Aquarium::Finders::FinderResult.new
     result2 = Aquarium::Finders::FinderResult.new
-    result1.should eql(result2)
+    result1.should be_eql(result2)
   end
 
   it "should return false for two different objects that are equal and map to the same method." do
@@ -340,7 +398,7 @@ describe "equality", :shared => true do
   it "should return true if a key has a single value that equals the value in a 1-element array for the same key in the other FinderResult." do
     result1 = Aquarium::Finders::FinderResult.new :a => 'a',   :not_matched => {:b => 'b'}
     result2 = Aquarium::Finders::FinderResult.new :a => ['a'], :not_matched => {:b => ['b']}
-    result1.should eql(result2)
+    result1.should be_eql(result2)
   end
 
   it "should return false for two objects that are different." do

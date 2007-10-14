@@ -31,7 +31,7 @@ end
 
 # :startdoc:
 
-def common_before
+def before_method_finder_specbefore
   @test_classes = [
     ClassWithPublicInstanceMethod, 
     ClassWithProtectedInstanceMethod, 
@@ -51,7 +51,7 @@ end
 
 describe Aquarium::Finders::MethodFinder, "#find (synonymous input parameters)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should accept options :types and :type, which are synonymous." do
@@ -76,7 +76,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (invalid input parameters)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should raise if unrecognized option specified." do
@@ -93,7 +93,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (input parameters that yield empty results)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should return empty FinderResult#matched and FinderResult#not_matched hashes by default." do
@@ -123,7 +123,7 @@ end
 
 describe Aquarium::Finders::MethodFinder, "#find (input parameters specify no methods)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should return an empty FinderResult#matched hash and a FinderResult#not_matched hash with the specified objects if no methods are specified." do
@@ -162,7 +162,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (input parameters specify method regular expressions that match nothing)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should find no methods when searching with one type and with a regexp matching no methods." do
@@ -181,7 +181,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (input parameters specify method names that match nothing)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
     
   it "should find no methods when searching with a type and with a literal name matching no methods." do
@@ -200,7 +200,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (behavior for derived classes)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
     
   it "should find Base and Derived methods in the specified class, by default." do
@@ -232,7 +232,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should find all class methods matching a regular expression for types when :class is used." do
@@ -268,7 +268,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (searching for instance methods)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should find all public instance methods in types when searching with the :all method specification." do
@@ -374,7 +374,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (format of results)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should return found methods for a type as symbols." do
@@ -393,7 +393,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :methods => :all)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should accept :all for the methods argument and find all methods for a type subject to the method options." do
@@ -432,7 +432,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => :suppress_ancestor_methods)" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
   
   it "should suppress ancestor methods for types when :suppress_ancestor_methods is specified." do
@@ -460,7 +460,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :instance])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find only public instance methods for types when :public, and :instance are specified." do
@@ -488,7 +488,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:protected, :instance])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find only protected instance methods when :protected, and :instance are specified." do
@@ -516,7 +516,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:private, :instance])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find only private instance methods when :private, and :instance are specified." do
@@ -544,7 +544,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :class])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find only public class methods for types when :public, and :class are specified." do
@@ -572,7 +572,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:private, :class])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find only private class methods for types when :private, and :class are specified." do
@@ -600,7 +600,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :protected, :instance])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find public and protected instance methods for types when :public, :protected, and :instance are specified." do
@@ -628,7 +628,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :;private, :instance])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find public and private instance methods when :public, :private, and :instance are specified." do
@@ -656,7 +656,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:protected, :private, :instance])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find protected and private instance methods when :protected, :private, and :instance are specified." do
@@ -684,7 +684,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :class, :instance])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find public class and instance methods for types when :public, :class, and :instance are specified." do
@@ -712,7 +712,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :protected, :class, :instance])" do
   before(:each) do
-    common_before
+    before_method_finder_specbefore
   end
 
   it "should find public and protected instance methods when :public, :protected, :class, and :instance are specified." do

@@ -57,6 +57,7 @@ module Aquarium
       end
   
       alias :union :or
+      alias :| :or
   
       # "And" two results together
       def and other_result
@@ -67,7 +68,17 @@ module Aquarium
       end
   
       alias :intersection :and
+      alias :& :and
   
+      def minus other_result
+        result = FinderResult.new
+        result.matched     = matched     - other_result.matched
+        result.not_matched = not_matched - other_result.not_matched
+        result
+      end
+      
+      alias :- :minus
+
       def append_matched other_hash = {}
         @matched = convert_hash_values_to_sets hash_union(matched, other_hash)
       end
