@@ -48,11 +48,11 @@ module Aquarium
       # <tt>:method  => method || [method_list]</tt>::
       #   One or an array of methods, method names and/or method regular expessions to match. 
       #   By default, unless :attributes are specified, searches for public instance methods
-      #   with the method option :suppress_ancestor_methods implied, unless explicit method 
+      #   with the method option :exclude_ancestor_methods implied, unless explicit method 
       #   options are given.
       #
       # <tt>:method_options => [options]</tt>::
-      #   One or more options supported by Aquarium::Finders::MethodFinder. The :suppress_ancestor_methods
+      #   One or more options supported by Aquarium::Finders::MethodFinder. The :exclude_ancestor_methods
       #   option is most useful.
       #
       # <tt>:attributes => attribute || [attribute_list]</tt>::
@@ -124,6 +124,8 @@ module Aquarium
         @specification[:join_points] = Set.new(make_array(options[:join_points], options[:join_point]))
         @specification[:exclude_types] = Set.new(make_array(options[:exclude_type], options[:exclude_types]))
         @specification[:exclude_objects] = Set.new(make_array(options[:exclude_object], options[:exclude_objects]))
+        @specification[:exclude_join_points] = Set.new(make_array(options[:exclude_join_point], options[:exclude_join_points]))
+        @specification[:exclude_methods] = Set.new(make_array(options[:exclude_method], options[:exclude_methods]))
         @specification[:default_object] = Set.new(make_array(options[:default_object]))
         use_default_object_if_defined unless (types_given? || objects_given?)
         @specification[:attributes] = Set.new(make_array(options[:attributes], options[:attribute]))
@@ -138,7 +140,7 @@ module Aquarium
       
       def validate_options options
         knowns = %w[object objects type types join_point join_points 
-          exclude_object exclude_objects exclude_type exclude_types exclude_join_point exclude_join_points
+          exclude_object exclude_objects exclude_type exclude_types exclude_join_point exclude_join_points exclude_method exclude_methods
           method methods attribute attributes 
           method_options attribute_options default_object].map {|x| x.intern}
         unknowns = options.keys - knowns
@@ -169,6 +171,18 @@ module Aquarium
   
           def #{name}_given?
             not (#{name}_given.nil? or #{name}_given.empty?)
+          end
+        EOF
+      end
+
+      %w[types objects join_points methods].each do |name|
+        class_eval(<<-EOF, __FILE__, __LINE__)
+          def exclude_#{name}_given
+            @specification[:exclude_#{name}]
+          end
+  
+          def exclude_#{name}_given?
+            not (exclude_#{name}_given.nil? or exclude_#{name}_given.empty?)
           end
         EOF
       end
@@ -216,7 +230,9 @@ module Aquarium
       end
 
       def add_join_points_for_candidate_join_points 
-        @join_points_matched     += @candidate_join_points.matched.keys
+        @join_points_matched += @candidate_join_points.matched.keys.find_all do |jp|
+          not (is_excluded_join_point?(jp) or is_excluded_type_or_object?(jp.type_or_object) or is_excluded_method?(jp.method_name))
+        end
         @join_points_not_matched += @candidate_join_points.not_matched.keys
       end
       
@@ -228,8 +244,9 @@ module Aquarium
       def find_methods_for type_or_object_sym, candidates, which_methods
         return Aquarium::Finders::FinderResult::NIL_OBJECT if candidates.matched.size == 0
         Aquarium::Finders::MethodFinder.new.find type_or_object_sym => candidates.matched_keys, 
-                              :methods => which_methods, 
-                              :options => @specification[:method_options].to_a
+              :methods => which_methods, 
+              :exclude_methods => @specification[:exclude_methods], 
+              :options => @specification[:method_options].to_a
       end
 
       def add_join_points search_results, type_or_object_sym
@@ -250,9 +267,41 @@ module Aquarium
       end
 
       def make_all_method_names
-        @specification[:methods] + Pointcut.make_attribute_method_names(@specification[:attributes], @specification[:attribute_options])
+        @specification[:methods] +
+          Pointcut.make_attribute_method_names(@specification[:attributes], @specification[:attribute_options]) -
+          @specification[:exclude_methods]
       end
   
+      def is_excluded_join_point? jp
+        @specification[:exclude_join_points].include? jp
+      end
+      
+      def is_excluded_type_or_object? type_or_object
+        return true if @specification[:exclude_objects].include?(type_or_object)
+        @specification[:exclude_types].find do |t|
+          case t
+          when String: type_or_object.name.eql?(t)
+          when Symbol: type_or_object.name.eql?(t.to_s)
+          when Regexp: type_or_object.name =~ t
+          else         type_or_object == t
+          end
+        end
+      end
+       
+      def is_excluded_method? method
+        is_explicitly_excluded_method?(method) or matches_excluded_method_regex?(method)
+      end
+      
+      def is_explicitly_excluded_method? method
+        @specification[:exclude_methods].include? method
+      end
+      
+      def matches_excluded_method_regex? method
+        regexs = @specification[:exclude_methods].find_all {|s| s.kind_of? Regexp}
+        return false if regexs.empty?
+        regexs.find {|re| method.to_s =~ re}          
+      end
+      
       def self.make_attribute_readers attributes
         readers = attributes.map do |regexp_or_name|
           if regexp_or_name.kind_of? Regexp

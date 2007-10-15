@@ -56,7 +56,7 @@ describe "An example with advice on the public instance methods (excluding ances
   it "should trace all calls to the public methods defined by Foo" do
     # The "begin/ensure/end" idiom shown causes the advice to return the correct value; the result
     # of the "proceed", rather than the value returned by "p"!
-    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Foo, :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Foo, :methods => :all, :method_options => :exclude_ancestor_methods do |execution_point, *args|
       begin
         o = execution_point.context.advised_object
         o.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
@@ -79,7 +79,7 @@ end
 
 describe "An example with advice on the public instance methods (excluding ancestor methods) of Bar" do
   it "should not trace any calls to the public methods defined by the included BarModule" do
-    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Bar, :methods => :all, :method_options => :suppress_ancestor_methods do |execution_point, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Bar, :methods => :all, :method_options => :exclude_ancestor_methods do |execution_point, *args|
       begin
         o = execution_point.context.advised_object
         o.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"

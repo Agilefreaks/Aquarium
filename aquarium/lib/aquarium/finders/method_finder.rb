@@ -1,6 +1,7 @@
 require 'set'
 require File.dirname(__FILE__) + '/../utils/array_utils'
 require File.dirname(__FILE__) + '/../utils/invalid_options'
+require File.dirname(__FILE__) + '/../utils/type_utils'
 require File.dirname(__FILE__) + '/finder_result'
 
 # Find methods and types and objects.
@@ -34,6 +35,11 @@ module Aquarium
       #   One or more method names and regular expressions to match.
       #   Specify one or an array of values.
       #
+      # <tt>:exclude_methods => method_names_and_regexps</tt>::
+      # <tt>:exclude_method  => method_names_and_regexps</tt>::
+      #   One or more method names and regular expressions to exclude from the match.
+      #   Specify one or an array of values.
+      #
       # <tt>:options => method_options</tt>::
       #   By default, searches for public instance methods. Specify one or more
       #   of the following options for alternatives. You can combine any of the
@@ -48,30 +54,38 @@ module Aquarium
       # <tt>:singleton</tt>:: Search for singleton methods. (Using :class for objects 
       # won't work and :class, :public, :protected, and :private are ignored when 
       # looking for singleton methods.)
-      # <tt>:suppress_ancestor_methods</tt>:: Suppress "ancestor" methods. This
+      # <tt>:exclude_ancestor_methods</tt>:: Suppress "ancestor" methods. This
       # means that if you search for a override method +foo+ in a
       # +Derived+ class that is defined in the +Base+ class, you won't find it!
       #
       def find options = {}
         init_specification options
+        return Aquarium::Finders::FinderResult.new if nothing_to_find?
         types_and_objects = input_types + input_objects
-        return Aquarium::Finders::FinderResult.new if types_and_objects.empty? 
         method_names_or_regexps = input_methods
         if method_names_or_regexps.empty?
           not_matched = {}
           types_and_objects.each {|t| not_matched[t] = []}
           return Aquarium::Finders::FinderResult.new(:not_matched => not_matched)
         end
-        method_options = make_array options[:options]
-        find_all_by types_and_objects, method_names_or_regexps, method_options
+        result = do_find_all_by types_and_objects, method_names_or_regexps
+        unless (input_exclude_methods.nil? or input_exclude_methods.empty?)
+          result -= do_find_all_by types_and_objects, input_exclude_methods
+        end
+        result
       end
   
       # finder_result = MethodFinder.new.find_all_by types_and_objects, [methods, [options]]
       # where if no +methods+ are specified, all are returned, subject to the +options+,
       # as in #find.
+      # Note: Does not support the :exclude_method(s) options.
       def find_all_by types_and_objects, method_names_or_regexps = :all, *scope_options
-        return Aquarium::Finders::FinderResult.new if types_and_objects.nil? 
-        @specification = make_options_hash scope_options
+        return Aquarium::Finders::FinderResult.new if types_and_objects.nil?
+        @specification = { :options => init_method_options(scope_options) }
+        do_find_all_by types_and_objects, method_names_or_regexps
+      end
+      
+      def do_find_all_by types_and_objects, method_names_or_regexps
         types_and_objects = make_array types_and_objects
         names_or_regexps  = make_methods_array method_names_or_regexps
         types_and_objects_to_matched_methods = {}
@@ -84,7 +98,7 @@ module Aquarium
             reflection_method_names.each do |reflect|
               method_array += reflect_methods(type_or_object, reflect).grep(make_regexp(name_or_regexp))
             end
-            if @specification[:suppress_ancestor_methods]
+            if exclude_ancestor_methods?
               method_array = remove_ancestor_methods type_or_object, reflection_method_names, method_array
             end
             found_methods += method_array
@@ -99,18 +113,25 @@ module Aquarium
       end
   
       NIL_OBJECT = MethodFinder.new unless const_defined?(:NIL_OBJECT)
+
+      RECOGNIZED_METHOD_OPTIONS = %w[public private protected 
+                instance class exclude_ancestor_methods exclude_ancestor_methods]
   
       def self.is_recognized_method_option string_or_symbol
-        %w[public private protected 
-           instance class suppress_ancestor_methods].include? string_or_symbol.to_s 
+        RECOGNIZED_METHOD_OPTIONS.include? string_or_symbol.to_s 
       end
   
       protected
   
       def init_specification options
-        options[:options] = make_array(options[:options]) unless options[:options].nil?
+        options[:options] = init_method_options(options[:options])
         validate options
         @specification = options
+      end
+      
+      def nothing_to_find? 
+        types_and_objects = input_types + input_objects
+        types_and_objects.nil? or types_and_objects.empty? or input_exclude_methods.include?(:all)
       end
       
       def input_types
@@ -125,6 +146,14 @@ module Aquarium
         make_array @specification[:methods], @specification[:method]
       end
   
+      def input_exclude_methods
+        make_array @specification[:exclude_methods], @specification[:exclude_method]
+      end
+  
+      def exclude_ancestor_methods?
+        @specification[:options].include?(:exclude_ancestor_methods) or @specification[:options].include?(:suppress_ancestor_methods)
+      end
+      
       private
   
       def make_methods_array *array_or_single_item
@@ -139,7 +168,7 @@ module Aquarium
   
       def remove_ancestor_methods type_or_object, reflection_method_names, method_array
         type = type_or_object
-        unless (type_or_object.instance_of?(Class) or type_or_object.instance_of?(Module)) 
+        unless (Aquarium::Utils::TypeUtils.is_type? type_or_object) 
           type = type_or_object.class
           # Must recalc reflect methods if we've switched to the type of the input object.
           reflection_method_names = make_methods_reflection_method_names type, "methods"
@@ -156,13 +185,10 @@ module Aquarium
         method_array
       end
   
-      def make_options_hash *scope_options
-        return {} if scope_options.nil?
-        options = {}
-        scope_options.flatten.each {|o| options[o] = '' unless o.nil?}
-        unless options[:class] || options[:instance] || options[:singleton]
-          options[:instance] = ''
-        end
+      def init_method_options *scope_options
+        return [] if scope_options.nil?
+        options = scope_options.flatten
+        options << :instance unless options.include?(:class) or options.include?(:instance) or options.include?(:singleton)
         options
       end
   
@@ -170,7 +196,7 @@ module Aquarium
         is_type = Aquarium::Utils::TypeUtils.is_type?(type_or_object)
         scope_prefixes = []
         class_instance_prefixes = []
-        @specification.each do |opt, value|
+        @specification[:options].each do |opt, value|
           opt_string = opt.to_s
           case opt_string
           when "public", "private", "protected" 
@@ -211,7 +237,7 @@ module Aquarium
       end
   
       def validate options
-        allowed = %w[type types object objects method methods options class instance public private protected suppress_ancestor_methods].map {|x| x.intern}
+        allowed = (%w[type types object objects method methods exclude_method exclude_methods options] + RECOGNIZED_METHOD_OPTIONS).map {|x| x.intern}
         okay, bad = options.keys.partition {|x| allowed.include?(x)}
         raise Aquarium::Utils::InvalidOptions.new("Unrecognized option(s): #{bad.inspect}") unless bad.empty?
         method_options = options[:options]

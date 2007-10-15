@@ -39,7 +39,7 @@ bar1.do_something_else :b3, :b4
 include Aquarium::Aspects
 
 Aspect.new :around, :types => [Aquarium::Foo, Aquarium::Bar], :methods => :all, 
-    :method_options => :suppress_ancestor_methods do |execution_point, *args|
+    :method_options => :exclude_ancestor_methods do |execution_point, *args|
   begin
     p "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
     execution_point.proceed

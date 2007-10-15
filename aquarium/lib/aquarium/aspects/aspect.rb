@@ -89,11 +89,11 @@ module Aquarium
       # <tt>:within_methods => method || [method_list]</tt>::
       #   One or an array of methods, method names and/or method regular expessions to match. 
       #   By default, unless :attributes are specified, searches for public instance methods
-      #   with the method option :suppress_ancestor_methods implied, unless explicit method 
+      #   with the method option :exclude_ancestor_methods implied, unless explicit method 
       #   options are given.
       #
       # <tt>:method_options => [options]</tt>::
-      #   One or more options supported by Aquarium::Finders::MethodFinder. Defaults to :suppress_ancestor_methods
+      #   One or more options supported by Aquarium::Finders::MethodFinder. Defaults to :exclude_ancestor_methods
       #
       # <tt>:attributes => attribute || [attribute_list]</tt>::
       # <tt>:attribute  => attribute || [attribute_list]</tt>::

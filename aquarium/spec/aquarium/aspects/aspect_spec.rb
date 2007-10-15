@@ -416,27 +416,27 @@ describe Aspect, "#new modifications to the list of methods for the advised obje
   
   it "should not include new public instance or class methods for the advised type." do
     all_public_methods_before = all_public_methods_of_type Watchful
-    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :method_options => :suppress_ancestor_methods}, :advice => @advice 
+    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice 
     (all_public_methods_of_type(Watchful) - all_public_methods_before).should == []
   end
 
   it "should not include new protected instance or class methods for the advised type." do
     all_protected_methods_before = all_protected_methods_of_type Watchful
-    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :method_options => :suppress_ancestor_methods}, :advice => @advice  
+    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice  
     (all_protected_methods_of_type(Watchful) - all_protected_methods_before).should == []
   end
 
   it "should not include new public methods for the advised object." do
     watchful = Watchful.new
     all_public_methods_before = all_public_methods_of_object Watchful
-    @aspect = Aspect.new :after, :pointcut => {:object => watchful, :method_options => :suppress_ancestor_methods}, :advice => @advice  
+    @aspect = Aspect.new :after, :pointcut => {:object => watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice  
     (all_public_methods_of_object(Watchful) - all_public_methods_before).should == []
   end
 
   it "should not include new protected methods for the advised object." do
     watchful = Watchful.new
     all_protected_methods_before = all_protected_methods_of_object Watchful
-    @aspect = Aspect.new :after, :pointcut => {:object => watchful, :method_options => :suppress_ancestor_methods}, :advice => @advice  
+    @aspect = Aspect.new :after, :pointcut => {:object => watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice  
     (all_protected_methods_of_object(Watchful) - all_protected_methods_before).should == []
   end
 end
@@ -1005,7 +1005,7 @@ describe Aspect, "#unadvise" do
     
   it "should remove all advice added by the aspect." do
     advice_called = false
-    aspect = Aspect.new(:after, :pointcut => {:type => Watchful, :method_options => :suppress_ancestor_methods}) {|jp, *args| advice_called = true}
+    aspect = Aspect.new(:after, :pointcut => {:type => Watchful, :method_options => :exclude_ancestor_methods}) {|jp, *args| advice_called = true}
     aspect.unadvise
     watchful = Watchful.new
 
@@ -1023,7 +1023,7 @@ describe Aspect, "#unadvise" do
       def bar; end
     end
     before = Foo.private_instance_methods.sort
-    aspect = Aspect.new(:after, :pointcut => {:type => Foo, :method_options => :suppress_ancestor_methods}) {|jp, *args| true}
+    aspect = Aspect.new(:after, :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, *args| true}
     after  = Foo.private_instance_methods
     (after - before).should_not == []
     aspect.unadvise

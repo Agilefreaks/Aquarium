@@ -31,7 +31,7 @@ end
 
 # :startdoc:
 
-def before_method_finder_specbefore
+def before_method_finder_spec
   @test_classes = [
     ClassWithPublicInstanceMethod, 
     ClassWithProtectedInstanceMethod, 
@@ -51,7 +51,7 @@ end
 
 describe Aquarium::Finders::MethodFinder, "#find (synonymous input parameters)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should accept options :types and :type, which are synonymous." do
@@ -76,7 +76,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (invalid input parameters)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should raise if unrecognized option specified." do
@@ -93,7 +93,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (input parameters that yield empty results)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should return empty FinderResult#matched and FinderResult#not_matched hashes by default." do
@@ -123,7 +123,7 @@ end
 
 describe Aquarium::Finders::MethodFinder, "#find (input parameters specify no methods)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should return an empty FinderResult#matched hash and a FinderResult#not_matched hash with the specified objects if no methods are specified." do
@@ -162,7 +162,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (input parameters specify method regular expressions that match nothing)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should find no methods when searching with one type and with a regexp matching no methods." do
@@ -181,7 +181,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (input parameters specify method names that match nothing)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
     
   it "should find no methods when searching with a type and with a literal name matching no methods." do
@@ -200,7 +200,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (behavior for derived classes)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
     
   it "should find Base and Derived methods in the specified class, by default." do
@@ -217,14 +217,14 @@ describe Aquarium::Finders::MethodFinder, "#find (behavior for derived classes)"
   end
    
   it "should find Derived methods only for a type when ancestor methods are suppressed, which also suppresses method overrides." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :options => [:suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :options => [:exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[Derived].should == Set.new([:mderived1, :mmodule3])
   end
 
   it "should find Derived methods only for an object when ancestor methods are suppressed, which also suppresses method overrides." do
     child = Derived.new
-    actual = Aquarium::Finders::MethodFinder.new.find :object => child, :methods => [/^mder/, /^mmodule/], :options => [:suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :object => child, :methods => [/^mder/, /^mmodule/], :options => [:exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[child].should == Set.new([:mderived1, :mmodule3])
   end
@@ -232,7 +232,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should find all class methods matching a regular expression for types when :class is used." do
@@ -257,8 +257,8 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
     actual.matched[ClassWithPrivateClassMethod].should == Set.new(ClassWithPrivateClassMethod.public_methods.sort.map{|m| m.intern})
   end
   
-  it "should find all public class methods in types, but not ancestors, when searching with the :all method specification and the :class and :suppress_ancestor_methods options." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all, :options => [:class, :suppress_ancestor_methods]
+  it "should find all public class methods in types, but not ancestors, when searching with the :all method specification and the :class and :exclude_ancestor_methods options." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all, :options => [:class, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.not_matched.size.should == 1
     actual.matched[ClassWithPublicClassMethod].should == Set.new([:public_class_test_method])
@@ -268,7 +268,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (searching for instance methods)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should find all public instance methods in types when searching with the :all method specification." do
@@ -374,7 +374,7 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (format of results)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should return found methods for a type as symbols." do
@@ -393,50 +393,134 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :methods => :all)" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
   
   it "should accept :all for the methods argument and find all methods for a type subject to the method options." do
-    actual = Aquarium::Finders::MethodFinder.new.find :type => ClassWithPublicInstanceMethod, :method => :all, :options => :suppress_ancestor_methods
+    actual = Aquarium::Finders::MethodFinder.new.find :type => ClassWithPublicInstanceMethod, :method => :all, :options => :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
   end
   
   it "should accept :all for the methods argument and find all methods for an object subject to the method options." do
     pub = ClassWithPublicInstanceMethod.new
-    actual = Aquarium::Finders::MethodFinder.new.find :object => pub, :method => :all, :options => :suppress_ancestor_methods
+    actual = Aquarium::Finders::MethodFinder.new.find :object => pub, :method => :all, :options => :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[pub].should == Set.new([:public_instance_test_method])
   end
   
   it "should ignore other method arguments if :all is present." do
-    actual = Aquarium::Finders::MethodFinder.new.find :type => ClassWithPublicInstanceMethod, :method => [:all, :none, /.*foo.*/], :methods =>[/.*bar.*/, /^baz/], :options => :suppress_ancestor_methods
+    actual = Aquarium::Finders::MethodFinder.new.find :type => ClassWithPublicInstanceMethod, :method => [:all, :none, /.*foo.*/], :methods =>[/.*bar.*/, /^baz/], :options => :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
     pub = ClassWithPublicInstanceMethod.new
-    actual = Aquarium::Finders::MethodFinder.new.find :object => pub, :method => [:all, :none, /.*foo.*/], :methods =>[/.*bar.*/, /^baz/], :options => :suppress_ancestor_methods
+    actual = Aquarium::Finders::MethodFinder.new.find :object => pub, :method => [:all, :none, /.*foo.*/], :methods =>[/.*bar.*/, /^baz/], :options => :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[pub].should == Set.new([:public_instance_test_method])
   end
   
-  it "should report [:all] as the not_matched value when :all is the method argument and no methods match, e.g., for :suppress_ancestor_methods." do
-    actual = Aquarium::Finders::MethodFinder.new.find :type => ClassWithPrivateInstanceMethod, :method => :all, :options => :suppress_ancestor_methods
+  it "should report [:all] as the not_matched value when :all is the method argument and no methods match, e.g., for :exclude_ancestor_methods." do
+    actual = Aquarium::Finders::MethodFinder.new.find :type => ClassWithPrivateInstanceMethod, :method => :all, :options => :exclude_ancestor_methods
     actual.matched.size.should == 0
     actual.not_matched[ClassWithPrivateInstanceMethod].should == Set.new([:all])
     pri = ClassWithPrivateInstanceMethod.new
-    actual = Aquarium::Finders::MethodFinder.new.find :object => pri, :method => :all, :options => :suppress_ancestor_methods
+    actual = Aquarium::Finders::MethodFinder.new.find :object => pri, :method => :all, :options => :exclude_ancestor_methods
     actual.matched.size.should == 0
     actual.not_matched[pri].should == Set.new([:all])
   end
 end
   
-describe Aquarium::Finders::MethodFinder, "#find (using :options => :suppress_ancestor_methods)" do
-  before(:each) do
-    before_method_finder_specbefore
+class ExcludeMethodTester
+  def method1; end
+  def method2; end
+  def method3; end
+end
+  
+describe Aquarium::Finders::MethodFinder, "#find for types (using :exclude_methods)" do
+  it "should return an empty result if :exclude_methods => :all specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_methods => :all, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 0
+    actual.not_matched.size.should == 0
   end
   
-  it "should suppress ancestor methods for types when :suppress_ancestor_methods is specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :instance, :suppress_ancestor_methods]
+  it "should remove excluded methods from the result where the excluded methods are specified by name." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_methods => [:method1, :method2], :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[ExcludeMethodTester].size.should == 1
+    actual.matched[ExcludeMethodTester].should == Set.new([:method3])
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should remove excluded methods from the result where the excluded methods are specified by regular expression." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_methods => /meth.*1$/, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[ExcludeMethodTester].size.should == 2
+    actual.matched[ExcludeMethodTester].should == Set.new([:method2, :method3])
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should support :exclude_method as a synonym." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_method => :method1, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[ExcludeMethodTester].size.should == 2
+    actual.matched[ExcludeMethodTester].should == Set.new([:method2, :method3])
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should not add the excluded methods to the #not_matched results." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_methods => /meth.*1$/, :options => :exclude_ancestor_methods
+    actual.not_matched.size.should == 0
+  end
+end
+  
+describe Aquarium::Finders::MethodFinder, "#find for objects (using :exclude_methods)" do
+  it "should return an empty result if :exclude_methods => :all specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :object => ExcludeMethodTester.new, :methods => :all, :exclude_methods => :all, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 0
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should remove excluded methods from the result where the excluded methods are specified by name." do
+    emt = ExcludeMethodTester.new
+    actual = Aquarium::Finders::MethodFinder.new.find :object => emt, :methods => :all, :exclude_methods => [:method1, :method2], :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[emt].size.should == 1
+    actual.matched[emt].should == Set.new([:method3])
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should remove excluded methods from the result where the excluded methods are specified by regular expression." do
+    emt = ExcludeMethodTester.new
+    actual = Aquarium::Finders::MethodFinder.new.find :object => emt, :methods => :all, :exclude_methods => /meth.*1$/, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[emt].size.should == 2
+    actual.matched[emt].should == Set.new([:method2, :method3])
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should support :exclude_method as a synonym." do
+    emt = ExcludeMethodTester.new
+    actual = Aquarium::Finders::MethodFinder.new.find :object => emt, :methods => :all, :exclude_method => :method1, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[emt].size.should == 2
+    actual.matched[emt].should == Set.new([:method2, :method3])
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should not add the excluded methods to the #not_matched results." do
+    actual = Aquarium::Finders::MethodFinder.new.find :object => ExcludeMethodTester.new, :methods => :all, :exclude_methods => /meth.*1$/, :options => :exclude_ancestor_methods
+    actual.not_matched.size.should == 0
+  end
+end
+  
+
+describe Aquarium::Finders::MethodFinder, "#find (using :options => :exclude_ancestor_methods)" do
+  before(:each) do
+    before_method_finder_spec
+  end
+  
+  it "should suppress ancestor methods for types when :exclude_ancestor_methods is specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicInstanceMethod].should    == Set.new([:public_instance_test_method])
     actual.not_matched.size.should == 4
@@ -446,8 +530,8 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => :suppress_an
     actual.not_matched[ClassWithPrivateClassMethod].should      == Set.new([/test_method/])
   end
 
-  it "should suppress ancestor methods for objects when :suppress_ancestor_methods is specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :instance, :suppress_ancestor_methods]
+  it "should suppress ancestor methods for objects when :exclude_ancestor_methods is specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[@pub].should == Set.new([:public_instance_test_method])
     actual.not_matched.size.should == 4
@@ -460,11 +544,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :instance])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find only public instance methods for types when :public, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
     actual.not_matched.size.should == 4
@@ -475,7 +559,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :i
   end
 
   it "should find only public instance methods for objects when :public, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[@pub].should == Set.new([:public_instance_test_method])
     actual.not_matched.size.should == 4
@@ -488,11 +572,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:protected, :instance])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find only protected instance methods when :protected, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:protected, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:protected, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[ClassWithProtectedInstanceMethod].should == Set.new([:protected_instance_test_method])
     actual.not_matched.size.should == 4
@@ -503,7 +587,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:protected,
   end
 
   it "should find only protected instance methods for objects when :protected, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:protected, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:protected, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[@pro].should == Set.new([:protected_instance_test_method])
     actual.not_matched.size.should == 4
@@ -516,11 +600,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:private, :instance])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find only private instance methods when :private, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:private, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:private, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[ClassWithPrivateInstanceMethod].should == Set.new([:private_instance_test_method])
     actual.not_matched.size.should == 4
@@ -531,7 +615,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:private, :
   end
 
   it "should find only private instance methods for objects when :private, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:private, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:private, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[@pri].should == Set.new([:private_instance_test_method])
     actual.not_matched.size.should == 4
@@ -544,11 +628,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :class])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find only public class methods for types when :public, and :class are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :class, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :class, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicClassMethod].should == Set.new([:public_class_test_method])
     actual.not_matched.size.should == 4
@@ -559,7 +643,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :c
   end
 
   it "should find no public class methods for objects when :public, and :class are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :class, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :class, :exclude_ancestor_methods]
     actual.matched.size.should == 0
     actual.not_matched.size.should == 5
     actual.not_matched[@pub].should  == Set.new([/test_method/])
@@ -572,11 +656,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:private, :class])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find only private class methods for types when :private, and :class are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:private, :class, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:private, :class, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[ClassWithPrivateClassMethod].should == Set.new([:private_class_test_method])
     actual.not_matched.size.should == 4
@@ -587,7 +671,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:private, :
   end
 
   it "should find no private class methods for objects when :private, and :class are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:private, :class, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:private, :class, :exclude_ancestor_methods]
     actual.matched.size.should == 0
     actual.not_matched.size.should == 5
     actual.not_matched[@pub].should  == Set.new([/test_method/])
@@ -600,11 +684,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :protected, :instance])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find public and protected instance methods for types when :public, :protected, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :protected, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :protected, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 2
     actual.matched[ClassWithPublicInstanceMethod].should    == Set.new([:public_instance_test_method])
     actual.matched[ClassWithProtectedInstanceMethod].should == Set.new([:protected_instance_test_method])
@@ -615,7 +699,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :p
   end
 
   it "should find public and protected instance methods for objects when :public, :protected, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :protected, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :protected, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 2
     actual.matched[@pub].should == Set.new([:public_instance_test_method])
     actual.matched[@pro].should == Set.new([:protected_instance_test_method])
@@ -628,11 +712,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :;private, :instance])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find public and private instance methods when :public, :private, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :private, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :private, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 2
     actual.matched[ClassWithPublicInstanceMethod].should  == Set.new([:public_instance_test_method])
     actual.matched[ClassWithPrivateInstanceMethod].should == Set.new([:private_instance_test_method])
@@ -643,7 +727,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :;
   end
 
   it "should find public and private instance methods for objects when :public, :private, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :private, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :private, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 2
     actual.matched[@pub].should == Set.new([:public_instance_test_method])
     actual.matched[@pri].should == Set.new([:private_instance_test_method])
@@ -656,11 +740,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:protected, :private, :instance])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find protected and private instance methods when :protected, :private, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:protected, :private, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:protected, :private, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 2
     actual.matched[ClassWithProtectedInstanceMethod].should == Set.new([:protected_instance_test_method])
     actual.matched[ClassWithPrivateInstanceMethod].should   == Set.new([:private_instance_test_method])
@@ -671,7 +755,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:protected,
   end
 
   it "should find protected and private instance methods for objects when :protected, :private, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:protected, :private, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:protected, :private, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 2
     actual.matched[@pro].should == Set.new([:protected_instance_test_method])
     actual.matched[@pri].should == Set.new([:private_instance_test_method])
@@ -684,11 +768,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :class, :instance])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find public class and instance methods for types when :public, :class, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :class, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :class, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 2
     actual.matched[ClassWithPublicInstanceMethod].should  == Set.new([:public_instance_test_method])
     actual.matched[ClassWithPublicClassMethod].should     == Set.new([:public_class_test_method])
@@ -699,7 +783,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :c
   end
 
   it "should find only public instance methods for objects even when :class is specified along with :public and :instance." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :class, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :class, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[@pub].should  == Set.new([:public_instance_test_method])
     actual.not_matched.size.should == 4
@@ -712,11 +796,11 @@ end
   
 describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :protected, :class, :instance])" do
   before(:each) do
-    before_method_finder_specbefore
+    before_method_finder_spec
   end
 
   it "should find public and protected instance methods when :public, :protected, :class, and :instance are specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :protected, :class, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :protected, :class, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 3
     actual.matched[ClassWithPublicInstanceMethod].should    == Set.new([:public_instance_test_method])
     actual.matched[ClassWithPublicClassMethod].should       == Set.new([:public_class_test_method])
@@ -727,7 +811,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => [:public, :p
   end
 
   it "should find only public and protected instance methods for objects even when :class is specified along with :public, :protected, :class, and :instance." do
-    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :protected, :class, :instance, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :protected, :class, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 2
     actual.matched[@pub].should  == Set.new([:public_instance_test_method])
     actual.matched[@pro].should  == Set.new([:protected_instance_test_method])
@@ -767,7 +851,7 @@ describe "Aquarium::Finders::MethodFinder#find (looking for singleton methods)" 
   end    
 
   it "should find type-level singleton methods for types when :singleton is specified." do
-    actual = Aquarium::Finders::MethodFinder.new.find :types => [NotQuiteEmpty, Empty], :methods => :all, :options => [:singleton, :suppress_ancestor_methods]
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [NotQuiteEmpty, Empty], :methods => :all, :options => [:singleton, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[NotQuiteEmpty].should  == Set.new([:a_class_singleton_method])
     actual.not_matched.size.should == 1
@@ -820,12 +904,12 @@ end
 
 describe "Aquarium::Finders::MethodFinder#find_all_by" do
   it "should accept :all for the methods argument." do
-    actual = Aquarium::Finders::MethodFinder.new.find_all_by ClassWithPublicInstanceMethod, :all, :suppress_ancestor_methods
+    actual = Aquarium::Finders::MethodFinder.new.find_all_by ClassWithPublicInstanceMethod, :all, :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
     actual.not_matched.size.should == 0
     pub = ClassWithPublicInstanceMethod.new
-    actual = Aquarium::Finders::MethodFinder.new.find_all_by pub, :all, :suppress_ancestor_methods
+    actual = Aquarium::Finders::MethodFinder.new.find_all_by pub, :all, :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[pub].should == Set.new([:public_instance_test_method])
     actual.not_matched.size.should == 0
@@ -833,35 +917,35 @@ describe "Aquarium::Finders::MethodFinder#find_all_by" do
   
   it "should behave like Aquarium::Finders::MethodFinder#find with an explicit parameter list rather than a hash." do
     expected = Aquarium::Finders::MethodFinder.new.find :types => ClassWithPrivateInstanceMethod, 
-      :methods => /test_method/, :options => [:private, :instance, :suppress_ancestor_methods]
+      :methods => /test_method/, :options => [:private, :instance, :exclude_ancestor_methods]
     actual = Aquarium::Finders::MethodFinder.new.find_all_by ClassWithPrivateInstanceMethod, 
-      /test_method/, :private, :instance, :suppress_ancestor_methods
+      /test_method/, :private, :instance, :exclude_ancestor_methods
     actual.should == expected
 
     expected = Aquarium::Finders::MethodFinder.new.find :objects => @pub, 
-      :methods => /test_method/, :options => [:private, :instance, :suppress_ancestor_methods]
+      :methods => /test_method/, :options => [:private, :instance, :exclude_ancestor_methods]
     actual = Aquarium::Finders::MethodFinder.new.find_all_by @pub, 
-      /test_method/, :private, :instance, :suppress_ancestor_methods
+      /test_method/, :private, :instance, :exclude_ancestor_methods
     actual.should == expected
 
     expected = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicInstanceMethod, ClassWithPrivateInstanceMethod], 
-      :methods => ["foo", /test_method/], :options => [:instance, :suppress_ancestor_methods]
+      :methods => ["foo", /test_method/], :options => [:instance, :exclude_ancestor_methods]
     actual = Aquarium::Finders::MethodFinder.new.find_all_by [ClassWithPublicInstanceMethod, ClassWithPrivateInstanceMethod],
-      ["foo", /test_method/], :instance, :suppress_ancestor_methods
+      ["foo", /test_method/], :instance, :exclude_ancestor_methods
     actual.should == expected
 
     expected = Aquarium::Finders::MethodFinder.new.find :objects => [@pub, @pri], 
-      :methods => ["foo", /test_method/], :options => [:instance, :suppress_ancestor_methods]
+      :methods => ["foo", /test_method/], :options => [:instance, :exclude_ancestor_methods]
     actual = Aquarium::Finders::MethodFinder.new.find_all_by [@pub, @pri],
-      ["foo", /test_method/], :instance, :suppress_ancestor_methods
+      ["foo", /test_method/], :instance, :exclude_ancestor_methods
     actual.should == expected
   end
 end
   
 describe "Aquarium::Finders::MethodFinder.is_recognized_method_option" do
 
-  it "should be true for :public, :private, :protected, :instance, :class, and :suppress_ancestor_methods as strings or symbols." do
-    %w[public private protected instance class suppress_ancestor_methods].each do |s|
+  it "should be true for :public, :private, :protected, :instance, :class, and :exclude_ancestor_methods as strings or symbols." do
+    %w[public private protected instance class exclude_ancestor_methods].each do |s|
       Aquarium::Finders::MethodFinder.is_recognized_method_option(s).should == true
       Aquarium::Finders::MethodFinder.is_recognized_method_option(s.to_sym).should == true
     end

@@ -31,9 +31,9 @@ describe "Union of Pointcuts", :shared => true do
   end
    
   it "should return a new Aquarium::Aspects::Pointcut whose join points are the union of the left- and right-hand side Aquarium::Aspects::Pointcuts for type-based Aquarium::Aspects::Pointcuts." do
-    pc1 = Aquarium::Aspects::Pointcut.new :types => ClassWithAttribs, :attributes => [/^attr/], :attribute_options => [:writers, :suppress_ancestor_methods]
+    pc1 = Aquarium::Aspects::Pointcut.new :types => ClassWithAttribs, :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
     # "[^F]" excludes the ClassWithFunkyMethodNames...
-    pc2 = Aquarium::Aspects::Pointcut.new :types => /Class[^F]+Method/, :method_options => :suppress_ancestor_methods
+    pc2 = Aquarium::Aspects::Pointcut.new :types => /Class[^F]+Method/, :method_options => :exclude_ancestor_methods
     pc = pc1.or pc2
     jp1 = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method => :attrRW_ClassWithAttribs=
     jp2 = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method => :attrW_ClassWithAttribs=
@@ -46,8 +46,8 @@ describe "Union of Pointcuts", :shared => true do
   it "should return a new Aquarium::Aspects::Pointcut whose join points are the union of the left- and right-hand side Aquarium::Aspects::Pointcuts for object-based Aquarium::Aspects::Pointcuts." do
     cwa = ClassWithAttribs.new
     pub = ClassWithPublicInstanceMethod.new
-    pc1 = Aquarium::Aspects::Pointcut.new :objects => [cwa], :attributes => [/^attr/], :attribute_options => [:writers, :suppress_ancestor_methods]
-    pc2 = Aquarium::Aspects::Pointcut.new :object  => pub, :method_options => :suppress_ancestor_methods
+    pc1 = Aquarium::Aspects::Pointcut.new :objects => [cwa], :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
+    pc2 = Aquarium::Aspects::Pointcut.new :object  => pub, :method_options => :exclude_ancestor_methods
     pc = pc1.or pc2
     jp1 = Aquarium::Aspects::JoinPoint.new :object => cwa, :method => :attrRW_ClassWithAttribs=
     jp2 = Aquarium::Aspects::JoinPoint.new :object => cwa, :method => :attrW_ClassWithAttribs=

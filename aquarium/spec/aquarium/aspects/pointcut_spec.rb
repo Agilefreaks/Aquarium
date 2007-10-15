@@ -6,7 +6,50 @@ require 'aquarium/aspects/join_point'
 require 'aquarium/aspects/pointcut'
 require 'aquarium/utils'
 
-def before_pointcut_specbefore
+class ExcludeTestOne
+  def method11; end
+  def method12; end
+  def method13; end
+end
+class ExcludeTestTwo
+  def method21; end
+  def method22; end
+  def method23; end
+end
+class ExcludeTestThree
+  def method31; end
+  def method32; end
+  def method33; end
+end
+
+def before_exclude_spec
+  @jp11  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestOne,   :method_name => :method11
+  @jp12  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestOne,   :method_name => :method12
+  @jp13  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestOne,   :method_name => :method13
+  @jp21  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestTwo,   :method_name => :method21
+  @jp22  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestTwo,   :method_name => :method22
+  @jp23  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestTwo,   :method_name => :method23
+  @jp31  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestThree, :method_name => :method31
+  @jp32  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestThree, :method_name => :method32
+  @jp33  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestThree, :method_name => :method33
+  @et1 = ExcludeTestOne.new
+  @et2 = ExcludeTestTwo.new
+  @et3 = ExcludeTestThree.new
+  @ojp11 = Aquarium::Aspects::JoinPoint.new :object => @et1, :method_name => :method11
+  @ojp12 = Aquarium::Aspects::JoinPoint.new :object => @et1, :method_name => :method12
+  @ojp13 = Aquarium::Aspects::JoinPoint.new :object => @et1, :method_name => :method13
+  @ojp21 = Aquarium::Aspects::JoinPoint.new :object => @et2, :method_name => :method21
+  @ojp22 = Aquarium::Aspects::JoinPoint.new :object => @et2, :method_name => :method22
+  @ojp23 = Aquarium::Aspects::JoinPoint.new :object => @et2, :method_name => :method23
+  @ojp31 = Aquarium::Aspects::JoinPoint.new :object => @et3, :method_name => :method31
+  @ojp32 = Aquarium::Aspects::JoinPoint.new :object => @et3, :method_name => :method32
+  @ojp33 = Aquarium::Aspects::JoinPoint.new :object => @et3, :method_name => :method33
+  @all_type_jps   = [@jp11,  @jp12,  @jp13,  @jp21,  @jp22,  @jp23,  @jp31,  @jp32,  @jp33]
+  @all_object_jps = [@ojp11, @ojp12, @ojp13, @ojp21, @ojp22, @ojp23, @ojp31, @ojp32, @ojp33]
+  @all_jps = @all_type_jps + @all_object_jps
+end
+
+def before_pointcut_spec
   @example_types_without_public_instance_method = 
   [ClassWithProtectedInstanceMethod, ClassWithPrivateInstanceMethod, ClassWithPublicClassMethod, ClassWithPrivateClassMethod]
   @example_types = ([ClassWithPublicInstanceMethod] + @example_types_without_public_instance_method)
@@ -96,17 +139,17 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (types specified using regular expressions)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
 
   it "should match multiple types using regular expressions that cover the full class names." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /Class.*Method\Z/, :method_options => :suppress_ancestor_methods
+    pc = Aquarium::Aspects::Pointcut.new :types => /Class.*Method\Z/, :method_options => :exclude_ancestor_methods
     pc.join_points_matched.should == @expected_matched_jps
     pc.join_points_not_matched.should == @expected_not_matched_jps
   end
 
   it "should match types using regular expressions that only cover partial class names." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /lass.*Pro.*Inst.*Met/, :method_options => [:public, :protected, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :types => /lass.*Pro.*Inst.*Met/, :method_options => [:public, :protected, :exclude_ancestor_methods]
     pc.join_points_matched.should == Set.new([@pro_jp])
     pc.join_points_not_matched.size.should == 0
   end
@@ -114,29 +157,29 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (types specified using names)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
 
   it "should match multiple types using names." do
-    pc = Aquarium::Aspects::Pointcut.new :types => @example_types.map {|t| t.to_s}, :method_options => :suppress_ancestor_methods
+    pc = Aquarium::Aspects::Pointcut.new :types => @example_types.map {|t| t.to_s}, :method_options => :exclude_ancestor_methods
     pc.join_points_matched.should == @expected_matched_jps
     pc.join_points_not_matched.should == @expected_not_matched_jps
   end
   
   it "should match multiple types using types themselves." do
-    pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :method_options => :suppress_ancestor_methods
+    pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :method_options => :exclude_ancestor_methods
     pc.join_points_matched.should == @expected_matched_jps
     pc.join_points_not_matched.should == @expected_not_matched_jps
   end
   
   it "should match :all public instance methods for types by default." do
-    pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :method_options => :suppress_ancestor_methods
+    pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :method_options => :exclude_ancestor_methods
     pc.join_points_matched.should == @expected_matched_jps
     pc.join_points_not_matched.should == @expected_not_matched_jps
   end
 
-  it "should support MethodFinder's :suppress_ancestor_methods option when using types." do
-    pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :method_options => :suppress_ancestor_methods
+  it "should support MethodFinder's :exclude_ancestor_methods option when using types." do
+    pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :method_options => :exclude_ancestor_methods
     pc.join_points_matched.should == @expected_matched_jps
     pc.join_points_not_matched.should == @expected_not_matched_jps
   end
@@ -144,26 +187,26 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (objects specified)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
 
   it "should match :all public instance methods for objects by default." do
     pub, pro = ClassWithPublicInstanceMethod.new, ClassWithProtectedInstanceMethod.new
-    pc = Aquarium::Aspects::Pointcut.new :objects => [pub, pro], :method_options => :suppress_ancestor_methods
+    pc = Aquarium::Aspects::Pointcut.new :objects => [pub, pro], :method_options => :exclude_ancestor_methods
     pc.join_points_matched.should == Set.new([Aquarium::Aspects::JoinPoint.new(:object => pub, :method_name => :public_instance_test_method)])
     pc.join_points_not_matched.should == Set.new([Aquarium::Aspects::JoinPoint.new(:object => pro, :method_name => :all)])
   end
   
-  it "should support MethodFinder's :suppress_ancestor_methods option when using objects." do
+  it "should support MethodFinder's :exclude_ancestor_methods option when using objects." do
     pub, pro = ClassWithPublicInstanceMethod.new, ClassWithProtectedInstanceMethod.new
-    pc = Aquarium::Aspects::Pointcut.new :objects => [pub, pro], :method_options => :suppress_ancestor_methods
+    pc = Aquarium::Aspects::Pointcut.new :objects => [pub, pro], :method_options => :exclude_ancestor_methods
     pc.join_points_matched.should == Set.new([Aquarium::Aspects::JoinPoint.new(:object => pub, :method_name => :public_instance_test_method)])
     pc.join_points_not_matched.should == Set.new([Aquarium::Aspects::JoinPoint.new(:object => pro, :method_name => :all)])
   end
   
   it "should match all possible methods on the specified objects." do
     pub, pro = ClassWithPublicInstanceMethod.new, ClassWithProtectedInstanceMethod.new
-    pc = Aquarium::Aspects::Pointcut.new :objects => [pub, pro], :methods => :all, :method_options => [:public, :protected, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :objects => [pub, pro], :methods => :all, :method_options => [:public, :protected, :exclude_ancestor_methods]
     pc.join_points_matched.size.should == 2
     pc.join_points_not_matched.size.should == 0
     pc.join_points_matched.should == Set.new([
@@ -182,20 +225,14 @@ describe Aquarium::Aspects::Pointcut, " (objects specified)" do
   end  
 end
 
-class ExcludeTestOne
-  def method1; end
-end
-class ExcludeTestTwo
-  def method2; end
-end
-class ExcludeTestThree
-  def method3; end
-end
-
 describe Aquarium::Aspects::Pointcut, " (:exclude_types => types specified)" do
+  before(:each) do
+    before_exclude_spec
+  end
+  
   it "should remove from a list of explicitly-specified types the set of explicitly-specified excluded types." do
-    pc = Aquarium::Aspects::Pointcut.new :types => [ExcludeTestOne, ExcludeTestTwo, ExcludeTestThree], :exclude_type => ExcludeTestTwo, :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :types => [ExcludeTestOne, ExcludeTestTwo, ExcludeTestThree], :exclude_type => ExcludeTestTwo, :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 2
     actual.should include(ExcludeTestOne)
     actual.should include(ExcludeTestThree)
@@ -203,8 +240,8 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_types => types specified)" do
   end
   
   it "should remove from a list of explicitly-specified types the set of excluded types specified by regular expression." do
-    pc = Aquarium::Aspects::Pointcut.new :types => [ExcludeTestOne, ExcludeTestTwo, ExcludeTestThree], :exclude_types => /Two$/, :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :types => [ExcludeTestOne, ExcludeTestTwo, ExcludeTestThree], :exclude_types => /Two$/, :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 2
     actual.should include(ExcludeTestOne)
     actual.should include(ExcludeTestThree)
@@ -212,8 +249,8 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_types => types specified)" do
   end
   
   it "should remove from a list of explicitly-specified types the set of excluded types specified by name." do
-    pc = Aquarium::Aspects::Pointcut.new :types => [ExcludeTestOne, ExcludeTestTwo, ExcludeTestThree], :exclude_type => "ExcludeTestTwo", :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :types => [ExcludeTestOne, ExcludeTestTwo, ExcludeTestThree], :exclude_type => "ExcludeTestTwo", :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 2
     actual.should include(ExcludeTestOne)
     actual.should include(ExcludeTestThree)
@@ -221,8 +258,8 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_types => types specified)" do
   end
   
   it "should remove from the types specified by regular expression the explicitly-specified excluded types." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_type => ExcludeTestTwo, :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_type => ExcludeTestTwo, :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 2
     actual.should include(ExcludeTestOne)
     actual.should include(ExcludeTestThree)
@@ -230,8 +267,8 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_types => types specified)" do
   end
   
   it "should remove from the types specified by regular expression the excluded types specified by regular expression." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_type => /Two$/, :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_type => /Two$/, :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 2
     actual.should include(ExcludeTestOne)
     actual.should include(ExcludeTestThree)
@@ -239,8 +276,26 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_types => types specified)" do
   end
   
   it "should remove from the types specified by regular expression the excluded types specified by name." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_type => "ExcludeTestTwo", :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_type => "ExcludeTestTwo", :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
+    actual.size.should == 2
+    actual.should include(ExcludeTestOne)
+    actual.should include(ExcludeTestThree)
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove from the join points corresponding to the excluded types, specified by name." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_type_jps, :exclude_type => "ExcludeTestTwo", :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
+    actual.size.should == 2
+    actual.should include(ExcludeTestOne)
+    actual.should include(ExcludeTestThree)
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove the specified join points corresponding to the excluded types, specified by regular expression." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_type_jps, :exclude_type => /Exclude.*Two/, :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 2
     actual.should include(ExcludeTestOne)
     actual.should include(ExcludeTestThree)
@@ -248,14 +303,14 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_types => types specified)" do
   end
   
   it "should not add excluded types to the #not_matched results." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_type => ExcludeTestTwo, :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_type => ExcludeTestTwo, :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     pc.join_points_not_matched.size.should == 0
   end
   
   it "should be a synonym for :exclude_type." do
-    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_types => [ExcludeTestTwo, ExcludeTestThree], :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_types => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 1
     actual.should include(ExcludeTestOne)
     pc.join_points_not_matched.size.should == 0
@@ -274,42 +329,101 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_objects => objects specified)"
   end
   
   it "should remove from the matched objects the excluded objects." do
-    pc = Aquarium::Aspects::Pointcut.new :objects => @objects, :exclude_objects => [@e22, @e31], :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :objects => @objects, :exclude_objects => [@e22, @e31], :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 4
     [@e11, @e12, @e21, @e32].each {|e| actual.should include(e)}
     pc.join_points_not_matched.size.should == 0
   end
   
+  it "should remove the specified join points corresponding to the excluded objects." do
+    jps11 = Aquarium::Aspects::JoinPoint.new :object => @e11, :method => :method11
+    jps21 = Aquarium::Aspects::JoinPoint.new :object => @e21, :method => :method21
+    jps22 = Aquarium::Aspects::JoinPoint.new :object => @e22, :method => :method22
+    jps31 = Aquarium::Aspects::JoinPoint.new :object => @e31, :method => :method31
+    jps = [jps11, jps21, jps22, jps31]
+    pc = Aquarium::Aspects::Pointcut.new :join_points => jps, :exclude_objects => [@e22, @e31], :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 2
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
+    [@e11, @e21].each {|e| actual.should include(e)}
+    pc.join_points_not_matched.size.should == 0
+  end
+  
   it "should not add excluded objects to the #not_matched results." do
-    pc = Aquarium::Aspects::Pointcut.new :objects => @objects, :exclude_objects => [@e22, @e31], :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :objects => @objects, :exclude_objects => [@e22, @e31], :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     pc.join_points_not_matched.size.should == 0
   end
   
   it "should be a synonym for :exclude_object." do
-    pc = Aquarium::Aspects::Pointcut.new :objects => @objects, :exclude_object => @e22, :method_options => :suppress_ancestor_methods
-    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}
+    pc = Aquarium::Aspects::Pointcut.new :objects => @objects, :exclude_object => @e22, :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 5
     [@e11, @e12, @e21, @e31, @e32].each {|e| actual.should include(e)}
     pc.join_points_not_matched.size.should == 0
   end
 end
 
+describe Aquarium::Aspects::Pointcut, " (:exclude_join_points => join_points specified)" do
+  before(:each) do
+    before_exclude_spec
+  end
+
+  it "should remove from a list of explicitly-specified join points the set of explicitly-specified excluded join points." do
+    excluded = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_join_points => excluded
+    pc.join_points_matched.should == Set.new(@all_jps - excluded)
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove from the list of generated, type-based join points the set of explicitly-specified excluded join points." do
+    jp11  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestOne,   :method_name => :method11
+    jp22  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestTwo,   :method_name => :method22
+    jp33  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestThree, :method_name => :method33
+    excluded = [jp11, jp22, jp33]
+    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_join_points => excluded, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == Set.new(@all_type_jps - excluded)
+    pc.join_points_not_matched.size.should == 0
+  end
+
+  it "should remove from the list of generated, object-based join points the set of explicitly-specified excluded join points." do
+    ojp12 = Aquarium::Aspects::JoinPoint.new :object => @et1, :method_name => :method12
+    ojp23 = Aquarium::Aspects::JoinPoint.new :object => @et2, :method_name => :method23
+    ojp31 = Aquarium::Aspects::JoinPoint.new :object => @et3, :method_name => :method31
+    excluded = [ojp12, ojp23, ojp31]  
+    pc = Aquarium::Aspects::Pointcut.new :objects => [@et1, @et2, @et3], :exclude_join_points => excluded, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == Set.new(@all_object_jps - excluded)
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should not add excluded types to the #not_matched results." do
+    excluded = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_join_points => excluded
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should be a synonym for :exclude_join_point." do
+    excluded = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_join_point => excluded
+    pc.join_points_matched.should == Set.new(@all_jps - excluded)
+    pc.join_points_not_matched.size.should == 0
+  end
+end
+
 describe Aquarium::Aspects::Pointcut, " (types or objects specified with public instance methods)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
 
   it "should support MethodFinder's :public and :instance options for the specified types." do
-    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithPublicInstanceMethod, :method_options => [:public, :instance, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithPublicInstanceMethod, :method_options => [:public, :instance, :exclude_ancestor_methods]
     pc.join_points_matched.should be_eql(Set.new([@pub_jp]))
     pc.join_points_not_matched.size.should == 0
   end
   
   it "should support MethodFinder's :public and :instance options for the specified objects." do
     pub = ClassWithPublicInstanceMethod.new
-    pc = Aquarium::Aspects::Pointcut.new :objects => pub, :method_options => [:public, :instance, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :objects => pub, :method_options => [:public, :instance, :exclude_ancestor_methods]
     pc.join_points_matched.should be_eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pub, :method_name => :public_instance_test_method)]))
     pc.join_points_not_matched.size.should == 0
   end
@@ -317,18 +431,18 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (types or objects specified with protected instance methods)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
   
   it "should support MethodFinder's :protected and :instance options for the specified types." do
-    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithProtectedInstanceMethod, :method_options => [:protected, :instance, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithProtectedInstanceMethod, :method_options => [:protected, :instance, :exclude_ancestor_methods]
     pc.join_points_matched.should be_eql(Set.new([@pro_jp]))
     pc.join_points_not_matched.size.should == 0
   end
   
   it "should support MethodFinder's :protected and :instance options for the specified objects." do
     pro = ClassWithProtectedInstanceMethod.new
-    pc = Aquarium::Aspects::Pointcut.new :objects => pro, :method_options => [:protected, :instance, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :objects => pro, :method_options => [:protected, :instance, :exclude_ancestor_methods]
     pc.join_points_matched.should be_eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pro, :method_name => :protected_instance_test_method)]))
     pc.join_points_not_matched.size.should == 0
   end
@@ -336,18 +450,18 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (types or objects specified with private instance methods)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
   
   it "should support MethodFinder's :private and :instance options for the specified types." do
-    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithPrivateInstanceMethod, :method_options => [:private, :instance, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithPrivateInstanceMethod, :method_options => [:private, :instance, :exclude_ancestor_methods]
     pc.join_points_matched.should be_eql(Set.new([@pri_jp]))
     pc.join_points_not_matched.size.should == 0
   end
   
   it "should support MethodFinder's :private and :instance options for the specified objects." do
     pro = ClassWithPrivateInstanceMethod.new
-    pc = Aquarium::Aspects::Pointcut.new :objects => pro, :method_options => [:private, :instance, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :objects => pro, :method_options => [:private, :instance, :exclude_ancestor_methods]
     pc.join_points_matched.should be_eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pro, :method_name => :private_instance_test_method)]))
     pc.join_points_not_matched.size.should == 0
   end
@@ -355,18 +469,18 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (types or objects specified with public class methods)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
   
   it "should support MethodFinder's :public and :class options for the specified types." do
-    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithPublicClassMethod, :method_options => [:public, :class, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithPublicClassMethod, :method_options => [:public, :class, :exclude_ancestor_methods]
     pc.join_points_matched.should be_eql(Set.new([@cpub_jp]))
     pc.join_points_not_matched.size.should == 0
   end
   
   it "should support MethodFinder's :public and :class options for the specified objects, which will return no methods." do
     pub = ClassWithPublicInstanceMethod.new
-    pc = Aquarium::Aspects::Pointcut.new :objects => pub, :method_options => [:public, :class, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :objects => pub, :method_options => [:public, :class, :exclude_ancestor_methods]
     pc.join_points_matched.size.should == 0
     pc.join_points_not_matched.size.should == 1
     pc.join_points_not_matched.should be_eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pub, :method_name => :all, :class_method => true)]))
@@ -375,18 +489,18 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (types or objects specified with private class methods)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
   
   it "should support MethodFinder's :private and :class options for the specified types." do
-    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithPrivateClassMethod, :method_options => [:private, :class, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :types => ClassWithPrivateClassMethod, :method_options => [:private, :class, :exclude_ancestor_methods]
     pc.join_points_matched.should be_eql(Set.new([@cpri_jp]))
     pc.join_points_not_matched.size.should == 0
   end
   
   it "should support MethodFinder's :private and :class options for the specified objects, which will return no methods." do
     pri = ClassWithPrivateInstanceMethod.new
-    pc = Aquarium::Aspects::Pointcut.new :objects => pri, :method_options => [:private, :class, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :objects => pri, :method_options => [:private, :class, :exclude_ancestor_methods]
     pc.join_points_not_matched.should be_eql(Set.new([Aquarium::Aspects::JoinPoint.new(:object => pri, :method_name => :all, :class_method => true)]))
     pc.join_points_not_matched.size.should == 1
   end
@@ -394,7 +508,7 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (types or objects specified with method regular expressions)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
     @jp_rwe = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method_name => :attrRW_ClassWithAttribs=
     @jp_rw  = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method_name => :attrRW_ClassWithAttribs
     @jp_we  = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method_name => :attrW_ClassWithAttribs=
@@ -424,9 +538,57 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with method 
   end
 end
 
+describe Aquarium::Aspects::Pointcut, " (:exclude_methods => methods specified)" do
+  before(:each) do
+    before_exclude_spec
+  end
+  
+  it "should remove type-specified JoinPoints matching the excluded methods specified by name." do
+    pc = Aquarium::Aspects::Pointcut.new :types => [ExcludeTestOne, ExcludeTestTwo, ExcludeTestThree], :exclude_methods => [:method11, :method23], :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 7
+    pc.join_points_matched.should == Set.new([@jp12, @jp13, @jp21, @jp22, @jp31, @jp32, @jp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove type-specified JoinPoints matching the excluded methods specified by regular expression." do
+    pc = Aquarium::Aspects::Pointcut.new :types => [ExcludeTestOne, ExcludeTestTwo, ExcludeTestThree], :exclude_methods => /method[12][13]/, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 5
+    pc.join_points_matched.should == Set.new([@jp12, @jp22, @jp31, @jp32, @jp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove object-specified JoinPoints matching the excluded methods specified by name." do
+    pc = Aquarium::Aspects::Pointcut.new :objects => [@et1, @et2, @et3], :exclude_methods => [:method11, :method23], :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 7
+    pc.join_points_matched.should == Set.new([@ojp12, @ojp13, @ojp21, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove object-specified JoinPoints matching the excluded methods specified by regular expression." do
+    pc = Aquarium::Aspects::Pointcut.new :objects => [@et1, @et2, @et3], :exclude_methods => /method[12][13]/, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 5
+    pc.join_points_matched.should == Set.new([@ojp12, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove join-point-specified JoinPoints matching the excluded methods specified by name." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_methods => [:method11, :method23], :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 14
+    pc.join_points_matched.should == Set.new([@jp12, @jp13, @jp21, @jp22, @jp31, @jp32, @jp33, @ojp12, @ojp13, @ojp21, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove join-point-specified JoinPoints matching the excluded methods specified by regular expression." do
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_methods => /method[12][13]/, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 10
+    pc.join_points_matched.should == Set.new([@jp12, @jp22, @jp31, @jp32, @jp33, @ojp12, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+end
+  
 describe Aquarium::Aspects::Pointcut, " (types or objects specified with attribute regular expressions)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
     @jp_rwe = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method_name => :attrRW_ClassWithAttribs=
     @jp_rw  = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method_name => :attrRW_ClassWithAttribs
     @jp_we  = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method_name => :attrW_ClassWithAttribs=
@@ -578,7 +740,7 @@ end
 
 describe Aquarium::Aspects::Pointcut, " (join points specified)" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
     @anClassWithPublicInstanceMethod = ClassWithPublicInstanceMethod.new
     @expected_matched = [@pub_jp, @pro_jp, @pri_jp, @cpub_jp, @cpri_jp,
         Aquarium::Aspects::JoinPoint.new(:object => @anClassWithPublicInstanceMethod, :method => :public_instance_test_method)]
@@ -620,25 +782,25 @@ describe Aquarium::Aspects::Pointcut, " (methods that end in non-alphanumeric ch
 
   {'?' => :huh?, '!' => :yes!, '=' => :x=}.each do |char, method|
     it "should match instance methods for types when searching for names that end with a '#{char}' character." do
-      pc = Aquarium::Aspects::Pointcut.new :types => ClassWithFunkyMethodNames, :method => method, :method_options => [:suppress_ancestor_methods]
+      pc = Aquarium::Aspects::Pointcut.new :types => ClassWithFunkyMethodNames, :method => method, :method_options => [:exclude_ancestor_methods]
       expected_jp = Aquarium::Aspects::JoinPoint.new :type => ClassWithFunkyMethodNames, :method_name => method
       pc.join_points_matched.should == Set.new([expected_jp])
     end
 
     it "should match instance methods for objects when searching for names that end with a '#{char}' character." do
-      pc = Aquarium::Aspects::Pointcut.new :object => @funky, :method => method, :method_options => [:suppress_ancestor_methods]
+      pc = Aquarium::Aspects::Pointcut.new :object => @funky, :method => method, :method_options => [:exclude_ancestor_methods]
       expected_jp = Aquarium::Aspects::JoinPoint.new :object => @funky, :method_name => method
       pc.join_points_matched.should == Set.new([expected_jp])
     end
 
     it "should match instance methods for types when searching for names that end with a '#{char}' character, using a regular expressions." do
-      pc = Aquarium::Aspects::Pointcut.new :types => ClassWithFunkyMethodNames, :methods => /#{Regexp.escape(char)}$/, :method_options => [:suppress_ancestor_methods]
+      pc = Aquarium::Aspects::Pointcut.new :types => ClassWithFunkyMethodNames, :methods => /#{Regexp.escape(char)}$/, :method_options => [:exclude_ancestor_methods]
       expected_jp = Aquarium::Aspects::JoinPoint.new :type => ClassWithFunkyMethodNames, :method_name => method
       pc.join_points_matched.should == Set.new([expected_jp])
     end
 
     it "should match instance methods for object when searching for names that end with a '#{char}' character, using a regular expressions." do
-      pc = Aquarium::Aspects::Pointcut.new :object => @funky, :methods => /#{Regexp.escape(char)}$/, :method_options => [:suppress_ancestor_methods]
+      pc = Aquarium::Aspects::Pointcut.new :object => @funky, :methods => /#{Regexp.escape(char)}$/, :method_options => [:exclude_ancestor_methods]
       expected_jp = Aquarium::Aspects::JoinPoint.new :object => @funky, :method_name => method
       pc.join_points_matched.should == Set.new([expected_jp])
     end
@@ -707,7 +869,7 @@ describe "Aquarium::Aspects::Pointcut" do
   end    
   
   it "should find type-level singleton methods for types when :singleton is specified." do
-    pc = Aquarium::Aspects::Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :suppress_ancestor_methods]
+    pc = Aquarium::Aspects::Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :exclude_ancestor_methods]
     pc.join_points_matched.should == Set.new([Aquarium::Aspects::JoinPoint.new(:type => NotQuiteEmpty, :method_name => :a_class_singleton_method)])
     pc.join_points_not_matched.should == Set.new([Aquarium::Aspects::JoinPoint.new(:type => Empty, :method_name => :all)])
   end
@@ -854,7 +1016,7 @@ end
 
 describe Aquarium::Aspects::Pointcut, "#candidate_types" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
   
   it "should return only candidate matching types when the input types exist." do
@@ -884,7 +1046,7 @@ end
 
 describe Aquarium::Aspects::Pointcut, "#candidate_objects" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
   
   it "should return only candidate matching objects when the input are objects." do
@@ -899,7 +1061,7 @@ end
 
 describe Aquarium::Aspects::Pointcut, "#candidate_join_points" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
   end
   
   it "should return only candidate non-matching join points for the input join points that do not exist." do
@@ -928,7 +1090,7 @@ end
 
 describe Aquarium::Aspects::Pointcut, "#specification" do
   before(:each) do
-    before_pointcut_specbefore
+    before_pointcut_spec
     @empty_set = Set.new
     @default_specification = {
       :types => @empty_set, :objects => @empty_set, :join_points => @empty_set,
@@ -936,6 +1098,8 @@ describe Aquarium::Aspects::Pointcut, "#specification" do
       :attributes => @empty_set, :attribute_options => @empty_set, 
       :exclude_types => @empty_set,
       :exclude_objects => @empty_set,
+      :exclude_join_points => @empty_set,
+      :exclude_methods => @empty_set,
       :default_object => @empty_set} 
     @default_specification_all_methods = { :methods => Set.new([:all]) } | @default_specification
   end
