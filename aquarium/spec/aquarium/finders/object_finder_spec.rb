@@ -118,6 +118,7 @@ describe Aquarium::Finders::ObjectFinder, "#find" do
     actual = Aquarium::Finders::ObjectFinder.new.find :type => OBase
     actual.matched.size.should == 1
     actual.matched[OBase].sort_by {|o| o.name}.should == [b1, b2, d1, d2]
+    actual.matched[OBase].each {|o| [b1, b2, d1, d2].include?(o)}
     actual.not_matched.should == {}
   end
   

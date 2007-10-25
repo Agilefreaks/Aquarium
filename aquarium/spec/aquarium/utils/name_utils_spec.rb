@@ -15,12 +15,61 @@ describe Aquarium::Utils::NameUtils, ".make_valid_attr_name_from_method_name" do
     Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo!bar!baz").should eql(:foo_exclamationmark_bar_exclamationmark_baz)
   end
 
-  it "should convert question marks into _tilde_" do
+  it "should convert a tilde into _tilde_" do
     Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo~bar~baz").should eql(:foo_tilde_bar_tilde_baz)
   end
 
+  it "should convert a minus sign into _minus_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo-bar-baz").should eql(:foo_minus_bar_minus_baz)
+  end
+
+  it "should convert a plus sign into _plus_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo+bar+baz").should eql(:foo_plus_bar_plus_baz)
+  end
+
+  it "should convert a slash into _slash_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo/bar/baz").should eql(:foo_slash_bar_slash_baz)
+  end
+
+  it "should convert a star into _star_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo*bar*baz").should eql(:foo_star_bar_star_baz)
+  end
+
+  it "should convert a less than sign into _lessthan_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo<bar<baz").should eql(:foo_lessthan_bar_lessthan_baz)
+  end
+
+  it "should convert a greater than sign into _greaterthan_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo>bar>baz").should eql(:foo_greaterthan_bar_greaterthan_baz)
+  end
+
+  it "should convert a left shift into _leftshift_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo<<bar<<baz").should eql(:foo_leftshift_bar_leftshift_baz)
+  end
+
+  it "should convert a right shift into _rightshift_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo>>bar>>baz").should eql(:foo_rightshift_bar_rightshift_baz)
+  end
+
+  it "should convert an '=~' into _matches_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo=~bar=~baz").should eql(:foo_matches_bar_matches_baz)
+  end
+
+  it "should convert an '==' sign into _equivalent_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo==bar==baz").should eql(:foo_equivalent_bar_equivalent_baz)
+  end
+  
+  it "should convert a percent sign into _percent_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo%bar%baz").should eql(:foo_percent_bar_percent_baz)
+  end
+
+  it "should convert a caret into _caret_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo^bar^baz").should eql(:foo_caret_bar_caret_baz)
+  end
+
   it "should convert all of the above in the same symbol" do
-    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo=bar?baz!boz~bat").should eql(:foo_equalsign_bar_questionmark_baz_exclamationmark_boz_tilde_bat)
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo=bar?baz!boz~bat-bot+bit/a*b<c>d<<e>>f=~g==h%i^j").should 
+      eql(:foo_equalsign_bar_questionmark_baz_exclamationmark_boz_tilde_bat_minus_bot_plus_bit_slash_a_star_b_lessthan_c_greaterthan_d_leftshift_e_rightshift_f_matches_g_equivalent_h_percent_i_caretj)
   end
 end
 

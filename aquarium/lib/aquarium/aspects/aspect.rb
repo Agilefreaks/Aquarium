@@ -419,7 +419,8 @@ module Aquarium
   
       def saved_method_name join_point
         to_key = Aquarium::Utils::NameUtils.make_type_or_object_key(join_point.type_or_object)
-        "#{Aspect.aspect_method_prefix}saved_#{to_key}_#{join_point.method_name}"
+        valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name join_point.method_name
+        "#{Aspect.aspect_method_prefix}saved_#{to_key}_#{valid_name}"
       end
   
       def specified_advice_kinds

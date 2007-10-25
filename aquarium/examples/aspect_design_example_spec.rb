@@ -17,8 +17,13 @@ module Aquarium
     end
     attr_accessor :state
 
-    # A simpler version of the following would be 
-    # STATE_CHANGE = pointcut :method => :state
+    # A simpler version of the following pointcut would be 
+    # STATE_CHANGE = pointcut :method => :state=
+    # Note that the :attribute_options => :writer option is important, especially
+    # given the advice block below, because if the reader is allowed to be advised,
+    # we get an infinite recursion of advice invocation! The correct solution is
+    # the planned extension of the pointcut language to support condition tests for
+    # context. I.e., we don't want the advice applied when it's already inside advice!
     STATE_CHANGE = pointcut :attribute => :state, :attribute_options => :writer
   end
 end

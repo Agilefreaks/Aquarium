@@ -808,7 +808,7 @@ describe Aspect, "#new with :around advice" do
     module AdvisingSuperClass
       class SuperClass
         def public_method *args
-          yield *args if block_given?
+          # yield *args if block_given?
         end
         protected
         def protected_method *args
@@ -848,7 +848,7 @@ describe Aspect, "#new with :around advice" do
     module AdvisingSubClass
       class SuperClass
         def public_method *args
-          yield *args if block_given?
+          # yield *args if block_given?
         end
         protected
         def protected_method *args
@@ -1051,6 +1051,41 @@ describe Aspect, "Advising methods should keep the protection level of an advise
 end
 describe Aspect, "Unadvising methods should restore the original protection level of the methods." do
   it_should_behave_like("invariant protection level of methods under advising and unadvising")
+end
+
+
+describe Aspect, "Advising methods with non-alphanumeric characters" do
+  module Aquarium::Aspects
+    class ClassWithMethodNamesContainingOddChars
+      @@method_names = []
+      %w[= ! ?].each do |s|
+        @@method_names << "_a#{s}" << "a#{s}"
+      end
+      %w[+ - * / < << > >> =~ == % ^ ~].each do |s|
+        @@method_names << s 
+      end
+      @@method_names.each do |s|
+        class_eval <<-EOF
+          def #{s}; "#{s}"; end
+        EOF
+      end
+      def self.method_names; @@method_names; end
+    end
+  end
+  it "should work with any valid ruby character" do
+    actual = ""
+    Aspect.new :before, :type => Aquarium::Aspects::ClassWithMethodNamesContainingOddChars, 
+      :methods => Aquarium::Aspects::ClassWithMethodNamesContainingOddChars.method_names do |jp, *args|
+      actual += ", #{jp.method_name}"
+    end
+    object = Aquarium::Aspects::ClassWithMethodNamesContainingOddChars.new
+    expected = ""
+    Aquarium::Aspects::ClassWithMethodNamesContainingOddChars.method_names.each do |s|
+      object.send s
+      expected += ", #{s}"
+    end
+    actual.should == expected
+  end
 end
 
 describe Aspect, "#eql?" do

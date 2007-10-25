@@ -6,6 +6,25 @@ module Aquarium
   module Utils
     module NameUtils
 
+      @@char_map = {
+        '='  => '_equalsign_',
+        '?'  => '_questionmark_',
+        '!'  => '_exclamationmark_',
+        '~'  => '_tilde_',
+        '-'  => '_minus_',
+        '+'  => '_plus_',
+        '/'  => '_slash_',
+        '*'  => '_star_',
+        '<'  => '_lessthan_',
+        '>'  => '_greaterthan_',
+        '<<' => '_leftshift_',
+        '>>' => '_rightshift_',
+        '=~' => '_matches_',
+        '==' => '_equivalent_',
+        '%'  => '_percent_',
+        '^'  => '_caret_'
+      }
+
       def self.make_type_or_object_key type_or_object
         if Aquarium::Utils::TypeUtils.is_type?(type_or_object) 
           make_valid_type_name type_or_object
@@ -28,7 +47,11 @@ module Aquarium
       end
 
       def self.make_valid_attr_name_from_method_name method_name
-        method_name.to_s.gsub("=","_equalsign_").gsub("?", "_questionmark_").gsub("!", "_exclamationmark_").gsub("~", "_tilde_").intern
+        new_name = method_name.to_s
+        @@char_map.each do |char, substitute|
+          new_name.gsub! char, substitute
+        end
+        new_name.intern
       end
     end
   end
