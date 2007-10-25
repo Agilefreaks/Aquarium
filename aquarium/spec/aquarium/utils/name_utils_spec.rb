@@ -67,9 +67,27 @@ describe Aquarium::Utils::NameUtils, ".make_valid_attr_name_from_method_name" do
     Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo^bar^baz").should eql(:foo_caret_bar_caret_baz)
   end
 
+  it "should convert a [] into _brackets_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo[]bar[]baz").should eql(:foo_brackets_bar_brackets_baz)
+  end
+
+  it "should convert a & into _ampersand_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo&bar&baz").should eql(:foo_ampersand_bar_ampersand_baz)
+  end
+
+  it "should convert a | into _pipe_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo|bar|baz").should eql(:foo_pipe_bar_pipe_baz)
+  end
+
+  it "should convert a back tick into _backtick_" do
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo`bar`baz").should eql(:foo_backtick_bar_backtick_baz)
+  end
+
   it "should convert all of the above in the same symbol" do
-    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo=bar?baz!boz~bat-bot+bit/a*b<c>d<<e>>f=~g==h%i^j").should 
-      eql(:foo_equalsign_bar_questionmark_baz_exclamationmark_boz_tilde_bat_minus_bot_plus_bit_slash_a_star_b_lessthan_c_greaterthan_d_leftshift_e_rightshift_f_matches_g_equivalent_h_percent_i_caretj)
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name(:"foo=bar?baz!boz~bat-bot+bit").should eql(
+      :foo_equalsign_bar_questionmark_baz_exclamationmark_boz_tilde_bat_minus_bot_plus_bit)
+    Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name('x/a*b<c>d<<e>>f=~g==h%i^j[]k&l|m`n'.intern).should eql(
+      :x_slash_a_star_b_lessthan_c_greaterthan_d_leftshift_e_rightshift_f_matches_g_equivalent_h_percent_i_caret_j_brackets_k_ampersand_l_pipe_m_backtick_n)
   end
 end
 

@@ -22,7 +22,11 @@ module Aquarium
         '=~' => '_matches_',
         '==' => '_equivalent_',
         '%'  => '_percent_',
-        '^'  => '_caret_'
+        '^'  => '_caret_',
+        '[]' => '_brackets_',
+        '&'  => '_ampersand_',
+        '|'  => '_pipe_',
+        '`'  => '_backtick_'
       }
 
       def self.make_type_or_object_key type_or_object

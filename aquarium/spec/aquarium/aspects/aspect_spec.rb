@@ -1061,7 +1061,7 @@ describe Aspect, "Advising methods with non-alphanumeric characters" do
       %w[= ! ?].each do |s|
         @@method_names << "_a#{s}" << "a#{s}"
       end
-      %w[+ - * / < << > >> =~ == % ^ ~].each do |s|
+      %w[+ - * / < << > >> =~ == % ^ ~ [] & | `].each do |s|
         @@method_names << s 
       end
       @@method_names.each do |s|
