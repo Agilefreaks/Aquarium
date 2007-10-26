@@ -88,9 +88,9 @@ module Aquarium
       # <tt>:within_method  => method || [method_list]</tt>::
       # <tt>:within_methods => method || [method_list]</tt>::
       #   One or an array of methods, method names and/or method regular expessions to match. 
-      #   By default, unless :attributes are specified, searches for public instance methods
-      #   with the method option :exclude_ancestor_methods implied, unless explicit method 
-      #   options are given.
+      #   Unless :attributes are specified, defaults to :all, which searches for all public
+      #   instance methods with an implied :method_options => :exclude_ancestor_methods, unless
+      #   :method_options provided explicitly.
       #
       # <tt>:method_options => [options]</tt>::
       #   One or more options supported by Aquarium::Finders::MethodFinder. Defaults to :exclude_ancestor_methods
@@ -115,14 +115,14 @@ module Aquarium
         advise_join_points
       end
   
-      def join_points_matched
-        matched_jps = Set.new
-        @pointcuts.each do |pointcut|
-          matched_jps = matched_jps.union pointcut.join_points_matched
-        end
-        matched_jps
+      def join_points_matched 
+        get_jps :join_points_matched
       end
   
+      def join_points_not_matched
+        get_jps :join_points_not_matched
+      end
+      
       def unadvise
         return if @specification[:noop]
         @pointcuts.each do |pointcut|
@@ -189,6 +189,8 @@ module Aquarium
           pc_options[:objects] = objects_given.to_a if objects_given?
           pc_options[:methods] = methods_given.to_a if methods_given?
           pc_options[:method_options] = method_options_given.to_a if method_options_given?
+          pc_options[:attributes] = attributes_given.to_a if attributes_given?
+          pc_options[:attribute_options] = attribute_options_given.to_a if attribute_options_given?
           pointcuts << Aquarium::Aspects::Pointcut.new(pc_options)
         end
         @pointcuts = Set.new(pointcuts)
@@ -228,6 +230,14 @@ module Aquarium
         advice_chain = Aspect.get_advice_chain join_point.type_or_object, join_point.method_name
       end
 
+      def get_jps message
+        jps = Set.new
+        @pointcuts.each do |pointcut|
+          jps = jps.union(pointcut.send(message))
+        end
+        jps
+      end
+  
       # Useful for debugging...
       def self.advice_chain_inspect advice_chain
         return "[nil]" if advice_chain.nil?
@@ -441,6 +451,7 @@ module Aquarium
           :method           => :methods,
           :within_method    => :methods, 
           :within_methods   => :methods,
+          :attribute        => :attributes,
           :pointcut         => :pointcuts,
           :within_pointcut  => :pointcuts,
           :within_pointcuts => :pointcuts

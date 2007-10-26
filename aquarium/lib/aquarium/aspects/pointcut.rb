@@ -283,7 +283,6 @@ module Aquarium
           when String: type_or_object.name.eql?(t)
           when Symbol: type_or_object.name.eql?(t.to_s)
           when Regexp: type_or_object.name =~ t
-          else         type_or_object == t
           end
         end
       end

@@ -604,6 +604,7 @@ describe Aquarium::Aspects::Pointcut, " (types or objects specified with attribu
   
   it "should match on public attribute readers and writers for type names by default." do
     pc = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/]
+    pc.join_points_matched.size.should == 4
     pc.join_points_matched.should == @expected_for_types
   end
   
