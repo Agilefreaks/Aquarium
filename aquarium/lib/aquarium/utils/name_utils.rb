@@ -7,7 +7,7 @@ module Aquarium
     module NameUtils
 
       @@char_map = {
-        '='  => '_equalsign_',
+        '='  => '_equal_',
         '?'  => '_questionmark_',
         '!'  => '_exclamationmark_',
         '~'  => '_tilde_',
@@ -20,7 +20,6 @@ module Aquarium
         '<<' => '_leftshift_',
         '>>' => '_rightshift_',
         '=~' => '_matches_',
-        '==' => '_equivalent_',
         '%'  => '_percent_',
         '^'  => '_caret_',
         '[]' => '_brackets_',
