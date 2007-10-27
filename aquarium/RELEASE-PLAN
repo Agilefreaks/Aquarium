@@ -1,1 +1,25 @@
-TODO:
+== Release Plan
+
+=== Versions 0.1.X
+
+Mostly bug fixes and enhancements. Only "minor" breakages of backwards compatibility.
+
+=== Versions 0.2.0
+
+Change the argument list for advice to |join_point, object, *args| from |join_point, *args|, 
+where "*args" are the arguments passed to the invoked join point (method). Since nontrivial 
+advice usually needs the object being advised, it became clear that having to call 
+"join_point.context.advised_object" is too tedious. 
+
+This change will obvious break existing aspects.
+
+=== Versions 0.3+.0
+
+More refinements to the API and functionality. The main thrust will be expanding the pointcut 
+language to include conditionals and stack context constructs, as well as more intuitive ways
+of expressing sets of types, such as types nested arbitrarily deep in module "namespaces",
+etc.
+
+=== Version 1.0.0
+
+Reasonable stable and full-featured API and DSL.

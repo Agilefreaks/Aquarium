@@ -1,3 +1,21 @@
+== Version 0.1.7
+
+Bug fixes:
+14946	Advice fails when instrumenting methods containing special characters
+15038	Spec for pointcut example variation #1
+15039	Spec for pointcut example variation #2
+15085	Specifying just :attributes for aspects also matches all methods, as if :methods =&gt; :all specified
+
+Enhancements:
+13396	Unify internal handling of types vs. objects
+
+15038 and 15039 were bugs in one of the examples (actually in the comments). However, 
+experimenting with them also revealed the nasty 15085 bug!
+
+I previously handled some special characters in method names, but not all the possible
+ones, hence 14946. Aquarium should now properly handle any valid Ruby method name.
+
+
 == Version 0.1.6
 
 Bug fixes:

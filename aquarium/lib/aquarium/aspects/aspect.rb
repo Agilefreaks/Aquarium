@@ -108,6 +108,8 @@ module Aquarium
       #   One or more of <tt>:readers</tt>, <tt>:reader</tt> (synonymous), 
       #   <tt>:writers</tt>, and/or <tt>:writer</tt> (synonymous). By default, both
       #   readers and writers are matched.
+      #
+      # See also the project README for extensive examples of these options.
       def initialize *options, &block
         process_input options, &block
         init_pointcuts

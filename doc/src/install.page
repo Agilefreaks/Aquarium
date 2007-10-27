@@ -13,8 +13,8 @@ h3. Rubygems
 This is the preferred approach. Non-windows users may have to use sudo for each command. Install or update to the latest with:
 
 <pre>
-gem install aquarium
-gem update aquarium
+gem install -y aquarium
+gem update -y aquarium
 </pre>  
 
 or if you want an older version:
