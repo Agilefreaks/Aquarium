@@ -2,6 +2,8 @@ require File.dirname(__FILE__) + '/../spec_helper.rb'
 require File.dirname(__FILE__) + '/../spec_example_classes'
 require 'aquarium'
 
+include Aquarium::Aspects::Advice
+
 # Some of AdviceChainNode and related classes are tested through advice_spec.rb. We rely on rcov to
 # tell us otherwise...
 describe Aquarium::Aspects::AdviceChainNode, "#each" do
@@ -15,7 +17,7 @@ describe Aquarium::Aspects::AdviceChainNode, "#each" do
       :static_join_point => static_join_point}    
     advice_chain = Aquarium::Aspects::AdviceChainNodeFactory.make_node options
 
-    Aquarium::Aspects::Advice.kinds_in_priority_order.each do |advice_kind|
+    KINDS_IN_PRIORITY_ORDER.each do |advice_kind|
       advice = lambda {|jp, *args| p "#{advice_kind} advice"}
       options[:advice_kind] = advice_kind
       options[:advice]      = advice,
@@ -24,7 +26,7 @@ describe Aquarium::Aspects::AdviceChainNode, "#each" do
     end
     
     advice_chain.size.should == 6
-    expected_advice_kinds = Aquarium::Aspects::Advice.kinds_in_priority_order.reverse + [:none]
+    expected_advice_kinds = KINDS_IN_PRIORITY_ORDER.reverse + [:none]
     count = 0
     advice_chain.each do |node|
       node.advice_kind.should == expected_advice_kinds[count]

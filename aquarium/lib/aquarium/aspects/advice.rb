@@ -7,15 +7,14 @@ require 'aquarium/utils/nil_object'
 module Aquarium
   module Aspects
     module Advice
-      def self.kinds_in_priority_order
-        [:around, :before, :after, :after_returning, :after_raising]
-      end
-
-      def self.kinds; self.kinds_in_priority_order; end
+      
+      KINDS_IN_PRIORITY_ORDER = [:around, :before, :after, :after_returning, :after_raising] 
+      
+      def self.kinds; KINDS_IN_PRIORITY_ORDER; end
 
       def self.sort_by_priority_order advice_kinds
         advice_kinds.sort do |x,y| 
-          self.kinds_in_priority_order.index(x.to_sym) <=> self.kinds_in_priority_order.index(y.to_sym)
+          KINDS_IN_PRIORITY_ORDER.index(x.to_sym) <=> KINDS_IN_PRIORITY_ORDER.index(y.to_sym)
         end.map {|x| x.to_sym}
       end
     end  
@@ -28,10 +27,12 @@ module Aquarium
       include Enumerable
       def initialize options = {}, &proc_block
         @proc = Proc.new &proc_block
-        options[:next_node] ||= nil  # assign so the attribute is always created
+        # assign :next_node and :static_join_point so the attributes are always created
+        options[:next_node] ||= nil  
+        options[:static_join_point] ||= nil
         options.each do |key, value|
           instance_variable_set "@#{key}".intern, value
-          (class << self; self; end).class_eval <<-EOF
+          (class << self; self; end).class_eval(<<-EOF, __FILE__, __LINE__)
             attr_accessor(:#{key})
           EOF
         end
@@ -44,7 +45,7 @@ module Aquarium
           class_or_instance_method_separater = jp.instance_method? ? "#" : "."
           context_message = "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
           backtrace = e.backtrace
-          e2 = e.exception(context_message + e.message)
+          e2 = e.exception(context_message + e.message + " (join_point = #{jp.inspect})")
           e2.set_backtrace backtrace
           raise e2
         end

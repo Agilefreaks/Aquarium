@@ -5,397 +5,8 @@ require 'aquarium/aspects'
 
 include Aquarium::Aspects
 
-# TODO Could refactor this whole file to use "behave_like", etc.
-describe Aspect, "#new parameters that configure advice" do  
-  it "should require the kind of advice as the first parameter." do
-    lambda {Aspect.new(:pointcuts => {:type => Watchful, :methods => :public_watchful_method}) {|jp, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-  end
 
-  it "should at least one of :method(s), :pointcut(s), :type(s), or :object(s)." do
-    lambda {Aspect.new(:after) {|jp, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-  end
-
-  it "should at least one of :pointcut(s), :type(s), or :object(s) unless :default_object => object is given." do
-    aspect = Aspect.new(:after, :default_object => Watchful.new, :methods => :public_watchful_method) {|jp, *args| true}
-    aspect.unadvise
-  end
-
-  it "should not contain :pointcut(s) and either :type(s) or :object(s)." do
-    lambda {Aspect.new(:after, :pointcuts => {:type => Watchful, :methods => :public_watchful_method}, :type => Watchful, :methods => :public_watchful_method) {|jp, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda {Aspect.new(:after, :pointcuts => {:type => Watchful, :methods => :public_watchful_method}, :object => Watchful.new, :methods => :public_watchful_method) {|jp, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-  end
-
-  it "should include an advice block or :advice => advice parameter." do
-    lambda {Aspect.new(:after, :type => Watchful, :methods => :public_watchful_method)}.should raise_error(Aquarium::Utils::InvalidOptions)
-  end
-end
-  
-describe Aspect, "#new :pointcut parameter with a hash of :type(s), :object(s), and/or :method(s)" do  
-  it "should accept a {:type(s) => [T1, ...], :methods = [...]} hash, indicating the types and methods to advise." do
-    advice_called = false
-    aspect = Aspect.new :before, :pointcut => {:type => [Watchful], :methods => :public_watchful_method} do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept a {:type(s) => T, :methods = [...]} hash, indicating the type and methods to advise." do
-    advice_called = false
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  %w[public protected private].each do |protection|
-    it "should accept a {:type(s) => T, :methods = [...], :method_options =>[:instance, #{protection}]} hash, indicating the type and #{protection} instance methods to advise." do
-      advice_called = false
-      aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => /watchful_method/, :method_options =>[:instance, protection.intern]} do |jp, *args|
-        advice_called = true
-        jp.should_not == nil
-        args.size.should == 4
-        args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-      end 
-      Watchful.new.method("#{protection}_watchful_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-      Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-      advice_called.should be_true
-      aspect.unadvise
-    end
-  end
-  
-  it "should accept a {:type(s) => T, :methods = [...], :method_options =>[:instance]} hash, indicating the type and (public) instance methods to advise." do
-    advice_called = false
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  %w[public private].each do |protection|
-    it "should accept a {:type(s) => T, :methods = [...], :method_options =>[:class, :#{protection}]} hash, indicating the type and #{protection} class methods to advise." do
-      advice_called = false
-      aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => /class_watchful_method$/, :method_options =>[:class, protection.intern]} do |jp, *args|
-        advice_called = true
-        jp.should_not == nil
-        args.size.should == 4
-        args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-      end 
-      Watchful.method("#{protection}_class_watchful_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-      advice_called.should be_true
-      aspect.unadvise
-    end
-  end
-  
-  it "should accept a {:type(s) => T, :methods = [...], :method_options =>:class} hash, indicating the type and (public) class methods to advise." do
-    advice_called = false
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options =>:class} do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.public_class_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept a {:objects(s) => [O1, ...], :methods = [...]} hash, indicating the objects and methods to advise." do
-    watchful1 = Watchful.new
-    watchful2 = Watchful.new
-    advice_called = false
-    aspect = Aspect.new :before, :pointcut => {:objects => [watchful1, watchful2], :methods => :public_watchful_method} do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    watchful1.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    watchful2.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept a {:objects(s) => O, :methods = [...]} hash, indicating the objects and methods to advise." do
-    watchful = Watchful.new
-    advice_called = false
-    aspect = Aspect.new :before, :pointcut => {:objects => watchful, :methods => :public_watchful_method} do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end  
-end
-
-describe Aspect, "#new :pointcut parameter with a PointCut object or an array of Pointcuts" do  
-  it "should accept a single Pointcut object." do
-    advice_called = false
-    pointcut = Pointcut.new :type => [Watchful], :methods => :public_watchful_method
-    aspect = Aspect.new :before, :pointcut => pointcut do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept an array of Pointcut objects." do
-    advice_called = 0
-    pointcut1 = Pointcut.new :type => [Watchful], :methods => :public_watchful_method
-    pointcut2 = Pointcut.new :type => [Watchful], :methods => :public_class_watchful_method, :method_options => [:class]
-    aspect = Aspect.new :before, :pointcut => [pointcut1, pointcut2] do |jp, *args|
-      advice_called += 1
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    Watchful.public_class_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should == 2
-    aspect.unadvise
-  end
-
-  it "should treat an array of Pointcuts as if they are one Pointcut \"or'ed\" together." do
-    advice_called = 0
-    advice = Proc.new {|jp, *args|
-      advice_called += 1
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    }
-    pointcut1 = Pointcut.new :type => [Watchful], :methods => :public_watchful_method
-    pointcut2 = Pointcut.new :type => [Watchful], :methods => :public_class_watchful_method, :method_options => [:class]
-    pointcut12 = pointcut1.or pointcut2
-    aspect1 = Aspect.new :before, :pointcut => [pointcut1, pointcut2], :advice => advice
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    Watchful.public_class_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should == 2
-    aspect1.unadvise
-    advice_called = 0
-    aspect2 = Aspect.new :before, :pointcut => pointcut12, :advice => advice
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    Watchful.public_class_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should == 2
-    aspect2.unadvise
-    aspect1.join_points_matched.should eql(aspect2.join_points_matched)
-  end
-end
-
-describe Aspect, "#new :type(s), :object(s), and :method(s) parameters" do  
-  it "should accept :type(s) => [T1, ...] and :methods => [...] parameters indicating the types to advise." do
-    advice_called = false
-    aspect = Aspect.new :before, :types => [Watchful], :methods => :public_watchful_method do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept :type(s) => T and :methods => [...] parameters indicating the types to advise." do
-    advice_called = false
-    aspect = Aspect.new :before, :type => Watchful, :methods => :public_watchful_method do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept :type(s) => /regexp/ and :methods => [...] parameters indicating the types to advise." do
-    advice_called = false
-    aspect = Aspect.new :before, :type => /^Watchful/, :methods => :public_watchful_method do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-  
-  it "should accept :object(s) => [O1, ...] and :methods => [...] parameters indicating the objects to advise." do
-    watchful1 = Watchful.new
-    watchful2 = Watchful.new
-    advice_called = false
-    aspect = Aspect.new :before, :object => [watchful1, watchful2], :methods => :public_watchful_method do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    watchful1.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    watchful2.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept :object(s) => O and :methods => [...] parameters indicating the objects to advise." do
-    watchful = Watchful.new
-    advice_called = false
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept :object(s) => O and :methods => [...] parameters indicating the objects to advise." do
-    watchful = Watchful.new
-    advice_called = false
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-end
-
-describe Aspect, "#new block parameter" do  
-  it "should accept a block as the advice to use." do
-    watchful = Watchful.new
-    advice_called = false
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method do |jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end 
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept an :advice => Proc parameter indicating the advice to use." do
-    watchful = Watchful.new
-    advice_called = false
-    advice = Proc.new {|jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    }
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advice => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-  
-  it "should accept a :call => Proc parameter as a synonym for :advice." do
-    watchful = Watchful.new
-    advice_called = false
-    advice = Proc.new {|jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    }
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :call => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept a :invoke => Proc parameter as a synonym for :advice." do
-    watchful = Watchful.new
-    advice_called = false
-    advice = Proc.new {|jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    }
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :invoke => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should accept a :advise_with => Proc parameter as a synonym for :advice." do
-    watchful = Watchful.new
-    advice_called = false
-    advice = Proc.new {|jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    }
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advise_with => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should ignore all synonyms if there is an :advice => Proc parameter." do
-    watchful = Watchful.new
-    advice_called = false
-    advice = Proc.new {|jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    }
-    advice2 = Proc.new {|jp, *args| raise "should not be called"}
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :invoke => advice2, :advice => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-
-  it "should ignore all but the last :advice => Proc parameter." do
-    watchful = Watchful.new
-    advice_called = false
-    advice = Proc.new {|jp, *args|
-      advice_called = true
-      jp.should_not == nil
-      args.size.should == 4
-      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    }
-    advice2 = Proc.new {|jp, *args| raise "should not be called"}
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advice => advice2, :advice => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    advice_called.should be_true
-    aspect.unadvise
-  end
-end
-
-describe Aspect, "#new invoked for the private implementation methods inserted by other aspects" do  
+describe "Aspects that specify the private implementation methods inserted by other aspects" do  
   it "should have no affect." do
     class WithAspectLikeMethod
       def _aspect_foo; end
@@ -406,7 +17,7 @@ describe Aspect, "#new invoked for the private implementation methods inserted b
   end
 end
 
-describe Aspect, "#new modifications to the list of methods for the advised object or type" do  
+describe "When an aspect advises a type" do  
   before(:all) do
     @advice = Proc.new {}
   end
@@ -414,26 +25,35 @@ describe Aspect, "#new modifications to the list of methods for the advised obje
     @aspect.unadvise
   end
   
-  it "should not include new public instance or class methods for the advised type." do
+  it "should not add new public instance or class methods that the advised type responds to." do
     all_public_methods_before = all_public_methods_of_type Watchful
     @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice 
     (all_public_methods_of_type(Watchful) - all_public_methods_before).should == []
   end
 
-  it "should not include new protected instance or class methods for the advised type." do
+  it "should not add new protected instance methods that the advised type responds to." do
     all_protected_methods_before = all_protected_methods_of_type Watchful
     @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice  
     (all_protected_methods_of_type(Watchful) - all_protected_methods_before).should == []
   end
+end
 
-  it "should not include new public methods for the advised object." do
+describe "When an aspect advises an object" do  
+  before(:all) do
+    @advice = Proc.new {}
+  end
+  after(:each) do
+    @aspect.unadvise
+  end
+
+  it "should not add new public instance or class methods that the advised object responds to." do
     watchful = Watchful.new
     all_public_methods_before = all_public_methods_of_object Watchful
     @aspect = Aspect.new :after, :pointcut => {:object => watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice  
     (all_public_methods_of_object(Watchful) - all_public_methods_before).should == []
   end
 
-  it "should not include new protected methods for the advised object." do
+  it "should not add new protected instance or class methods that the advised object responds to." do
     watchful = Watchful.new
     all_protected_methods_before = all_protected_methods_of_object Watchful
     @aspect = Aspect.new :after, :pointcut => {:object => watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice  
@@ -441,7 +61,7 @@ describe Aspect, "#new modifications to the list of methods for the advised obje
   end
 end
 
-describe Aspect, "#new with :before advice" do
+describe "Aspects with :before advice" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -470,7 +90,7 @@ describe Aspect, "#new with :before advice" do
   end
 end
 
-describe Aspect, "#new with :after advice" do
+describe "Aspects with :after advice" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -512,6 +132,7 @@ describe Aspect, "#new with :after advice" do
     end 
     do_watchful_public_protected_private 
   end
+  
   it "should ignore the value returned by the advice" do
     class ReturningValue
       def doit args
@@ -541,7 +162,7 @@ describe Aspect, "#new with :after advice" do
   end
 end
 
-describe Aspect, "#new with :after_returning advice" do
+describe "Aspects with :after_returning advice" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -598,7 +219,7 @@ describe Aspect, "#new with :after_returning advice" do
   end
 end
 
-describe Aspect, "#new with :after_raising advice" do
+describe "Aspects with :after_raising advice" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -667,7 +288,7 @@ describe Aspect, "#new with :after_raising advice" do
   end
 end
 
-describe Aspect, "#new with :before and :after advice" do
+describe "Aspects with :before and :after advice" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -708,7 +329,7 @@ describe Aspect, "#new with :before and :after advice" do
   end
 end
 
-describe Aspect, "#new with :before and :after_returning advice" do
+describe "Aspects with :before and :after_returning advice" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -742,7 +363,7 @@ describe Aspect, "#new with :before and :after_returning advice" do
   end
 end
 
-describe Aspect, "#new with :before and :after_raising advice" do
+describe "Aspects with :before and :after_raising advice" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -776,7 +397,7 @@ describe Aspect, "#new with :before and :after_raising advice" do
   end
 end
 
-describe Aspect, "#new with :around advice" do
+describe "Aspects with :around advice" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -978,56 +599,142 @@ end
 
 
 
-describe Aspect, "#unadvise" do
+describe Aspect, "#unadvise for 'empty' aspects" do
   before(:all) do
     @advice = Proc.new {}
   end
+  
   it "should do nothing for unadvised types." do
-    expected_methods = Watchful.private_methods.sort
+    expected_methods = (Watchful.private_methods + Watchful.private_instance_methods).sort
     aspect = Aspect.new :around, :type => Watchful, :method => /does_not_exist/, :advice => @advice
-    (Watchful.private_methods.sort - expected_methods).should == []
+    ((Watchful.private_methods + Watchful.private_instance_methods).sort - expected_methods).should == []
     aspect.unadvise
-    (Watchful.private_methods.sort - expected_methods).should == []
+    ((Watchful.private_methods + Watchful.private_instance_methods).sort - expected_methods).should == []
     aspect.unadvise
-    (Watchful.private_methods.sort - expected_methods).should == []
+    ((Watchful.private_methods + Watchful.private_instance_methods).sort - expected_methods).should == []
   end
     
   it "should do nothing for unadvised objects." do
-    watchful = Watchful.new
-    expected_methods = Watchful.private_methods.sort
-    aspect = Aspect.new :around, :type => Watchful, :method => /does_not_exist/, :advice => @advice
-    (Watchful.private_methods.sort - expected_methods).should == []
+    @watchful = Watchful.new
+    expected_methods = @watchful.private_methods.sort
+    aspect = Aspect.new :around, :object => @watchful, :method => /does_not_exist/, :advice => @advice
+    (@watchful.private_methods.sort - expected_methods).should == []
     aspect.unadvise
-    (Watchful.private_methods.sort - expected_methods).should == []
+    (@watchful.private_methods.sort - expected_methods).should == []
     aspect.unadvise
-    (Watchful.private_methods.sort - expected_methods).should == []
+    (@watchful.private_methods.sort - expected_methods).should == []
   end
-    
-  it "should remove all advice added by the aspect." do
+end
+
+describe Aspect, "#unadvise for removes all traces of the aspect" do
+  before(:all) do
+    @advice = Proc.new {}
+    @watchful = Watchful.new
+  end
+
+  def get_type_methods
+    public_methods    = (Watchful.public_methods    + Watchful.public_instance_methods).sort
+    protected_methods = (Watchful.protected_methods + Watchful.protected_instance_methods).sort
+    private_methods   = (Watchful.private_methods   + Watchful.private_instance_methods).sort
+    [public_methods, protected_methods, private_methods]
+  end
+  
+  def get_object_methods
+    public_methods    = @watchful.public_methods.sort
+    protected_methods = @watchful.protected_methods.sort
+    private_methods   = @watchful.private_methods.sort
+    [public_methods, protected_methods, private_methods]
+  end
+  
+  def diff_methods actual, expected, private_should_not_be_equal = false
+    3.times do |i|
+      if i==2 && private_should_not_be_equal
+        actual[i].should_not == expected[i] 
+      else
+        actual[i].should == expected[i] 
+      end
+    end
+  end
+  
+  def do_unadvise_spec parameters, which_get_methods
+    parameters[:after] = ''
+    expected_methods = send(which_get_methods)
     advice_called = false
-    aspect = Aspect.new(:after, :pointcut => {:type => Watchful, :method_options => :exclude_ancestor_methods}) {|jp, *args| advice_called = true}
+    aspect = Aspect.new(:after, parameters) {|jp, *args| advice_called = true}
+    diff_methods send(which_get_methods), expected_methods, true
     aspect.unadvise
-    watchful = Watchful.new
+    diff_methods send(which_get_methods), expected_methods
 
     %w[public protected private].each do |protection|
       advice_called = false
       block_called = false
-      watchful.send("#{protection}_watchful_method".intern, :a1, :a2, :a3) {|*args| block_called = true}
+      @watchful.send("#{protection}_watchful_method".intern, :a1, :a2, :a3) {|*args| block_called = true}
       advice_called.should be_false
       block_called.should be_true
     end
   end
   
-  it "should remove all advice overhead if all advices are removed." do
+  it "should remove all advice added by a pointcut-based aspect." do
+    do_unadvise_spec({:pointcut => {:type => Watchful, :method_options => :exclude_ancestor_methods}}, :get_type_methods)
+  end
+  
+  it "should remove all advice added by a type-based aspect." do
+    do_unadvise_spec({:type => Watchful, :method_options => :exclude_ancestor_methods}, :get_type_methods)
+  end
+  
+  it "should remove all advice added by an object-based aspect." do
+    do_unadvise_spec({:object => @watchful, :method_options => :exclude_ancestor_methods}, :get_object_methods)
+  end
+  
+  it "should remove all advice overhead if all advices are removed for pointcut-based aspects." do
     class Foo
       def bar; end
     end
     before = Foo.private_instance_methods.sort
-    aspect = Aspect.new(:after, :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, *args| true}
+    aspect1 = Aspect.new(:before, :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, *args| true}
+    aspect2 = Aspect.new(:after,  :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, *args| true}
     after  = Foo.private_instance_methods
     (after - before).should_not == []
-    aspect.unadvise
+    aspect1.unadvise
     after  = Foo.private_instance_methods
+    (after - before).should_not == []
+    aspect2.unadvise
+    after  = Foo.private_instance_methods
+    (after - before).should == []
+  end
+  
+  it "should remove all advice overhead if all advices are removed for type-based aspects." do
+    class Foo
+      def bar; end
+    end
+    before = Foo.private_instance_methods.sort
+    aspect1 = Aspect.new(:before, :type => Foo, :method_options => :exclude_ancestor_methods) {|jp, *args| true}
+    aspect2 = Aspect.new(:after,  :type => Foo, :method_options => :exclude_ancestor_methods) {|jp, *args| true}
+    after  = Foo.private_instance_methods
+    (after - before).should_not == []
+    aspect1.unadvise
+    after  = Foo.private_instance_methods
+    (after - before).should_not == []
+    aspect2.unadvise
+    after  = Foo.private_instance_methods
+    (after - before).should == []
+  end
+
+  it "should remove all advice overhead if all advices are removed for object-based aspects." do
+    class Overhead
+      def over; end
+    end
+    overhead = Overhead.new
+    before = overhead.private_methods.sort
+    aspect1 = Aspect.new(:before, :object => overhead, :method_options => :exclude_ancestor_methods) {|jp, *args| true}
+    aspect2 = Aspect.new(:after,  :object => overhead, :method_options => :exclude_ancestor_methods) {|jp, *args| true}
+    after  = overhead.private_methods
+    (after - before).should_not == []
+    aspect1.unadvise
+    after  = overhead.private_methods
+    (after - before).should_not == []
+    aspect2.unadvise
+    after  = overhead.private_methods
     (after - before).should == []
   end
 end
@@ -1046,15 +753,15 @@ describe "invariant protection level of methods under advising and unadvising", 
   end  
 end
 
-describe Aspect, "Advising methods should keep the protection level of an advised methods unchanged." do
+describe "Aspects advising methods should keep the protection level of an advised methods unchanged." do
   it_should_behave_like("invariant protection level of methods under advising and unadvising")
 end
-describe Aspect, "Unadvising methods should restore the original protection level of the methods." do
+describe "Aspects unadvising methods should restore the original protection level of the methods." do
   it_should_behave_like("invariant protection level of methods under advising and unadvising")
 end
 
 
-describe Aspect, "Advising methods with non-alphanumeric characters" do
+describe "Aspects advising methods with non-alphanumeric characters" do
   module Aquarium::Aspects
     class ClassWithMethodNamesContainingOddChars
       @@method_names = []
@@ -1065,7 +772,7 @@ describe Aspect, "Advising methods with non-alphanumeric characters" do
         @@method_names << s 
       end
       @@method_names.each do |s|
-        class_eval <<-EOF
+        class_eval(<<-EOF, __FILE__, __LINE__)
           def #{s}; "#{s}"; end
         EOF
       end

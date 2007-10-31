@@ -6,22 +6,6 @@ require 'aquarium/aspects/join_point'
 require 'aquarium/aspects/pointcut'
 require 'aquarium/utils'
 
-class ExcludeTestOne
-  def method11; end
-  def method12; end
-  def method13; end
-end
-class ExcludeTestTwo
-  def method21; end
-  def method22; end
-  def method23; end
-end
-class ExcludeTestThree
-  def method31; end
-  def method32; end
-  def method33; end
-end
-
 def before_exclude_spec
   @jp11  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestOne,   :method_name => :method11
   @jp12  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestOne,   :method_name => :method12
@@ -371,28 +355,25 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_join_points => join_points spe
 
   it "should remove from a list of explicitly-specified join points the set of explicitly-specified excluded join points." do
     excluded = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
+    expected = [@jp11, @jp13, @jp21, @jp22, @jp23, @jp31, @jp32, @ojp12, @ojp21, @ojp22, @ojp31, @ojp32, @ojp33]
     pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_join_points => excluded
-    pc.join_points_matched.should == Set.new(@all_jps - excluded)
+    pc.join_points_matched.should == Set.new(expected)
     pc.join_points_not_matched.size.should == 0
   end
   
   it "should remove from the list of generated, type-based join points the set of explicitly-specified excluded join points." do
-    jp11  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestOne,   :method_name => :method11
-    jp22  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestTwo,   :method_name => :method22
-    jp33  = Aquarium::Aspects::JoinPoint.new :type   => ExcludeTestThree, :method_name => :method33
-    excluded = [jp11, jp22, jp33]
+    excluded = [@jp11, @jp22, @jp33]
+    expected = [@jp12, @jp13, @jp21, @jp23, @jp31, @jp32]
     pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_join_points => excluded, :method_options => :exclude_ancestor_methods
-    pc.join_points_matched.should == Set.new(@all_type_jps - excluded)
+    pc.join_points_matched.should == Set.new(expected)
     pc.join_points_not_matched.size.should == 0
   end
 
   it "should remove from the list of generated, object-based join points the set of explicitly-specified excluded join points." do
-    ojp12 = Aquarium::Aspects::JoinPoint.new :object => @et1, :method_name => :method12
-    ojp23 = Aquarium::Aspects::JoinPoint.new :object => @et2, :method_name => :method23
-    ojp31 = Aquarium::Aspects::JoinPoint.new :object => @et3, :method_name => :method31
-    excluded = [ojp12, ojp23, ojp31]  
+    excluded = [@ojp12, @ojp23, @ojp31]  
+    expected = [@ojp11, @ojp13, @ojp21, @ojp22, @ojp32, @ojp33]
     pc = Aquarium::Aspects::Pointcut.new :objects => [@et1, @et2, @et3], :exclude_join_points => excluded, :method_options => :exclude_ancestor_methods
-    pc.join_points_matched.should == Set.new(@all_object_jps - excluded)
+    pc.join_points_matched.should == Set.new(expected)
     pc.join_points_not_matched.size.should == 0
   end
   
@@ -404,8 +385,66 @@ describe Aquarium::Aspects::Pointcut, " (:exclude_join_points => join_points spe
   
   it "should be a synonym for :exclude_join_point." do
     excluded = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
+    expected = [@jp11, @jp13, @jp21, @jp22, @jp23, @jp31, @jp32, @ojp12, @ojp21, @ojp22, @ojp31, @ojp32, @ojp33]
     pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_join_point => excluded
-    pc.join_points_matched.should == Set.new(@all_jps - excluded)
+    pc.join_points_matched.should == Set.new(expected)
+    pc.join_points_not_matched.size.should == 0
+  end
+end
+
+
+describe Aquarium::Aspects::Pointcut, " (:exclude_pointcuts => pointcuts specified)" do
+  before(:each) do
+    before_exclude_spec
+  end
+
+  it "should remove from a list of explicitly-specified join points the set of explicitly-specified excluded pointcuts." do
+    excluded_jps = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
+    excluded = Aquarium::Aspects::Pointcut.new :join_points => excluded_jps
+    expected = [@jp11, @jp13, @jp21, @jp22, @jp23, @jp31, @jp32, @ojp12, @ojp21, @ojp22, @ojp31, @ojp32, @ojp33]
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_pointcuts => excluded
+    pc.join_points_matched.should == Set.new(expected)
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove from the list of generated, type-based join points the set of explicitly-specified excluded pointcuts." do
+    excluded_jps = [@jp11, @jp22, @jp33]
+    excluded = Aquarium::Aspects::Pointcut.new :join_points => excluded_jps
+    expected = [@jp12, @jp13, @jp21, @jp23, @jp31, @jp32]
+    pc = Aquarium::Aspects::Pointcut.new :types => /ExcludeTest/, :exclude_pointcuts => excluded, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == Set.new(expected)
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should remove from the list of generated, object-based join points the set of explicitly-specified excluded pointcuts." do
+    excluded_jps = [@ojp12, @ojp23, @ojp31]  
+    excluded = Aquarium::Aspects::Pointcut.new :join_points => excluded_jps
+    expected = [@ojp11, @ojp13, @ojp21, @ojp22, @ojp32, @ojp33]
+    pc = Aquarium::Aspects::Pointcut.new :objects => [@et1, @et2, @et3], :exclude_pointcuts => excluded, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == Set.new(expected)
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should not add excluded types to the #not_matched results." do
+    excluded_jps = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
+    excluded = Aquarium::Aspects::Pointcut.new :join_points => excluded_jps
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_pointcuts => excluded
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should result in an empty pointcut if the join points in the :exclude_pointcuts are a superset of the matched join points." do
+    excluded = Aquarium::Aspects::Pointcut.new :join_points => @all_jps
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_pointcut => excluded
+    pc.join_points_matched.size.should == 0
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should be a synonym for :exclude_pointcut." do
+    excluded_jps = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
+    excluded = Aquarium::Aspects::Pointcut.new :join_points => excluded_jps
+    expected = [@jp11, @jp13, @jp21, @jp22, @jp23, @jp31, @jp32, @ojp12, @ojp21, @ojp22, @ojp31, @ojp32, @ojp33]
+    pc = Aquarium::Aspects::Pointcut.new :join_points => @all_jps, :exclude_pointcut => excluded
+    pc.join_points_matched.should == Set.new(expected)
     pc.join_points_not_matched.size.should == 0
   end
 end
@@ -898,7 +937,7 @@ describe Aquarium::Aspects::Pointcut, "#eql?" do
     pc1.should be_eql(pc2)
   end
   
-  it "should return false for Aquarium::Aspects::Pointcuts that specify different types." do
+  it "should return false if the matched types are different." do
     pc1 = Aquarium::Aspects::Pointcut.new  :types => /ClassWithPublicMethod/
     pc2 = Aquarium::Aspects::Pointcut.new  :types => /Class.*Method/
     pc1.should_not eql(pc2)
@@ -928,16 +967,17 @@ describe Aquarium::Aspects::Pointcut, "#eql?" do
     pc1.should_not eql(pc2)
   end
   
-  it "should return false if the matched types are different." do
-    pc1 = Aquarium::Aspects::Pointcut.new  :types => /ClassWithPublicMethod/
-    pc2 = Aquarium::Aspects::Pointcut.new  :types => /Class.*Method/
-    pc1.should_not eql(pc2)
-  end
-  
-  it "should return false if the matched objects are different." do
+  it "should return false if the matched objects are different objects." do
     pc1 = Aquarium::Aspects::Pointcut.new  :object => ClassWithPublicClassMethod.new, :methods => /_test_method$/
     pc2 = Aquarium::Aspects::Pointcut.new  :object => ClassWithPrivateClassMethod.new, :methods => /_test_method$/
     pc1.should_not eql(pc2)
+  end
+
+  it "should return true if the matched objects are the same object." do
+    object = ClassWithPublicClassMethod.new
+    pc1 = Aquarium::Aspects::Pointcut.new  :object => object, :methods => /_test_method$/
+    pc2 = Aquarium::Aspects::Pointcut.new  :object => object, :methods => /_test_method$/
+    pc1.should eql(pc2)
   end
 
   it "should return false if the not_matched types are different." do
@@ -1100,8 +1140,9 @@ describe Aquarium::Aspects::Pointcut, "#specification" do
       :exclude_types => @empty_set,
       :exclude_objects => @empty_set,
       :exclude_join_points => @empty_set,
+      :exclude_pointcuts => @empty_set,
       :exclude_methods => @empty_set,
-      :default_object => @empty_set} 
+      :default_objects => @empty_set} 
     @default_specification_all_methods = { :methods => Set.new([:all]) } | @default_specification
   end
 
@@ -1130,13 +1171,13 @@ describe Aquarium::Aspects::Pointcut, "#specification" do
   it "should return the input :method_options verbatim." do
     pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :methods => /^get/, :method => "dup", :method_options => [:instance, :public]
     pc.specification.should == { :types => Set.new(@example_types), :methods => Set.new([/^get/, "dup"]), 
-        :method_options => Set.new([:instance, :public]), :default_object => @empty_set } | @default_specification
+        :method_options => Set.new([:instance, :public]), :default_objects => @empty_set } | @default_specification
   end
   
   it "should return the input :methods and :method arguments combined into an array keyed by :methods." do
     pc = Aquarium::Aspects::Pointcut.new :types => @example_types, :attributes => /^state/, :attribute => "name"
     pc.specification.should == { :types => Set.new(@example_types), :objects => @empty_set, :join_points => @empty_set,
-      :methods => @empty_set, :method_options => Set.new([]), :default_object => @empty_set,
+      :methods => @empty_set, :method_options => Set.new([]), :default_objects => @empty_set,
       :attributes => Set.new([/^state/, "name"]), :attribute_options => @empty_set } | @default_specification
   end
   

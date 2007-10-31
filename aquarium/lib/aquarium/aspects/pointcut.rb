@@ -1,5 +1,6 @@
 require 'set'
 require 'aquarium/aspects/join_point'
+require 'aquarium/aspects/exclusion_handler'
 require 'aquarium/utils'
 require 'aquarium/extensions'
 require 'aquarium/finders/finder_result'
@@ -18,8 +19,9 @@ module Aquarium
       include Aquarium::Utils::ArrayUtils
       include Aquarium::Utils::HashUtils
       include Aquarium::Utils::SetUtils
+      include ExclusionHandler
       include DefaultObjectHandler
-  
+
       attr_reader :specification
 
       # Construct a Pointcut for methods in types or objects.
@@ -66,6 +68,24 @@ module Aquarium
       #   One or more of <tt>:readers</tt>, <tt>:reader</tt> (synonymous), 
       #   <tt>:writers</tt>, and/or <tt>:writer</tt> (synonymous). By default, both
       #   readers and writers are matched.
+      #
+      # <tt>:exclude_pointcuts   => pc || [pc_list]</tt>::
+      # <tt>:exclude_pointcut    => pc || [pc_list]</tt>::
+      # <tt>:exclude_join_points => jp || [jp_list]</tt>::
+      # <tt>:exclude_join_point  => jp || [jp_list]</tt>::
+      # <tt>:exclude_types       => type || [type_list]</tt>::
+      # <tt>:exclude_types       => type || [type_list]</tt>::
+      # <tt>:exclude_type        => type || [type_list]</tt>::
+      # <tt>:exclude_objects     => object || [object_list]</tt>::
+      # <tt>:exclude_object      => object || [object_list]</tt>::
+      # <tt>:exclude_methods     => method || [method_list]</tt>::
+      # <tt>:exclude_method      => method || [method_list]</tt>::
+      # <tt>:exclude_attributes  => attribute || [attribute_list]</tt>::
+      # <tt>:exclude_attribute   => attribute || [attribute_list]</tt>::
+      #   Exclude the specified "things" from the matched join points. If pointcuts are
+      #   excluded, they should be subsets of the matched pointcuts. Otherwise, the
+      #   resulting pointcut will be empty!
+      #
       def initialize options = {} 
         init_specification options
         init_candidate_types 
@@ -113,22 +133,20 @@ module Aquarium
   
       attr_writer :join_points_matched, :join_points_not_matched, :specification, :candidate_types, :candidate_objects, :candidate_join_points
 
+      ALLOWED_OPTIONS_SINGULAR = %w[type object join_point method exclude_type exclude_object exclude_join_point exclude_pointcut exclude_method
+         default_object attribute method_option attribute_option]
+      
       def init_specification options
         @specification = {}
         options ||= {} 
         validate_options options
-        @specification[:method_options] = Set.new(make_array(options[:method_options]))
-        @specification[:attribute_options] = Set.new(make_array(options[:attribute_options]) )
-        @specification[:types]   = Set.new(make_array(options[:types], options[:type]))
-        @specification[:objects] = Set.new(make_array(options[:objects], options[:object]))
-        @specification[:join_points] = Set.new(make_array(options[:join_points], options[:join_point]))
-        @specification[:exclude_types] = Set.new(make_array(options[:exclude_type], options[:exclude_types]))
-        @specification[:exclude_objects] = Set.new(make_array(options[:exclude_object], options[:exclude_objects]))
-        @specification[:exclude_join_points] = Set.new(make_array(options[:exclude_join_point], options[:exclude_join_points]))
-        @specification[:exclude_methods] = Set.new(make_array(options[:exclude_method], options[:exclude_methods]))
-        @specification[:default_object] = Set.new(make_array(options[:default_object]))
+        ALLOWED_OPTIONS_SINGULAR.each do |option|
+          self.instance_eval(<<-EOF, __FILE__, __LINE__)
+            @specification[:#{option}s]= Set.new(make_array(options[:#{option}], options[:#{option}s]))
+          EOF
+        end
         use_default_object_if_defined unless (types_given? || objects_given?)
-        @specification[:attributes] = Set.new(make_array(options[:attributes], options[:attribute]))
+
         raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
         init_methods_specification options
       end
@@ -139,10 +157,11 @@ module Aquarium
       end
       
       def validate_options options
-        knowns = %w[object objects type types join_point join_points 
-          exclude_object exclude_objects exclude_type exclude_types exclude_join_point exclude_join_points exclude_method exclude_methods
-          method methods attribute attributes 
-          method_options attribute_options default_object].map {|x| x.intern}
+        knowns = []
+        ALLOWED_OPTIONS_SINGULAR.each do |x| 
+          knowns << x.intern
+          knowns << "#{x}s".intern
+        end
         unknowns = options.keys - knowns
         raise Aquarium::Utils::InvalidOptions.new("Unknown options specified: #{unknowns.inspect}") if unknowns.size > 0
       end
@@ -175,7 +194,7 @@ module Aquarium
         EOF
       end
 
-      %w[types objects join_points methods].each do |name|
+      %w[types objects join_points pointcuts methods].each do |name|
         class_eval(<<-EOF, __FILE__, __LINE__)
           def exclude_#{name}_given
             @specification[:exclude_#{name}]
@@ -227,18 +246,29 @@ module Aquarium
         find_join_points_for :type, candidate_types, make_all_method_names
         find_join_points_for :object, candidate_objects, make_all_method_names
         add_join_points_for_candidate_join_points
+        remove_excluded_join_points
       end
 
       def add_join_points_for_candidate_join_points 
-        @join_points_matched += @candidate_join_points.matched.keys.find_all do |jp|
-          not (is_excluded_join_point?(jp) or is_excluded_type_or_object?(jp.type_or_object) or is_excluded_method?(jp.method_name))
-        end
+        @join_points_matched += @candidate_join_points.matched.keys
         @join_points_not_matched += @candidate_join_points.not_matched.keys
       end
       
+      def remove_excluded_join_points
+        @join_points_matched.delete_if do |jp|
+          join_point_excluded? jp
+        end
+      end
+      
       def find_join_points_for type_or_object_sym, candidates, method_names
+        # p Process.times.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
+        # p type_or_object_sym
+        # p method_names.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
+        # p candidates.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
         results = find_methods_for type_or_object_sym, candidates, method_names
+        # p Process.times.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
         add_join_points results, type_or_object_sym
+        # p Process.times.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
       end
       
       def find_methods_for type_or_object_sym, candidates, which_methods
@@ -272,35 +302,6 @@ module Aquarium
           @specification[:exclude_methods]
       end
   
-      def is_excluded_join_point? jp
-        @specification[:exclude_join_points].include? jp
-      end
-      
-      def is_excluded_type_or_object? type_or_object
-        return true if @specification[:exclude_objects].include?(type_or_object)
-        @specification[:exclude_types].find do |t|
-          case t
-          when String: type_or_object.name.eql?(t)
-          when Symbol: type_or_object.name.eql?(t.to_s)
-          when Regexp: type_or_object.name =~ t
-          end
-        end
-      end
-       
-      def is_excluded_method? method
-        is_explicitly_excluded_method?(method) or matches_excluded_method_regex?(method)
-      end
-      
-      def is_explicitly_excluded_method? method
-        @specification[:exclude_methods].include? method
-      end
-      
-      def matches_excluded_method_regex? method
-        regexs = @specification[:exclude_methods].find_all {|s| s.kind_of? Regexp}
-        return false if regexs.empty?
-        regexs.find {|re| method.to_s =~ re}          
-      end
-      
       def self.make_attribute_readers attributes
         readers = attributes.map do |regexp_or_name|
           if regexp_or_name.kind_of? Regexp

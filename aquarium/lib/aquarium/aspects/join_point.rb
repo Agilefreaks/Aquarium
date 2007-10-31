@@ -68,7 +68,7 @@ module Aquarium
       end
 
       %w[type object].each do |attr|
-        class_eval <<-EOF
+        class_eval(<<-EOF, __FILE__, __LINE__)
           # Deprecated, as JoinPoint#type overrides Module#type in a non-substitutable way!
           # JoinPoint#target_#{attr} will be removed in the next release.
           # Use JoinPoint#target_#{attr} instead
@@ -105,16 +105,15 @@ module Aquarium
         @target_type     = options[:type]
         @target_object   = options[:object]
         @method_name     = options[:method_name] || options[:method]
-        @instance_method = options[:instance_method]
         class_method     = options[:class_method].nil? ? false : options[:class_method]
-        @instance_method = (!class_method) if @instance_method.nil?
+        @instance_method = options[:instance_method].nil? ? (!class_method) : options[:instance_method]
         @instance_or_class_method  = @instance_method ? :instance : :class
         @visibility = Aquarium::Utils::MethodUtils.visibility(type_or_object, @method_name, class_or_instance_method_flag)
         assert_valid options
       end
   
       def type_or_object
-        @target_type || @target_object
+        target_type || target_object
       end
       
       alias_method :target_type_or_object, :type_or_object
@@ -128,7 +127,6 @@ module Aquarium
         return results.matched.size == 1 ? true : false
       end
       
-      # TODO while convenient, it couples advice-type information where it doesn't belong!
       def proceed *args, &block
         context.method(:proceed).call self, *args, &block
       end
@@ -151,15 +149,17 @@ module Aquarium
         return result unless result == 0
         result = (self.target_type.nil? && other.target_type.nil?) ? 0 : self.target_type.to_s <=> other.target_type.to_s 
         return result unless result == 0
-        result = (self.target_object.object_id.nil? && other.target_object.object_id.nil?) ? 0 : self.target_object.object_id <=> other.target_object.object_id 
-        result = self.target_object.object_id <=> other.target_object.object_id
+        result = (self.target_object.nil? && other.target_object.nil?) ? 0 : self.target_object.object_id <=> other.target_object.object_id 
         return result unless result == 0
         result = (self.method_name.nil? && other.method_name.nil?) ? 0 : self.method_name.to_s <=> other.method_name.to_s 
         return result unless result == 0
         result = self.instance_method? == other.instance_method?
         return 1 unless result == true
-        result = (self.context.nil? && other.context.nil?) ? 0 : self.context <=> other.context 
-        return result
+        # result = (self.context.nil? && other.context.nil?) ? 0 : self.context <=> other.context 
+        return  0 if  self.context.nil? &&  other.context.nil?
+        return -1 if  self.context.nil? && !other.context.nil?
+        return  1 if !self.context.nil? && other.context.nil?
+        return self.context <=> other.context 
       end
 
       def eql? other

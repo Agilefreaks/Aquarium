@@ -8,6 +8,7 @@ require File.dirname(__FILE__) + '/type_finder'
 
 module Aquarium
   module Finders
+    # Deprecated - Will be removed in a future release!
     class ObjectFinder
       include Aquarium::Utils::ArrayUtils
 

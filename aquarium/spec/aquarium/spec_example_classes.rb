@@ -119,3 +119,20 @@ class Watchful
 end
 
 class WatchfulChild < Watchful; end
+
+class ExcludeTestOne
+  def method11; end
+  def method12; end
+  def method13; end
+end
+class ExcludeTestTwo
+  def method21; end
+  def method22; end
+  def method23; end
+end
+class ExcludeTestThree
+  def method31; end
+  def method32; end
+  def method33; end
+end
+

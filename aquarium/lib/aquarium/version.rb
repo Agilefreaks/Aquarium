@@ -9,7 +9,7 @@ module Aquarium
     unless defined? MAJOR
       MAJOR  = 0
       MINOR  = 1
-      TINY   = 7
+      TINY   = 8
       RELEASE_CANDIDATE = nil
       
       # RANDOM_TOKEN: 0.598704893979657

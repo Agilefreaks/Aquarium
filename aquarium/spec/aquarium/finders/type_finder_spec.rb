@@ -289,7 +289,7 @@ describe Aquarium::Finders::TypeFinder, "#find_by_type" do
   end
 end
 
-# TODO refactor this protected method into a new class.
+# This is a spec for a protected method.
 describe Aquarium::Finders::TypeFinder, "#get_type_from_parent should" do
   it "should raise if a type doesn't exist that matches the constant" do
     lambda {Aquarium::Finders::TypeFinder.new.send(:get_type_from_parent, Aquarium::Finders, "Nonexistent", /Non/)}.should raise_error(NameError)

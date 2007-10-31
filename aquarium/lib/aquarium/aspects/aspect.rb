@@ -1,6 +1,7 @@
 require 'aquarium/extensions'
 require 'aquarium/utils'
 require 'aquarium/aspects/advice'
+require 'aquarium/aspects/exclusion_handler'
 require 'aquarium/aspects/join_point'
 require 'aquarium/aspects/pointcut'
 require 'aquarium/aspects/pointcut_composition'
@@ -19,6 +20,8 @@ module Aquarium
     #  
     # See also Aquarium::Aspects::DSL::AspectDsl for more information.
     class Aspect
+      include Advice
+      include ExclusionHandler
       include DefaultObjectHandler
       include Aquarium::Utils::ArrayUtils
       include Aquarium::Utils::HashUtils
@@ -27,6 +30,41 @@ module Aquarium
       attr_accessor :verbose, :log
       attr_reader   :specification, :pointcuts, :advice
   
+      ALLOWED_OPTIONS_SINGULAR = %w[advice type object method attribute method_option attribute_option pointcut default_object
+       exclude_type exclude_object exclude_pointcut exclude_join_point exclude_method exclude_attribute noop].map {|o| o.intern}
+  
+      ALLOWED_OPTIONS_PLURAL = ALLOWED_OPTIONS_SINGULAR.map {|o| "#{o}s".intern}
+
+      ALLOWED_OPTIONS = ALLOWED_OPTIONS_SINGULAR + ALLOWED_OPTIONS_PLURAL
+
+      ADVICE_OPTIONS_SYNONYMS_MAP = {
+        :call               => :advice,
+        :invoke             => :advice,
+        :advise_with        => :advice
+      }
+      
+      ALLOWED_OPTIONS_SYNONYMS_MAP = { 
+        :type               => :types,
+        :within_type        => :types, 
+        :within_types       => :types,
+        :object             => :objects,
+        :within_object      => :objects, 
+        :within_objects     => :objects,
+        :method             => :methods,
+        :within_method      => :methods, 
+        :within_methods     => :methods,
+        :attribute          => :attributes,
+        :pointcut           => :pointcuts,
+        :within_pointcut    => :pointcuts,
+        :within_pointcuts   => :pointcuts,
+        :exclude_type       => :exclude_types,
+        :exclude_object     => :exclude_objects,
+        :exclude_pointcut   => :exclude_pointcuts,
+        :exclude_join_point => :exclude_join_points,
+        :exclude_method     => :exclude_methods,
+        :exclude_attribute  => :exclude_attributes,
+      }.merge(ADVICE_OPTIONS_SYNONYMS_MAP)
+
       # Aspect.new (:around | :before | :after | :after_returning | :after_raising ) \
       #   (:pointcuts => [...]), | \
       #    ((:types => [...] | :objects => [...]), 
@@ -77,11 +115,13 @@ module Aquarium
       # <tt>:within_objects => object || [object_list]</tt>::
       #   One or an array of objects to advise. 
       #
-      # <tt>:default_object => object</tt>::
+      # <tt>:default_objects => object || [object_list]</tt>::
+      # <tt>:default_object  => object || [object_list]</tt>::
       #   An "internal" flag used by the methods that AspectDSL adds to Object. When no object
-      #   or type is specified, the value of :default_object will be used, if defined. The
+      #   or type is specified, the value of :default_objects will be used, if defined. The
       #   AspectDSL methods set the value to self, so that the user doesn't have to in the 
-      #   appropriate contexts. This flag is subject to change, so don't use it explicitly!
+      #   appropriate contexts, for convenience. This flag is subject to change, so don't 
+      #   use it explicitly!
       #
       # <tt>:methods => method || [method_list]</tt>::
       # <tt>:method  => method || [method_list]</tt>::
@@ -109,7 +149,21 @@ module Aquarium
       #   <tt>:writers</tt>, and/or <tt>:writer</tt> (synonymous). By default, both
       #   readers and writers are matched.
       #
-      # See also the project README for extensive examples of these options.
+      # <tt>:exclude_pointcuts   => pc || [pc_list]</tt>::
+      # <tt>:exclude_pointcut    => pc || [pc_list]</tt>::
+      # <tt>:exclude_join_points => jp || [jp_list]</tt>::
+      # <tt>:exclude_join_point  => jp || [jp_list]</tt>::
+      # <tt>:exclude_types       => type || [type_list]</tt>::
+      # <tt>:exclude_types       => type || [type_list]</tt>::
+      # <tt>:exclude_type        => type || [type_list]</tt>::
+      # <tt>:exclude_objects     => object || [object_list]</tt>::
+      # <tt>:exclude_object      => object || [object_list]</tt>::
+      # <tt>:exclude_methods     => method || [method_list]</tt>::
+      # <tt>:exclude_method      => method || [method_list]</tt>::
+      # <tt>:exclude_attributes  => attribute || [attribute_list]</tt>::
+      # <tt>:exclude_attribute   => attribute || [attribute_list]</tt>::
+      #   Exclude the specified "things" from the matched join points.
+      #
       def initialize *options, &block
         process_input options, &block
         init_pointcuts
@@ -154,25 +208,30 @@ module Aquarium
       protected
 
       def process_input options, &block
-        @original_options = options
+        @original_options = options.flatten
         make_specification options, &block
         @verbose = @specification[:verbose] || false
         @log     = @specification[:log] || ""
-        validate_specification
       end  
   
       def make_specification options, &block
-        opts = options.flatten.dup
-        rationalize_parameters opts
-        @specification = Aquarium::Utils::MethodUtils.method_args_to_hash(*opts) {|option| ""} # set other hash values to an empty string
+        opts = rationalize_parameters options.flatten.dup
+        # For non-hash inputs, use an empty string for the value
+        @specification = Aquarium::Utils::MethodUtils.method_args_to_hash(*opts) {|option| ""} 
         use_default_object_if_defined unless (types_given? || objects_given? || pointcuts_given?)
         use_first_nonadvice_symbol_as_method(opts) unless methods_given?
-        @advice = block || @specification[:advice]
+        @advice = determine_advice block
         if @advice.nil? && @specification[:noop].nil?
-          raise Aquarium::Utils::InvalidOptions.new("No advice block or argument specified.") 
+          bad_options "No advice block nor :advice argument was given."
         end
+        validate_specification
       end
 
+      def determine_advice block
+        # There can be only one advice; take the last one...
+        block || (@specification[:advice].kind_of?(Array) ? @specification[:advice].last : @specification[:advice])
+      end
+      
       def init_pointcuts
         pointcuts = []
         if pointcuts_given?
@@ -181,61 +240,80 @@ module Aquarium
               pointcuts << pointcut 
             elsif pointcut.kind_of?(Aquarium::Aspects::JoinPoint)
               pointcuts << Aquarium::Aspects::Pointcut.new(:join_point => pointcut) 
-            else
+            else  # a hash of Pointcut.new options?
               pointcuts << Aquarium::Aspects::Pointcut.new(pointcut) 
             end
           end
         else
           pc_options = {}
-          pc_options[:types]   = types_given.to_a   if types_given?
-          pc_options[:objects] = objects_given.to_a if objects_given?
-          pc_options[:methods] = methods_given.to_a if methods_given?
-          pc_options[:method_options] = method_options_given.to_a if method_options_given?
-          pc_options[:attributes] = attributes_given.to_a if attributes_given?
-          pc_options[:attribute_options] = attribute_options_given.to_a if attribute_options_given?
+          ALLOWED_OPTIONS_PLURAL.each do |option|
+            next if pointcut_new_doesnt_accept? option
+            self.instance_eval(<<-EOF, __FILE__, __LINE__)
+              pc_options[:#{option}] = #{option}_given if #{option}_given?
+            EOF
+          end
           pointcuts << Aquarium::Aspects::Pointcut.new(pc_options)
         end
-        @pointcuts = Set.new(pointcuts)
+        @pointcuts = Set.new(remove_excluded_join_points_and_empty_pointcuts(pointcuts))
       end
 
+      def pointcut_new_doesnt_accept? option
+        case option
+        when :advices:         true   
+        when :pointcuts:       true
+        when :default_objects: true
+        when :noops:           true
+        else                   false
+        end
+      end
+      
+      def remove_excluded_join_points_and_empty_pointcuts pointcuts
+        pointcuts.reject do |pc|
+          pc.join_points_matched.delete_if do |jp|
+            join_point_excluded? jp
+          end
+          pc.empty?
+        end
+      end
+      
       def advise_join_points
         advice = @advice.to_proc
         @pointcuts.each do |pointcut|
           interesting_join_points(pointcut).each do |join_point|
-            add_advice_framework join_point
+            add_advice_framework(join_point) if need_advice_framework?(join_point)
             Aquarium::Aspects::Advice.sort_by_priority_order(specified_advice_kinds).reverse.each do |advice_kind|
-              advice_chain = Aspect.get_advice_chain join_point.type_or_object, join_point.method_name
-              add_advice_to_chain join_point, advice_chain, advice_kind, advice
+              add_advice_to_chain join_point, advice_kind, advice
             end
           end
         end
       end
   
-      # Ignore any inserted methods that are part of the aspect implementation,
-      # i.e., those that match the prefix returned by Aspect.aspect_method_prefix.
       def interesting_join_points pointcut
         pointcut.join_points_matched.reject do |join_point| 
-          join_point.method_name.to_s =~ /^#{Aspect.aspect_method_prefix}/
+          join_point_for_aspect_implementation_method? join_point
         end
       end
 
-      def add_advice_to_chain join_point, advice_chain, advice_kind, advice
+      def join_point_for_aspect_implementation_method? join_point
+        join_point.method_name.to_s.index("#{Aspect.aspect_method_prefix}") == 0
+      end
+      
+      def add_advice_to_chain join_point, advice_kind, advice
+        start_of_advice_chain = Aspect.get_advice_chain join_point
         options = @specification.merge({
           :aspect => self,
           :advice_kind => advice_kind, 
           :advice => advice, 
-          :next_node => advice_chain,
+          :next_node => start_of_advice_chain,
           :static_join_point => join_point})
-        # The returned node becomes the lead node in the chain.
-        advice_chain = Aspect.get_advice_chain join_point.type_or_object, join_point.method_name
-        Aspect.set_advice_chain(join_point.type_or_object, join_point.method_name, Aquarium::Aspects::AdviceChainNodeFactory.make_node(options))
-        advice_chain = Aspect.get_advice_chain join_point.type_or_object, join_point.method_name
+        # New node is new start of chain.
+        Aspect.set_advice_chain(join_point, Aquarium::Aspects::AdviceChainNodeFactory.make_node(options))
       end
 
-      def get_jps message
+      def get_jps which_jps
         jps = Set.new
         @pointcuts.each do |pointcut|
-          jps = jps.union(pointcut.send(message))
+          jps = jps.union(pointcut.send(which_jps))
         end
         jps
       end
@@ -244,62 +322,72 @@ module Aquarium
       def self.advice_chain_inspect advice_chain
         return "[nil]" if advice_chain.nil?
         "<br/>"+advice_chain.inspect do |advice_chain|
-          "#{advice_chain.class.name}:#{advice_chain.object_id}: aspect = #{advice_chain.aspect.object_id}, next_node = #{advice_chain_inspect advice_chain.next_node}"
+          "#{advice_chain.class.name}:#{advice_chain.object_id}: join_point = #{advice_chain.static_join_point}: aspect = #{advice_chain.aspect.object_id}, next_node = #{advice_chain_inspect advice_chain.next_node}"
         end.gsub(/\</,"&lt;").gsub(/\>/,"&gt;")+"<br/>"
       end
-  
-      def add_advice_framework join_point
-        type_to_advise = join_point.target_type || (class << join_point.target_object; self; end)
+
+      def need_advice_framework? join_point
         alias_method_name = (saved_method_name join_point).intern
-        return if private_method_defined? join_point.type_or_object, alias_method_name
+        private_method_defined?(join_point, alias_method_name) == false
+      end
+      
+      def add_advice_framework join_point
+        alias_method_name = (saved_method_name join_point).intern
+        type_to_advise = type_to_advise_for join_point
         type_to_advise.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
-          #{static_method_prefix join_point.instance_method?}
+          #{static_method_prefix join_point}
           #{alias_original_method_text alias_method_name, join_point}
-          #{static_method_suffix join_point.instance_method?}
+          #{static_method_suffix join_point}
         EVAL_WRAPPER
-        Aspect.set_advice_chain join_point.type_or_object, join_point.method_name, Aquarium::Aspects::AdviceChainNodeFactory.make_node(
+        Aspect.set_advice_chain join_point, Aquarium::Aspects::AdviceChainNodeFactory.make_node(
           :aspect => nil,  # Belongs to all aspects that might advise this join point!
           :advice_kind => :none, 
           :alias_method_name => alias_method_name,
           :static_join_point => join_point)
-          advice_chain = Aspect.get_advice_chain join_point.type_or_object, join_point.method_name
       end
       
-      def static_method_prefix instance_method
-        return "" if instance_method
+      def static_method_prefix join_point
+        return "" if join_point.instance_method?
         <<-EOF
           class << self
         EOF
       end
 
-      def static_method_suffix instance_method
-        return "" if instance_method
+      def static_method_suffix join_point
+        return "" if join_point.instance_method?
         <<-EOF
           end
         EOF
       end
   
+      def type_to_advise_for join_point
+        join_point.target_type || (class << join_point.target_object; self; end)
+      end
+      
       # Note that we make the alias for the original method private, so it doesn't pollute the "interface" 
       # of the advised classes. This also means that we have to use the Class.method(name).call()
       # idiom when invoking it.
+      # TODO Change advice_kind to :none??
       def alias_original_method_text alias_method_name, join_point
-        self_name = join_point.target_type.nil? ? "self" : join_point.target_type.name
         target_self = join_point.instance_method? ? "self" : join_point.target_type.name
+        advice_chain_attr_sym = Aspect.make_advice_chain_attr_sym join_point
         <<-EOF
         alias_method :#{alias_method_name}, :#{join_point.method_name}
         def #{join_point.method_name} *args, &block_for_method
-          advice_chain = Aspect.get_advice_chain #{self_name}, :#{join_point.method_name}
-          static_join_point = advice_chain.static_join_point
-          advice_join_point = Aspect.make_advice_join_point static_join_point, #{target_self}, args, block_for_method
-          advice_chain.call advice_join_point, *args
+          static_join_point = #{advice_chain_attr_sym}.static_join_point
+          advice_join_point = static_join_point.make_current_context_join_point(
+            :advice_kind => :before, 
+            :advised_object => #{target_self}, 
+            :parameters => args, 
+            :block_for_method => block_for_method)
+          #{advice_chain_attr_sym}.call advice_join_point, *args
         end
         #{join_point.visibility.to_s} :#{join_point.method_name}
         private :#{alias_method_name}
         EOF
       end
-      
+
       def unalias_original_method_text alias_method_name, join_point
-        self_name = join_point.target_type.nil? ? "self" : join_point.target_type.name
         <<-EOF
         alias_method :#{join_point.method_name}, :#{alias_method_name}
         #{join_point.visibility.to_s} :#{join_point.method_name}
@@ -307,124 +395,87 @@ module Aquarium
         EOF
       end
   
-      def remove_advice_chain_class_variable_text alias_method_name, join_point
-        self_name = join_point.target_type.nil? ? "self" : join_point.target_type.name
-        <<-EOF
-        advice_chain_name = :@@#{Aspect.advice_chain_attr_name join_point.type_or_object, join_point.method_name}
-        remove_class_variable advice_chain_name
-        EOF
-      end
-  
-      def self.make_advice_join_point static_join_point, object, method_parameters, block_for_method
-        static_join_point.make_current_context_join_point(
-          :advice_kind => :before, 
-          :advised_object => object, 
-          :parameters => method_parameters, 
-          :block_for_method => block_for_method)
-      end
-  
       def remove_advice_for_aspect_at join_point
-        advice_chain = Aspect.get_advice_chain join_point.type_or_object, join_point.method_name
-        advice_chain = prune_nodes_in advice_chain
-        if advice_chain.empty?
-          remove_advice_framework_for join_point
-        else
-          Aspect.set_advice_chain join_point.type_or_object, join_point.method_name, advice_chain
-        end
+        prune_nodes_in_advice_chain_for join_point
+        advice_chain = Aspect.get_advice_chain join_point
+        remove_advice_framework_for(join_point) if advice_chain.empty?
       end
 
-      def prune_nodes_in advice_chain
+      def prune_nodes_in_advice_chain_for join_point
+        advice_chain = Aspect.get_advice_chain join_point
         # Use equal? for the aspects to compare object id only,
         while advice_chain.empty? == false && advice_chain.aspect.equal?(self)
           advice_chain = advice_chain.next_node 
         end
-        keeper_node = node = advice_chain
+        node = advice_chain
         while node.empty? == false
           while node.next_node.aspect.equal?(self)
             node.next_node = node.next_node.next_node
           end
           node = node.next_node 
         end
-        advice_chain
+        Aspect.set_advice_chain join_point, advice_chain
       end
   
       def remove_advice_framework_for join_point
-        if Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object)
-          restore_type_method   join_point
-        else
-          restore_object_method join_point
-        end
+        type_to_advise = type_to_advise_for join_point
+        type_to_advise.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
+          #{restore_original_method_text join_point}
+        EVAL_WRAPPER
+        Aspect.remove_advice_chain join_point
       end
   
-      def restore_type_method join_point
+      def restore_original_method_text join_point
         alias_method_name = (saved_method_name join_point).intern
-        join_point.target_type.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
-          #{static_method_prefix join_point.instance_method?}
+        <<-EOF
+          #{static_method_prefix join_point}
           #{unalias_original_method_text alias_method_name, join_point}
-          #{static_method_suffix join_point.instance_method?}
-          #{remove_advice_chain_class_variable_text alias_method_name, join_point}
-        EVAL_WRAPPER
+          #{static_method_suffix join_point}
+        EOF
       end
       
-      def restore_object_method join_point
-        saved = saved_method_name join_point
-        singleton = class << join_point.target_object; self; end
-        singleton.class_eval do
-          alias_method join_point.method_name, saved
-          send join_point.visibility, join_point.method_name
-          undef_method saved.intern
+      
+      def self.set_advice_chain join_point, advice_chain
+        advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
+        if Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object)
+          join_point.type_or_object.send :class_variable_set, advice_chain_attr_sym, advice_chain
+        else
+          join_point.type_or_object.send :instance_variable_set, advice_chain_attr_sym, advice_chain
         end
-        advice_chain_name = "@#{Aspect.advice_chain_attr_name join_point.type_or_object, join_point.method_name}".intern
-        join_point.target_object.method(:remove_instance_variable).call advice_chain_name
       end
 
-      def self.set_advice_chain type_or_object, method_name, advice_chain
-        advice_chain_attr_sym = self.make_advice_chain_attr_sym type_or_object, method_name
-        if Aquarium::Utils::TypeUtils.is_type?(type_or_object)
-          type_or_object.class_eval do
-            class_variable_set advice_chain_attr_sym, advice_chain
-          end
+      def self.get_advice_chain join_point
+        advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
+        if Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object) 
+          join_point.type_or_object.send :class_variable_get, advice_chain_attr_sym
         else
-          type_or_object.instance_eval do
-            instance_variable_set advice_chain_attr_sym, advice_chain
-          end
+          join_point.type_or_object.send :instance_variable_get, advice_chain_attr_sym
         end
       end
-  
-      def self.get_advice_chain type_or_object, method_name
-        advice_chain_attr_sym = self.make_advice_chain_attr_sym type_or_object, method_name
-        if Aquarium::Utils::TypeUtils.is_type?(type_or_object) 
-          type_or_object.class_eval do
-            class_variable_get advice_chain_attr_sym
-          end
+    
+      def self.remove_advice_chain join_point
+        advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
+        if Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object) 
+          join_point.type_or_object.send :remove_class_variable, advice_chain_attr_sym
         else
-          type_or_object.instance_eval do
-            instance_variable_get advice_chain_attr_sym
-          end
+          join_point.type_or_object.send :remove_instance_variable, advice_chain_attr_sym
         end
       end
+
+      def private_method_defined? join_point, alias_method_name
+        type_to_advise = type_to_advise_for join_point
+        type_to_advise.send(:private_instance_methods).include? alias_method_name.to_s
+      end
   
-      def self.make_advice_chain_attr_sym type_or_object, method_name
-        ats = Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? "@@" : "@"
-        chain_class_var = (ats + self.advice_chain_attr_name(type_or_object, method_name)).intern
+      def self.make_advice_chain_attr_sym join_point
+        ats = Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object) ? "@@" : "@"
+        type_or_object_key = Aquarium::Utils::NameUtils.make_type_or_object_key(join_point.type_or_object)
+        class_or_object_prefix = Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object) ? "class_" : ""
+        valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name join_point.method_name
+        "#{ats}#{aspect_method_prefix}#{class_or_object_prefix}advice_chain_#{type_or_object_key}_#{valid_name}".intern
+        # (ats + make_advice_chain_attr_name(join_point)).intern
       end
       
-    
-      def private_method_defined? type_or_object, method_name
-        if Aquarium::Utils::TypeUtils.is_type? type_or_object
-          type_or_object.private_instance_methods.include? method_name.to_s
-        else
-          type_or_object.private_methods.include? method_name.to_s
-        end
-      end
-  
-      def self.advice_chain_attr_name type_or_object, method_name
-        type_or_object_key = Aquarium::Utils::NameUtils.make_type_or_object_key(type_or_object)
-        class_or_object_prefix = Aquarium::Utils::TypeUtils.is_type?(type_or_object) ? "class_" : ""
-        valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name method_name
-        "#{self.aspect_method_prefix}#{class_or_object_prefix}advice_chain_#{type_or_object_key}_#{valid_name}"
-      end
-  
       def self.aspect_method_prefix
         "_aspect_"
       end
@@ -442,25 +493,10 @@ module Aquarium
       end
   
       def rationalize_parameters opts
-        return unless opts.last.kind_of?(Hash)
-        option_synonyms = { 
-          :type             => :types,
-          :within_type      => :types, 
-          :within_types     => :types,
-          :object           => :objects,
-          :within_object    => :objects, 
-          :within_objects   => :objects,
-          :method           => :methods,
-          :within_method    => :methods, 
-          :within_methods   => :methods,
-          :attribute        => :attributes,
-          :pointcut         => :pointcuts,
-          :within_pointcut  => :pointcuts,
-          :within_pointcuts => :pointcuts
-        }
+        return opts unless opts.last.kind_of?(Hash)
         hash = opts.pop.dup
         opts.push hash
-        option_synonyms.each do |syn, actual|
+        ALLOWED_OPTIONS_SYNONYMS_MAP.each do |syn, actual|
           if hash.has_key? syn
             hash[actual] = make_array(hash[actual], hash[syn])
             hash.delete syn
@@ -468,19 +504,18 @@ module Aquarium
         end
         # Only one advice argument allowed.
         unless hash.has_key?(:advice)
-          advice_synonyms = {
-            :call            => :advice,
-            :invoke          => :advice,
-            :advise_with     => :advice
-          }
-          advice_synonyms.each do |syn, actual|
+          ADVICE_OPTIONS_SYNONYMS_MAP.each do |syn, actual|
             if hash.has_key? syn
               hash[actual] = hash[syn]
               hash.delete syn
             end
           end
         end
-        [:types, :objects, :methods, :method_options, :pointcuts, :default_object].each do |opt|
+        ALLOWED_OPTIONS_PLURAL.each do |opt|
+          case opt
+          when :advices:  next
+          when :noops:    next
+          end
           hash[opt] = Set.new(make_array(hash[opt]))
         end
         opts
@@ -495,17 +530,35 @@ module Aquarium
         bad_options(":after can't be used with :after_returning.")   if after_given_with? :after_returning
         bad_options(":after can't be used with :after_raising.")     if after_given_with? :after_raising
         bad_options(":after_returning can't be used with :after_raising.") if after_returning_given_with? :after_raising
-        unless pointcuts_given? or types_given? or objects_given? #or objects_given_excluding_default?
+        unless pointcuts_given? or types_given? or objects_given? or default_objects_given?
           bad_options("At least one of :pointcut(s), :type(s), :object(s) is required.") 
         end
         if pointcuts_given? and (types_given? or objects_given?)
           bad_options("Can't specify both :pointcut(s) and one or more of :type(s), and/or :object(s).") 
         end
-        # unless methods_given? or pointcuts_given? or types_given? #or objects_given_excluding_default?
-        #   specification_too_short
-        # end
+        @specification.each_key do |parameter|
+          check_parameter parameter
+        end
       end
 
+      def check_parameter parameter
+        bad_options("Unrecognized parameter: :#{parameter}") unless is_valid_parameter(parameter)
+      end
+      
+      def is_valid_parameter key
+        ALLOWED_OPTIONS.include?(key) || ALLOWED_OPTIONS_SYNONYMS_MAP.keys.include?(key) ||
+          KINDS_IN_PRIORITY_ORDER.include?(key) ||
+          parameter_is_a_method_name?(key)    # i.e., use_first_nonadvice_symbol_as_method
+      end
+      
+      def parameter_is_a_method_name? name
+        methods = @specification[:methods]
+        case methods
+        when Enumerable : methods.include? name
+        else              methods == name
+        end
+      end
+      
       def advice_kinds_given
         Aquarium::Aspects::Advice.kinds.inject([]) {|ary, kind| ary << @specification[kind] if @specification[kind]; ary}
       end
@@ -514,21 +567,23 @@ module Aquarium
         not advice_kinds_given.empty?
       end
 
-      def around_given_with? other_advice_kind_sym
-        @specification[:around] and @specification[other_advice_kind_sym]
+      %w[around after after_returning].each do |advice_kind|
+        class_eval(<<-EOF, __FILE__, __LINE__)
+          def #{advice_kind}_given_with? other_advice_kind_sym
+            @specification[:#{advice_kind}] and @specification[other_advice_kind_sym]
+          end
+        EOF
       end
-  
-      def after_given_with? other_advice_kind_sym
-        @specification[:after] and @specification[other_advice_kind_sym]
-      end
-      def after_returning_given_with? other_advice_kind_sym
-        @specification[:after_returning] and @specification[other_advice_kind_sym]
-      end
-  
-      %w[pointcuts types objects methods attributes method_options attribute_options].each do |name|
+      
+      ALLOWED_OPTIONS_PLURAL.each do |name|
+        case name
+        when :advices         : next
+        when :default_objects : next
+        when :noops           : next
+        end
         class_eval(<<-EOF, __FILE__, __LINE__)
           def #{name}_given
-            @specification[:#{name}]
+            make_array(@specification[:#{name}])
           end
   
           def #{name}_given?
@@ -550,7 +605,8 @@ module Aquarium
       end
       
       def bad_options message
-        raise Aquarium::Utils::InvalidOptions.new("Invalid options given. " + message + " (options: #{@original_options.inspect})")
+        raise Aquarium::Utils::InvalidOptions.new("Invalid options given. " + message + 
+        " (options: #{@original_options.inspect}, mapped to specification: #{@specification.inspect})")
       end
     end
   end
