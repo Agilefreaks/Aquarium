@@ -1,5 +1,10 @@
 == Upgrading to Aquarium-0.1.7
 
+V0.1.7 did not successfully "register" at rubyforge. This releases fixes that problem and also adds
+several feature enhancements and refactorings. There are no known upgrade issues.
+
+== Upgrading to Aquarium-0.1.7
+
 This is primarily a bug-fix release, so there should be no upgrading or incompatibility issues.
 
 == Upgrading to Aquarium-0.1.6
