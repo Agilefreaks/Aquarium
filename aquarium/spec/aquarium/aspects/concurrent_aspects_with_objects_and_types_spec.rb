@@ -20,13 +20,14 @@ describe "Advising an object join point and then the corresponding type join poi
     @aspects = []
     @invoked = []
     @accessed = ConcurrentlyAccessed.new
+    @accessed2 = ConcurrentlyAccessed.new
   end
   after :each do
     @aspects.each {|a| a.unadvise}
   end
   
   Aquarium::Aspects::Advice.kinds.each do |advice_kind|
-    it "should invoke only the advice on the object join point for :#{advice_kind} advice" do
+    it "should invoke both the :#{advice_kind} advices when the object join point is invoked" do
       method = advice_kind == :after_raising ? :invoke_raises : :invoke
       @aspects << make_aspect(method, advice_kind, :object, @accessed)
       @aspects << make_aspect(method, advice_kind, :type,   ConcurrentlyAccessed)
@@ -36,7 +37,22 @@ describe "Advising an object join point and then the corresponding type join poi
       rescue ConcurrentlyAccessed::Error
         fail unless advice_kind == :after_raising 
       end
-      @invoked.should == [:object]
+      @invoked.sort.should == [:object, :type]
+    end
+  end  
+  
+  Aquarium::Aspects::Advice.kinds.each do |advice_kind|
+    it "should invoke only the :#{advice_kind} type advice when a different object is invoked" do
+      method = advice_kind == :after_raising ? :invoke_raises : :invoke
+      @aspects << make_aspect(method, advice_kind, :object, @accessed2)
+      @aspects << make_aspect(method, advice_kind, :type,   ConcurrentlyAccessed)
+      begin
+        @accessed.method(method).call :a1, :a2
+        fail if advice_kind == :after_raising 
+      rescue ConcurrentlyAccessed::Error
+        fail unless advice_kind == :after_raising 
+      end
+      @invoked.should == [:type]
     end
   end  
 end

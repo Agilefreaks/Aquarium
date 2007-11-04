@@ -10,13 +10,13 @@ Enhancements:
 13399	Add :exclusion options for methods and types.
 14707	:exclude_ancestor_methods as synonym for :suppress_ancestor_methods
 
-13399 adds new :exclude_(types|objects|methods|...) options for Aspect.new, and 
-Pointcut.new that make it easier to specify a set or regular expression for various
-options and then exclude particular items.
+13399 adds new :exclude_(pointcuts|join_points|types|objects|methods|attributes) options for
+Aspect.new, and Pointcut.new that make it easier to specify a list or regular expression for 
+various "items" and then to exclude particular items, e.g.,
+	Aspect.new :around, :types => /nterestingType/, :exclude_types => UninterestingType ...
 
 The :exclude_ancestor_methods option is now preferred over :suppress_ancestor_methods,
-since the former is more consistent with the new :exclude_(types|objects|methods|...)
-options.
+since the former is more consistent with the new :exclude_* options.
 
 == Version 0.1.7
 

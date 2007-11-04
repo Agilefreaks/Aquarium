@@ -194,6 +194,23 @@ You can specify a "Pointcut" that encapsulates one or more pre-defined Pointcuts
 	around :pointcuts = [jp, ...], ...                             # for pre-defined join point list
 	around :pointcut = {:type => T, :method => :m}, ...            # same as around :type => T, :method => :m, ..
 
+With release V0.1.8, you can specifically exclude particular pointcuts, join points, types, objects, methods, or attributes. This is useful when you specify a list or regular expression of "items" to match and you want to exclude some of the items.
+Note that there is an open bug (#15202) that appears to affect advising types, unadvising the types, then advising objects
+of the same types. (This is not likely to happen a lot in real applications, but it shows up when running specs.)
+
+	around ..., :exclude_pointcut = pc, ...
+	around ..., :exclude_pointcuts = [pc, ...]
+	around ..., :exclude_join_point = jp, ...
+	around ..., :exclude_join_points = [jp, ...]
+	around ..., :exclude_type = t, ...
+	around ..., :exclude_types = [t, ...]
+	around ..., :exclude_object = o, ...
+	around ..., :exclude_objects = [o, ...]
+	around ..., :exclude_method = m, ...
+	around ..., :exclude_methods = [m, ...]
+	around ..., :exclude_attribute = a, ...
+	around ..., :exclude_attributes = [a, ...]
+
 You can advice methods before execution:
 
 	before :types => ...

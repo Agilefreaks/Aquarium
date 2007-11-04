@@ -63,7 +63,7 @@ module Aquarium
         :exclude_join_point => :exclude_join_points,
         :exclude_method     => :exclude_methods,
         :exclude_attribute  => :exclude_attributes,
-      }.merge(ADVICE_OPTIONS_SYNONYMS_MAP)
+      }
 
       # Aspect.new (:around | :before | :after | :after_returning | :after_raising ) \
       #   (:pointcuts => [...]), | \
@@ -280,6 +280,7 @@ module Aquarium
         advice = @advice.to_proc
         @pointcuts.each do |pointcut|
           interesting_join_points(pointcut).each do |join_point|
+            attr_name = Aspect.make_advice_chain_attr_sym(join_point)
             add_advice_framework(join_point) if need_advice_framework?(join_point)
             Aquarium::Aspects::Advice.sort_by_priority_order(specified_advice_kinds).reverse.each do |advice_kind|
               add_advice_to_chain join_point, advice_kind, advice
@@ -327,60 +328,81 @@ module Aquarium
       end
 
       def need_advice_framework? join_point
-        alias_method_name = (saved_method_name join_point).intern
+        alias_method_name = (Aspect.make_saved_method_name join_point).intern
         private_method_defined?(join_point, alias_method_name) == false
       end
       
       def add_advice_framework join_point
-        alias_method_name = (saved_method_name join_point).intern
-        type_to_advise = type_to_advise_for join_point
-        type_to_advise.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
-          #{static_method_prefix join_point}
-          #{alias_original_method_text alias_method_name, join_point}
-          #{static_method_suffix join_point}
-        EVAL_WRAPPER
+        alias_method_name = (Aspect.make_saved_method_name join_point).intern
+        type_to_advise = Aspect.type_to_advise_for join_point
+        # Note: Must set advice chain, a class variable on the type we're advising, FIRST. 
+        # Otherwise the class_eval that follows will assume the @@ advice chain belongs to Aspect!
         Aspect.set_advice_chain join_point, Aquarium::Aspects::AdviceChainNodeFactory.make_node(
           :aspect => nil,  # Belongs to all aspects that might advise this join point!
           :advice_kind => :none, 
           :alias_method_name => alias_method_name,
           :static_join_point => join_point)
+        type_being_advised_text = join_point.instance_method? ? "self.class" : "self"
+        unless Aspect.is_type_join_point?(join_point) 
+          type_being_advised_text = "(class << self; self; end)"
+        end
+        type_to_advise2 = join_point.instance_method? ? type_to_advise : (class << type_to_advise; self; end)
+        type_to_advise2.class_eval(<<-EOF, __FILE__, __LINE__)
+          #{def_eigenclass_method_text join_point}
+          #{alias_original_method_text alias_method_name, join_point, type_being_advised_text}
+        EOF
       end
       
       def static_method_prefix join_point
-        return "" if join_point.instance_method?
-        <<-EOF
-          class << self
-        EOF
+        if join_point.instance_method?
+          "@@type_being_advised = self"
+        else
+          "@@type_being_advised = self"
+          "class << self"
+        end
       end
 
       def static_method_suffix join_point
-        return "" if join_point.instance_method?
-        <<-EOF
-          end
-        EOF
-      end
-  
-      def type_to_advise_for join_point
-        join_point.target_type || (class << join_point.target_object; self; end)
+        join_point.instance_method? ? "" : "end"
       end
       
-      # Note that we make the alias for the original method private, so it doesn't pollute the "interface" 
-      # of the advised classes. This also means that we have to use the Class.method(name).call()
-      # idiom when invoking it.
-      # TODO Change advice_kind to :none??
-      def alias_original_method_text alias_method_name, join_point
+      # When advising an instance, create an override method that gets advised instead of the types method.
+      # Otherwise, all objects will be advised!
+      # Note: this also solves bug #15202.
+      def def_eigenclass_method_text join_point
+        Aspect.is_type_join_point?(join_point) ? "" : "def #{join_point.method_name} *args; super; end"
+      end
+
+      # For the temporary eigenclass method wrapper, alias it to a temporary name then undefine it, so it 
+      # completely disappears. Next, remove_method on the method name so the object starts responding again
+      # to the original definition.
+      def undef_eigenclass_method_text join_point
+        Aspect.is_type_join_point?(join_point) ? "" : "remove_method :#{join_point.method_name}"
+      end
+
+      # TODO Move to JoinPoint
+      def self.is_type_join_point? join_point
+        Aquarium::Utils::TypeUtils.is_type? join_point.type_or_object
+      end
+      
+      def self.type_to_advise_for join_point
+        join_point.target_type ? join_point.target_type : (class << join_point.target_object; self; end)
+      end
+
+      def alias_original_method_text alias_method_name, join_point, type_being_advised_text
         target_self = join_point.instance_method? ? "self" : join_point.target_type.name
         advice_chain_attr_sym = Aspect.make_advice_chain_attr_sym join_point
         <<-EOF
         alias_method :#{alias_method_name}, :#{join_point.method_name}
         def #{join_point.method_name} *args, &block_for_method
-          static_join_point = #{advice_chain_attr_sym}.static_join_point
+          advice_chain = #{type_being_advised_text}.send :class_variable_get, "#{advice_chain_attr_sym}"
+          static_join_point = advice_chain.static_join_point
           advice_join_point = static_join_point.make_current_context_join_point(
             :advice_kind => :before, 
             :advised_object => #{target_self}, 
             :parameters => args, 
             :block_for_method => block_for_method)
-          #{advice_chain_attr_sym}.call advice_join_point, *args
+          advice_chain.call advice_join_point, *args
         end
         #{join_point.visibility.to_s} :#{join_point.method_name}
         private :#{alias_method_name}
@@ -418,7 +440,7 @@ module Aquarium
       end
   
       def remove_advice_framework_for join_point
-        type_to_advise = type_to_advise_for join_point
+        type_to_advise = Aspect.type_to_advise_for join_point
         type_to_advise.class_eval(<<-EVAL_WRAPPER, __FILE__, __LINE__)
           #{restore_original_method_text join_point}
         EVAL_WRAPPER
@@ -426,66 +448,67 @@ module Aquarium
       end
   
       def restore_original_method_text join_point
-        alias_method_name = (saved_method_name join_point).intern
+        alias_method_name = (Aspect.make_saved_method_name join_point).intern
         <<-EOF
           #{static_method_prefix join_point}
           #{unalias_original_method_text alias_method_name, join_point}
+          #{undef_eigenclass_method_text join_point}
           #{static_method_suffix join_point}
         EOF
       end
       
-      
+      # TODO optimize calls to these *_advice_chain methods from other private methods.
       def self.set_advice_chain join_point, advice_chain
         advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
-        if Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object)
-          join_point.type_or_object.send :class_variable_set, advice_chain_attr_sym, advice_chain
-        else
-          join_point.type_or_object.send :instance_variable_set, advice_chain_attr_sym, advice_chain
-        end
+        type_to_advise_for(join_point).send :class_variable_set, advice_chain_attr_sym, advice_chain
       end
 
       def self.get_advice_chain join_point
         advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
-        if Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object) 
-          join_point.type_or_object.send :class_variable_get, advice_chain_attr_sym
-        else
-          join_point.type_or_object.send :instance_variable_get, advice_chain_attr_sym
-        end
+        type_to_advise_for(join_point).send :class_variable_get, advice_chain_attr_sym
       end
     
       def self.remove_advice_chain join_point
         advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
-        if Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object) 
-          join_point.type_or_object.send :remove_class_variable, advice_chain_attr_sym
-        else
-          join_point.type_or_object.send :remove_instance_variable, advice_chain_attr_sym
-        end
+        type_to_advise_for(join_point).send :remove_class_variable, advice_chain_attr_sym
       end
 
       def private_method_defined? join_point, alias_method_name
-        type_to_advise = type_to_advise_for join_point
+        type_to_advise = Aspect.type_to_advise_for join_point
         type_to_advise.send(:private_instance_methods).include? alias_method_name.to_s
       end
   
       def self.make_advice_chain_attr_sym join_point
-        ats = Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object) ? "@@" : "@"
-        type_or_object_key = Aquarium::Utils::NameUtils.make_type_or_object_key(join_point.type_or_object)
-        class_or_object_prefix = Aquarium::Utils::TypeUtils.is_type?(join_point.type_or_object) ? "class_" : ""
+        class_or_object_prefix = is_type_join_point?(join_point) ? "class_" : ""
+        type_or_object_key = make_type_or_object_key join_point
         valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name join_point.method_name
-        "#{ats}#{aspect_method_prefix}#{class_or_object_prefix}advice_chain_#{type_or_object_key}_#{valid_name}".intern
-        # (ats + make_advice_chain_attr_name(join_point)).intern
+        "@@#{Aspect.aspect_method_prefix}#{class_or_object_prefix}advice_chain_#{type_or_object_key}_#{valid_name}".intern
       end
       
+      def self.make_saved_method_name join_point
+        type_or_object_key = make_type_or_object_key join_point
+        valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name join_point.method_name
+        "#{Aspect.aspect_method_prefix}saved_#{type_or_object_key}_#{valid_name}"
+      end
+  
       def self.aspect_method_prefix
         "_aspect_"
       end
   
-      def saved_method_name join_point
-        to_key = Aquarium::Utils::NameUtils.make_type_or_object_key(join_point.type_or_object)
-        valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name join_point.method_name
-        "#{Aspect.aspect_method_prefix}saved_#{to_key}_#{valid_name}"
+      def self.determine_type_or_object join_point
+        join_point.type_or_object
+        # type_or_object = join_point.type_or_object
+        # method_type = join_point.instance_or_class_method
+        # if is_type_join_point? join_point
+        #   type_or_object = Aquarium::Utils::MethodUtils.definer type_or_object, join_point.method_name, "#{method_type}_method_only".intern
+        # end
+        # type_or_object
       end
-  
+      
+      def self.make_type_or_object_key join_point
+        Aquarium::Utils::NameUtils.make_type_or_object_key determine_type_or_object(join_point)
+      end
+      
       def specified_advice_kinds
         @specification.keys.select do |key|
           Aquarium::Aspects::Advice.kinds.include? key
@@ -546,17 +569,13 @@ module Aquarium
       end
       
       def is_valid_parameter key
-        ALLOWED_OPTIONS.include?(key) || ALLOWED_OPTIONS_SYNONYMS_MAP.keys.include?(key) ||
-          KINDS_IN_PRIORITY_ORDER.include?(key) ||
+        ALLOWED_OPTIONS.include?(key) || ALLOWED_OPTIONS_SYNONYMS_MAP.keys.include?(key) || 
+          ADVICE_OPTIONS_SYNONYMS_MAP.keys.include?(key) || KINDS_IN_PRIORITY_ORDER.include?(key) ||
           parameter_is_a_method_name?(key)    # i.e., use_first_nonadvice_symbol_as_method
       end
       
       def parameter_is_a_method_name? name
-        methods = @specification[:methods]
-        case methods
-        when Enumerable : methods.include? name
-        else              methods == name
-        end
+        @specification[:methods].include? name
       end
       
       def advice_kinds_given

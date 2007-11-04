@@ -294,6 +294,12 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for instance methods
     actual = Aquarium::Finders::MethodFinder.new.find :types => ClassWithPublicInstanceMethod, :methods => /instance_test_method/
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
+    actual2 = Aquarium::Finders::MethodFinder.new.find :types => ClassWithPublicInstanceMethod, :methods => /instance_test/
+    actual2.matched.size.should == 1
+    actual2.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
+    actual3 = Aquarium::Finders::MethodFinder.new.find :types => ClassWithPublicInstanceMethod, :methods => /test_method/
+    actual3.matched.size.should == 1
+    actual3.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
   end
   
   it "should find only one instance method for an object when searching with a regexp matching one method." do
@@ -443,7 +449,15 @@ describe Aquarium::Finders::MethodFinder, "#find for types (using :exclude_metho
     actual.not_matched.size.should == 0
   end
   
-  it "should remove excluded methods from the result where the excluded methods are specified by name." do
+  it "should remove excluded methods from the result where a single excluded methods is specified by name." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_method => :method1, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[ExcludeMethodTester].size.should == 2
+    actual.matched[ExcludeMethodTester].should == Set.new([:method2, :method3])
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should remove excluded methods from the result where the excluded methods are specified by an array of names." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_methods => [:method1, :method2], :options => :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[ExcludeMethodTester].size.should == 1
@@ -480,7 +494,16 @@ describe Aquarium::Finders::MethodFinder, "#find for objects (using :exclude_met
     actual.not_matched.size.should == 0
   end
   
-  it "should remove excluded methods from the result where the excluded methods are specified by name." do
+  it "should remove excluded methods from the result where a single excluded methods is specified by name." do
+    emt = ExcludeMethodTester.new
+    actual = Aquarium::Finders::MethodFinder.new.find :object => emt, :methods => :all, :exclude_method => :method1, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[emt].size.should == 2
+    actual.matched[emt].should == Set.new([:method2, :method3])
+    actual.not_matched.size.should == 0
+  end
+  
+  it "should remove excluded methods from the result where the excluded methods are specified by an array of names." do
     emt = ExcludeMethodTester.new
     actual = Aquarium::Finders::MethodFinder.new.find :object => emt, :methods => :all, :exclude_methods => [:method1, :method2], :options => :exclude_ancestor_methods
     actual.matched.size.should == 1

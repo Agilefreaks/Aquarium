@@ -173,7 +173,7 @@ module Aquarium
           # Must recalc reflect methods if we've switched to the type of the input object.
           reflection_method_names = make_methods_reflection_method_names type, "methods"
         end
-        ancestors = eval "#{type.to_s}.ancestors + #{type.to_s}.included_modules"
+        ancestors = type.ancestors + type.included_modules
         return method_array if ancestors.nil? || ancestors.size <= 1 # 1 for type_or_object itself!
         ancestors.each do |ancestor|
           unless ancestor.name == type.to_s

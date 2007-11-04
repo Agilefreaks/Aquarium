@@ -21,7 +21,7 @@
 
 <div id="page">
   <div id="header">
-    <h1 id="title">Aquarium&nbsp;{version: }</h1>
+    <h1 id="title">Aquarium&nbsp;{version: }: Aspect-Oriented Programming for Ruby</h1>
   </div>
 
   <div class="breadcrumb-menu">

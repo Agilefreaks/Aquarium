@@ -38,17 +38,18 @@ module Aquarium
         # We require the same object id, not just equal objects.
         def <=> other
           return 0 if object_id == other.object_id 
+          return 1 if other.nil?
           result = self.class <=> other.class 
           return result unless result == 0
-          result = (self.advice_kind.nil? && other.advice_kind.nil?) ? 0 : self.advice_kind <=> other.advice_kind 
+          result = (self.advice_kind.nil? and other.advice_kind.nil?) ? 0 : self.advice_kind <=> other.advice_kind 
           return result unless result == 0
-          result = (self.advised_object.object_id.nil? && other.advised_object.object_id.nil?) ? 0 : self.advised_object.object_id <=> other.advised_object.object_id 
+          result = (self.advised_object.object_id.nil? and other.advised_object.object_id.nil?) ? 0 : self.advised_object.object_id <=> other.advised_object.object_id 
           return result unless result == 0
-          result = (self.parameters.nil? && other.parameters.nil?) ? 0 : self.parameters <=> other.parameters 
+          result = (self.parameters.nil? and other.parameters.nil?) ? 0 : self.parameters <=> other.parameters 
           return result unless result == 0
-          result = (self.returned_value.nil? && other.returned_value.nil?) ? 0 : self.returned_value <=> other.returned_value 
+          result = (self.returned_value.nil? and other.returned_value.nil?) ? 0 : self.returned_value <=> other.returned_value 
           return result unless result == 0
-          (self.raised_exception.nil? && other.raised_exception.nil?) ? 0 : self.raised_exception <=> other.raised_exception
+          (self.raised_exception.nil? and other.raised_exception.nil?) ? 0 : self.raised_exception <=> other.raised_exception
         end
     
         def eql? other
@@ -144,21 +145,21 @@ module Aquarium
 
       # We require the same object id, not just equal objects.
       def <=> other
-        return 0 if object_id == other.object_id 
+        return 0  if object_id == other.object_id 
+        return 1  if other.nil?
         result = self.class <=> other.class 
         return result unless result == 0
-        result = (self.target_type.nil? && other.target_type.nil?) ? 0 : self.target_type.to_s <=> other.target_type.to_s 
+        result = (self.target_type.nil? and other.target_type.nil?) ? 0 : self.target_type.to_s <=> other.target_type.to_s 
         return result unless result == 0
-        result = (self.target_object.nil? && other.target_object.nil?) ? 0 : self.target_object.object_id <=> other.target_object.object_id 
+        result = (self.target_object.nil? and other.target_object.nil?) ? 0 : self.target_object.object_id <=> other.target_object.object_id 
         return result unless result == 0
-        result = (self.method_name.nil? && other.method_name.nil?) ? 0 : self.method_name.to_s <=> other.method_name.to_s 
+        result = (self.method_name.nil? and other.method_name.nil?) ? 0 : self.method_name.to_s <=> other.method_name.to_s 
         return result unless result == 0
         result = self.instance_method? == other.instance_method?
         return 1 unless result == true
-        # result = (self.context.nil? && other.context.nil?) ? 0 : self.context <=> other.context 
-        return  0 if  self.context.nil? &&  other.context.nil?
-        return -1 if  self.context.nil? && !other.context.nil?
-        return  1 if !self.context.nil? && other.context.nil?
+        return  0 if  self.context.nil? and  other.context.nil?
+        return -1 if  self.context.nil? and !other.context.nil?
+        return  1 if !self.context.nil? and other.context.nil?
         return self.context <=> other.context 
       end
 

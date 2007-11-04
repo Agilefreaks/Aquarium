@@ -1,7 +1,7 @@
 /* Some properties are defined in environment.rb and dynamically included here. */  
 
 body {
-  width: 900px;
+  width: 1024px;
   margin: 0;
   margin-bottom: 25px;
   padding: 0;
@@ -86,6 +86,18 @@ pre.ruby {
   background-color: #E9D7A3;
 }
 
+#content {
+  width: 934px;  /* 1024 - 4*20px (margin) */
+  float: left;
+  background-color: #eed;
+  border: 2px solid #aaa;
+  border-top: none;
+  padding-top:    0px;
+  padding-left:   25px;
+  padding-right:  25px;
+  padding-bottom: 25px;
+}
+
 #content td {
   margin-top: 5px;
   margin-bottom: 5px;
@@ -100,7 +112,7 @@ pre.ruby {
 
 #page {
  /* background-color: #f0f0f0; */
-  width: 100%;
+  width: 984px; /* 1024 - 2*20px */
   margin: 0;
   margin-left: auto;
   margin-right: auto;
@@ -108,11 +120,12 @@ pre.ruby {
 
 #header, #about, #main {
   padding-left: 15px;
-  padding-right: 20px;
+  padding-right: 15px;
 }
+
 #title {
-  font-size: 36px;
-  background-image: url(images/banner.jpg);
+  font-size: 30px;
+/*  background-image: url(images/banner.jpg); */
   color: #EFF; /*#CBD6FF;*/
   font-family: "Times Roman", "Lucida Grande", "Bitstream Vera Sans", "Verdana";
   font-weight: bold;
@@ -125,15 +138,6 @@ h1 {
   font-family: "Times Roman", "Lucida Grande", "Bitstream Vera Sans", "Verdana";
 }
 
-#content {
-  width: 900px;
-  float: left;
-  background-color: #eed;
-  border: 2px solid #aaa;
-  border-top: none;
-  padding: 25px;
-}
-
 #sidebar-logo {
   float: right;
   width: 124px;
@@ -144,10 +148,10 @@ h1 {
   border-top: 1px solid #ccc;
   margin-top: 15px;
   padding-top: 15px;
- font-size: 12px;
- color: #444;
- text-align: left;
- font-size: 10px;
+  font-size: 12px;
+  color: #444;
+  text-align: left;
+  font-size: 10px;
 }
 
 
@@ -183,7 +187,7 @@ h1 {
 }
 
 #about-content {
- float: left;
+  float: left;
   background-color: #ffd;
   border: 1px solid #fc0;
   margin-left: -11px;

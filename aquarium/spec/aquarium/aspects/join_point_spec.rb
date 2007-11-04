@@ -265,14 +265,56 @@ describe Aquarium::Aspects::JoinPoint, "#<=>" do
     @jp3 = Aquarium::Aspects::JoinPoint.new :type => Array, :method_name => :size
     @jp4 = Aquarium::Aspects::JoinPoint.new :object => [],  :method_name => :size
     @jp5 = Aquarium::Aspects::JoinPoint.new :object => [],  :method_name => :size
+    dummy = Dummy.new
+    @jp6 = Aquarium::Aspects::JoinPoint.new :object => dummy,  :method_name => :size
+    @jp7 = Aquarium::Aspects::JoinPoint.new :object => dummy,  :method_name => :size
+    context_opts = {
+      :advice_kind => :before, 
+      :advised_object => dummy, 
+      :parameters => [], 
+      :block_for_method => nil, 
+      :returned_value => nil, 
+      :raised_exception => nil, 
+      :proceed_proc => nil
+    }
+    @jp1b = @jp1.make_current_context_join_point context_opts
+    @jp2b = @jp2.make_current_context_join_point context_opts
+    @jp6b = @jp6.make_current_context_join_point context_opts
+    @jp7b = @jp7.make_current_context_join_point context_opts
   end
   
-  it "should sort return 0 for the same join points" do
-    (@jp1.<=>@jp1).should == 0
+  it "should return 1 of the second object is nil" do
+    (@jp1 <=> nil).should == 1
   end
   
-  it "should sort return 0 for equivalent join points" do
-    (@jp1.<=>@jp2).should == 0
+  it "should return 0 for the same join point with no context" do
+    (@jp1 <=> @jp1).should == 0
+    (@jp6 <=> @jp6).should == 0
+  end
+  
+  it "should return 0 for the same join point with equivalent contexts" do
+    (@jp1b <=> @jp1b).should == 0
+    (@jp6b <=> @jp6b).should == 0
+  end
+  
+  it "should return 0 for equivalent join points with no context" do
+    (@jp1 <=>@jp2).should == 0
+    (@jp6 <=>@jp7).should == 0
+  end
+  
+  it "should return 0 for equivalent join points with equivalent contexts" do
+    (@jp1b <=> @jp2b).should == 0
+    (@jp6b <=> @jp7b).should == 0
+  end
+  
+  it "should return +1 for join points that equivalent except for the context, where the first join point has a context and the second does not" do
+    (@jp1b <=> @jp2).should == 1
+    (@jp6b <=> @jp7).should == 1
+  end
+  
+  it "should return -1 for join points that equivalent except for the context, where the second join point has a context and the first does not" do
+    (@jp1 <=> @jp2b).should == -1
+    (@jp6 <=> @jp6b).should == -1
   end
   
   it "should sort by type name first" do

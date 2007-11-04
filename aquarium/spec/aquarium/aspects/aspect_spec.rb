@@ -760,6 +760,37 @@ describe "Aspects unadvising methods should restore the original protection leve
   it_should_behave_like("invariant protection level of methods under advising and unadvising")
 end
 
+describe "Aspects unadvising methods for instance-type pointcuts for type-defined methods" do
+  class TypeDefinedMethodClass
+    def inititalize; @called = false; end
+    def m; @called = true; end
+    attr_reader :called
+  end
+  
+  it "should cause the object to respond to the type's original method." do
+    object = TypeDefinedMethodClass.new
+    aspect = Aspect.new(:before, :object => object, :method => :m) {true}
+    aspect.unadvise
+    object.m
+    object.called.should be_true
+  end
+end
+
+describe "Aspects unadvising methods for instance-type pointcuts for instance-defined methods" do
+  class InstanceDefinedMethodClass
+    def inititalize; @called = false; end
+    attr_reader :called
+  end
+  
+  it "should cause the object to respond to the object's original method." do
+    object = TypeDefinedMethodClass.new
+    def object.m; @called = true; end
+    aspect = Aspect.new(:before, :object => object, :method => :m) {true}
+    aspect.unadvise
+    object.m
+    object.called.should be_true
+  end
+end
 
 describe "Aspects advising methods with non-alphanumeric characters" do
   module Aquarium::Aspects

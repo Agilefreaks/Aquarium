@@ -1,9 +1,10 @@
 div.breadcrumb-menu {
+	width: 934px;  /* 1024 - 4*20px (margin) */
+	/*width: 100%;*/
 	height: 4.3em;
 	background-color: #eed; /* #FFF; #7B6C6D; */
 	border-left:  2px solid #aaa;
 	border-right: 2px solid #aaa;
-	width: 900px;
 	padding-left:  25px;
 	padding-right: 25px;
 }
@@ -29,7 +30,7 @@ div.breadcrumb-menu ul li span {
 
 div.breadcrumbs {
 	position: relative;
-	width: 900px;
+	/*width: 100%;*/
 	top: 0;
 	left: 0;
 	height: 2.1em;
@@ -43,11 +44,11 @@ div.breadcrumbs ul li {
 	left: 0;
 	background-position: center right;
 	background-repeat: no-repeat;
-	padding-right: 20px;
+	/*padding-right: 20px;*/
 }
 div.breadcrumbs ul li.selected {
 	background-image: none;
-	padding-right: 0;
+	/*padding-right: 0;*/
 }
 
 div.breadcrumbs ul li a {
@@ -73,7 +74,7 @@ div.breadcrumbs ul li.hovered a:hover {
 
 div.menu {
 	position: absolute;
-	width: 900px;
+	width: 934px;  /* 1024 - 4*20px (margin) */
 	background-color: #7b6c6d;
 	color: black;
 	z-index: 20;

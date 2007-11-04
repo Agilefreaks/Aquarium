@@ -261,14 +261,8 @@ module Aquarium
       end
       
       def find_join_points_for type_or_object_sym, candidates, method_names
-        # p Process.times.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
-        # p type_or_object_sym
-        # p method_names.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
-        # p candidates.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
         results = find_methods_for type_or_object_sym, candidates, method_names
-        # p Process.times.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
         add_join_points results, type_or_object_sym
-        # p Process.times.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")
       end
       
       def find_methods_for type_or_object_sym, candidates, which_methods
