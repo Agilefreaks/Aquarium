@@ -68,31 +68,8 @@ module Aquarium
         end    
       end
 
-      %w[type object].each do |attr|
-        class_eval(<<-EOF, __FILE__, __LINE__)
-          # Deprecated, as JoinPoint#type overrides Module#type in a non-substitutable way!
-          # JoinPoint#target_#{attr} will be removed in the next release.
-          # Use JoinPoint#target_#{attr} instead
-          def #{attr}
-            p "WARNING: JoinPoint##{attr} is deprecated. It will be removed in the next release."
-            target_#{attr}
-          end
-          # Deprecated
-          def #{attr}= new_#{attr}
-            p "WARNING: JoinPoint##{attr}= is deprecated. It will be removed in the next release."
-            target_#{attr}= new_#{attr}
-          end
-        EOF
-      end
-      
       attr_accessor :target_type, :target_object, :method_name, :visibility, :context
       attr_reader   :instance_or_class_method
-      
-      # For "symmetry" with JoinPoint#target_type
-      alias_method  :object, :target_object
-
-      # For "symmetry" with JoinPoint#target_type=
-      alias_method  :object=, :target_object=
       
       def instance_method?
         @instance_method
