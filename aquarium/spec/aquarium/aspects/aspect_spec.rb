@@ -614,6 +614,8 @@ describe Aspect, "with advise that calls JoinPoint#invoke_original_join_point" d
     aic = AdvicesInvocationCounter.new
     aic.increment
     aic.counter.should == 1
+    aspect1.unadvise
+    aspect2.unadvise
   end
 end
 
