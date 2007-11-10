@@ -224,9 +224,6 @@ module Aquarium
         use_default_object_if_defined unless (types_given? || objects_given? || pointcuts_given?)
         use_first_nonadvice_symbol_as_method(opts) unless methods_given?
         @advice = determine_advice block
-        if @advice.nil? && @specification[:noop].nil?
-          bad_options "No advice block nor :advice argument was given."
-        end
         validate_specification
       end
 
@@ -564,6 +561,12 @@ module Aquarium
         end
         @specification.each_key do |parameter|
           check_parameter parameter
+        end
+        if @advice.nil? && @specification[:noop].nil?
+          bad_options "No advice block nor :advice argument was given."
+        end
+        if @advice.arity == -2
+          bad_options "It appears that your advice parameter list is the obsolete format |jp, *args|. The correct format is |jp, object, *args|"
         end
       end
 

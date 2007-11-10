@@ -50,13 +50,13 @@ def before_pointcut_spec
   @expected_not_matched_jps = Set.new [@apro_jp, @apri_jp, @acpub_jp, @acpri_jp]
 end
 
-describe Aquarium::Aspects::Pointcut, "#new (invalid arguments)" do
+describe Aquarium::Aspects::Pointcut, ".new (invalid arguments)" do
   it "should raise if an unknown argument is specified" do
     lambda { Aquarium::Aspects::Pointcut.new :foo => :bar }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
 
-describe Aquarium::Aspects::Pointcut, "#new (empty)" do
+describe Aquarium::Aspects::Pointcut, ".new (empty)" do
   it "should match no join points by default." do
     pc = Aquarium::Aspects::Pointcut.new
     pc.should be_empty

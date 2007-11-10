@@ -23,7 +23,7 @@ module Nested1
   end
 end
 
-describe Aspect, "#new when advising methods in a nested class" do
+describe Aspect, ".new when advising methods in a nested class" do
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -61,7 +61,7 @@ describe Aspect, "#new when advising methods in a nested class" do
   end
 end
 
-describe Aspect, "#new when advising methods in a nested module included by a class" do
+describe Aspect, ".new when advising methods in a nested module included by a class" do
   after(:each) do
     @aspect.unadvise if @aspect
   end

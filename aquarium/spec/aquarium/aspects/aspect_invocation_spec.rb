@@ -30,7 +30,7 @@ def join_points_should_be_equal num_jps, aspect1, aspect2
 end
 
 
-describe Aspect, "#new parameters that specify the kind of advice" do
+describe Aspect, ".new parameters that specify the kind of advice" do
   it "should require the kind of advice as the first parameter." do
     lambda { Aspect.new :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
@@ -61,7 +61,7 @@ describe Aspect, "#new parameters that specify the kind of advice" do
   end
 end
 
-describe Aspect, "#new parameters that specify join points" do
+describe Aspect, ".new parameters that specify join points" do
   it "should contain at least one of :method(s), :pointcut(s), :type(s), or :object(s)." do
     lambda {Aspect.new(:after) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
   end
@@ -82,7 +82,7 @@ describe Aspect, "#new parameters that specify join points" do
 end
 
 
-describe Aspect, "#new :type parameter" do
+describe Aspect, ".new :type parameter" do
   it "should be accepted as a synonym for :types" do
     @advice = Proc.new {}
     @expected_methods = [:public_watchful_method]
@@ -94,7 +94,7 @@ describe Aspect, "#new :type parameter" do
   end
 end
 
-describe Aspect, "#new :pointcut parameter" do
+describe Aspect, ".new :pointcut parameter" do
   it "should be accepted as a synonym for :pointcuts" do
     @advice = Proc.new {}
     @expected_methods = [:public_watchful_method]
@@ -106,7 +106,7 @@ describe Aspect, "#new :pointcut parameter" do
   end
 end
 
-describe Aspect, "#new :object parameter" do
+describe Aspect, ".new :object parameter" do
   it "should be accepted as a synonym for :objects" do
     @advice = Proc.new {}
     @expected_methods = [:public_watchful_method]
@@ -119,7 +119,7 @@ describe Aspect, "#new :object parameter" do
   end
 end
 
-describe Aspect, "#new :method parameter" do
+describe Aspect, ".new :method parameter" do
   it "should be accepted as a synonym for :methods" do
     @advice = Proc.new {}
     @expected_methods = [:public_watchful_method]
@@ -131,7 +131,7 @@ describe Aspect, "#new :method parameter" do
   end
 end
 
-describe Aspect, "#new :attribute parameter" do
+describe Aspect, ".new :attribute parameter" do
   it "should be accepted as a synonym for :attributes" do
     @advice = Proc.new {}
     @expected_methods = [:public_watchful_method_args, :public_watchful_method_args=]
@@ -144,7 +144,7 @@ describe Aspect, "#new :attribute parameter" do
 end
 
 
-describe Aspect, "#new with a :type(s) parameter and a :method(s) parameter" do  
+describe Aspect, ".new with a :type(s) parameter and a :method(s) parameter" do  
   before :each do
     @protection = 'public'
     @are_class_methods = false
@@ -268,7 +268,7 @@ describe Aspect, "#new with a :type(s) parameter and a :method(s) parameter" do
 end
 
 
-describe Aspect, "#new with a :type(s) parameter and a :attribute(s) parameter" do  
+describe Aspect, ".new with a :type(s) parameter and a :attribute(s) parameter" do  
   before :each do
     @protection = 'public'
     @attribute_options = []
@@ -405,7 +405,7 @@ describe Aspect, "#new with a :type(s) parameter and a :attribute(s) parameter" 
   end
 end
 
-describe Aspect, "#new with a :object(s) parameter and a :method(s) parameter" do  
+describe Aspect, ".new with a :object(s) parameter and a :method(s) parameter" do  
   before :each do
     @watchful1 = Watchful.new
     @watchful2 = Watchful.new
@@ -497,7 +497,7 @@ describe Aspect, "#new with a :object(s) parameter and a :method(s) parameter" d
   end
 end
 
-describe Aspect, "#new with a :object(s) parameter and a :attribute(s) parameter" do  
+describe Aspect, ".new with a :object(s) parameter and a :attribute(s) parameter" do  
   before :each do
     @watchful1 = Watchful.new
     @watchful2 = Watchful.new
@@ -597,7 +597,7 @@ describe Aspect, "#new with a :object(s) parameter and a :attribute(s) parameter
   end
 end
 
-describe Aspect, "#new with a :pointcut parameter taking a hash with type specifications" do  
+describe Aspect, ".new with a :pointcut parameter taking a hash with type specifications" do  
   before :each do
     @protection = 'public'
     @are_class_methods = false
@@ -695,7 +695,7 @@ describe Aspect, "#new with a :pointcut parameter taking a hash with type specif
   end
 end
 
-describe Aspect, "#new with a :pointcut parameter taking a hash with object specifications" do  
+describe Aspect, ".new with a :pointcut parameter taking a hash with object specifications" do  
   before :each do
     @protection = 'public'
     @expected_advice_count = 2
@@ -752,7 +752,7 @@ describe Aspect, "#new with a :pointcut parameter taking a hash with object spec
   end
 end
 
-describe Aspect, "#new with a :pointcut parameter and a Pointcut object or an array of Pointcuts" do  
+describe Aspect, ".new with a :pointcut parameter and a Pointcut object or an array of Pointcuts" do  
   def do_pointcut_pointcut_spec
     aspect = nil
     advice_called = false
@@ -780,7 +780,7 @@ describe Aspect, "#new with a :pointcut parameter and a Pointcut object or an ar
   end
 end
 
-describe Aspect, "#new with a :pointcut parameter and an array of Pointcuts" do  
+describe Aspect, ".new with a :pointcut parameter and an array of Pointcuts" do  
   it "should treat the array as if it is one Pointcut \"or'ed\" together." do
     advice_called = 0
     advice = Proc.new {|jp, obj, *args|
@@ -807,7 +807,7 @@ describe Aspect, "#new with a :pointcut parameter and an array of Pointcuts" do
   end
 end
 
-describe Aspect, "#new with a :type(s) parameter and a :method(s) parameter or one of several equivalent :pointcut parameters" do
+describe Aspect, ".new with a :type(s) parameter and a :method(s) parameter or one of several equivalent :pointcut parameters" do
   before :each do
     @advice = proc {|jp, obj, *args| "advice"}
     @expected_methods = [:public_watchful_method]
@@ -845,7 +845,7 @@ describe Aspect, "#new with a :type(s) parameter and a :method(s) parameter or o
   end
 end
 
-describe Aspect, "#new with a :type(s) parameter and an :attributes(s) parameter or one of several equivalent :pointcut parameters" do
+describe Aspect, ".new with a :type(s) parameter and an :attributes(s) parameter or one of several equivalent :pointcut parameters" do
   class ClassWithAttrib1
     def dummy; end
     attr_accessor :state
@@ -902,7 +902,7 @@ describe Aspect, "#new with a :type(s) parameter and an :attributes(s) parameter
   end
 end
 
-describe Aspect, "#new with a :object(s) parameter and a :method(s) parameter or one of several equivalent :pointcut parameters" do
+describe Aspect, ".new with a :object(s) parameter and a :method(s) parameter or one of several equivalent :pointcut parameters" do
   before :each do
     @advice = proc {|jp, obj, *args| "advice"}
     @expected_methods = [:public_watchful_method]
@@ -936,7 +936,7 @@ describe Aspect, "#new with a :object(s) parameter and a :method(s) parameter or
   end
 end
 
-describe Aspect, "#new with a :object(s) parameter and an :attributes(s) parameter or one of several equivalent :pointcut parameters" do
+describe Aspect, ".new with a :object(s) parameter and an :attributes(s) parameter or one of several equivalent :pointcut parameters" do
   class ClassWithAttrib2
     def initialize *args
       @state = args
@@ -997,7 +997,7 @@ describe Aspect, "#new with a :object(s) parameter and an :attributes(s) paramet
   end
 end
 
-describe Aspect, "#new block for advice" do  
+describe Aspect, ".new block for advice" do  
   it "should accept a block as the advice to use." do
     watchful = Watchful.new
     advice_called = false
@@ -1102,6 +1102,32 @@ describe Aspect, "#new block for advice" do
   end
 end
 
+describe Aspect, ".new advice block or proc parameter list" do  
+  it "should raise if obsolete |jp, *args| list is used." do
+    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method do |jp, *args|; end }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+
+  it "should accept an argument list matching |jp, object, *args|." do
+    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do |jp, object, *args|; end }.should_not raise_error(Exception)
+  end
+
+  it "should accept an argument list matching |jp, object|." do
+    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do |jp, object|; end }.should_not raise_error(Exception)
+  end
+
+  it "should accept an argument list matching |jp|." do
+    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do |jp|; end }.should_not raise_error(Exception)
+  end
+
+  it "should accept an argument list matching ||." do
+    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do ||; end }.should_not raise_error(Exception)
+  end
+
+  it "should accept no argument list." do
+    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do; end }.should_not raise_error(Exception)
+  end
+end
+
 
 class ExcludeBase
   def doit; end
@@ -1128,7 +1154,7 @@ class Exclude1c < Exclude1
   def doit3; end
 end  
 
-describe Aspect, "#new with a :type(s) parameter and an :exclude_type(s) parameter" do  
+describe Aspect, ".new with a :type(s) parameter and an :exclude_type(s) parameter" do  
   def do_exclude_types exclude_type_sym
     included_types = [DontExclude1, DontExclude2]
     excluded_types = [Exclude1, Exclude2]
@@ -1161,7 +1187,7 @@ describe Aspect, "#new with a :type(s) parameter and an :exclude_type(s) paramet
 end
 
 
-describe Aspect, "#new with a :object(s) parameter and an :exclude_object(s) parameter" do  
+describe Aspect, ".new with a :object(s) parameter and an :exclude_object(s) parameter" do  
   def do_exclude_objects exclude_object_sym
     dontExclude1 = DontExclude1.new(1)
     dontExclude2 = DontExclude1.new(2)
@@ -1198,7 +1224,7 @@ describe Aspect, "#new with a :object(s) parameter and an :exclude_object(s) par
 end
 
 
-describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s) parameter and an :exclude_join_point(s) parameter" do  
+describe Aspect, ".new with a :pointcut(s), :type(s), :object(s), and :method(s) parameter and an :exclude_join_point(s) parameter" do  
   def do_exclude_join_points exclude_join_points_sym
     dontExclude1 = DontExclude1.new(1)
     dontExclude2 = DontExclude1.new(2)
@@ -1291,7 +1317,7 @@ describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s)
   end
 end
 
-describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s) parameter and an :exclude_pointcut(s) parameter" do  
+describe Aspect, ".new with a :pointcut(s), :type(s), :object(s), and :method(s) parameter and an :exclude_pointcut(s) parameter" do  
   def do_exclude_pointcuts exclude_pointcuts_sym
     dontExclude1 = DontExclude1.new(1)
     dontExclude2 = DontExclude1.new(2)
@@ -1384,7 +1410,7 @@ describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s)
   end
 end
 
-describe Aspect, "#new with type-based :pointcut(s) and :exclude_type(s) parameter" do  
+describe Aspect, ".new with type-based :pointcut(s) and :exclude_type(s) parameter" do  
 
   it "should accept :pointcut(s) => [P1, ...], :exclude_type(s) => [types], where join points with [types] are excluded" do  
     included_types = [DontExclude1, DontExclude2]
@@ -1413,7 +1439,7 @@ describe Aspect, "#new with type-based :pointcut(s) and :exclude_type(s) paramet
 end
 
 
-describe Aspect, "#new with object-based :pointcut(s) and :exclude_object(s) or :exclude_method(s) parameter" do  
+describe Aspect, ".new with object-based :pointcut(s) and :exclude_object(s) or :exclude_method(s) parameter" do  
 
   it "should accept :pointcut(s) => [P1, ...], :exclude_object(s) => [objects], where join points with [objects] are excluded" do  
     dontExclude1 = DontExclude1.new(1)
@@ -1444,7 +1470,7 @@ describe Aspect, "#new with object-based :pointcut(s) and :exclude_object(s) or 
   end
 end
 
-describe Aspect, "#new with :method(s) and :exclude_method(s) parameter" do  
+describe Aspect, ".new with :method(s) and :exclude_method(s) parameter" do  
   before :each do
     @dontExclude1 = DontExclude1.new(1)
     @dontExclude2 = DontExclude1.new(2)

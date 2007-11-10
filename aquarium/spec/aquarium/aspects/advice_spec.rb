@@ -108,15 +108,6 @@ describe Advice, "that raises an exception" do
   end
 end
 
-describe AdviceChainNode, "#new" do
-  it "should raise if no advice block is specified" do
-    lambda { Aquarium::Aspects::AdviceChainNode.new }.should raise_error(Aquarium::Utils::InvalidOptions)
-  end
-  it "should raise if advice block appears to use an obsolete parameter list format" do
-    lambda { Aquarium::Aspects::AdviceChainNode.new do |jp, *args|; end }.should raise_error(Aquarium::Utils::InvalidOptions)
-  end
-end
-
 describe AdviceChainNodeFactory, "#make_node" do
   it "should raise if an unknown advice kind is specified" do
     lambda {Aquarium::Aspects::AdviceChainNodeFactory.make_node :advice_kind => :foo}.should raise_error(Aquarium::Utils::InvalidOptions)    

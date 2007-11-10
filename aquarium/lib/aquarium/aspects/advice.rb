@@ -27,7 +27,6 @@ module Aquarium
       include Enumerable
       def initialize options = {}, &proc_block
         raise Aquarium::Utils::InvalidOptions.new("You must specify an advice block or Proc") if proc_block.nil?
-        raise Aquarium::Utils::InvalidOptions.new("It appears that the parameter list of your block follows the obsolete, pre-V0.2.0 format |jp, *args|. The correct format is now |jp, object, *args|") if proc_block.arity == -2
         @proc = Proc.new &proc_block
         # assign :next_node and :static_join_point so the attributes are always created
         options[:next_node] ||= nil  
