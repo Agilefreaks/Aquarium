@@ -26,6 +26,8 @@ module Aquarium
     class AdviceChainNode 
       include Enumerable
       def initialize options = {}, &proc_block
+        raise Aquarium::Utils::InvalidOptions.new("You must specify an advice block or Proc") if proc_block.nil?
+        raise Aquarium::Utils::InvalidOptions.new("It appears that the parameter list of your block follows the obsolete, pre-V0.2.0 format |jp, *args|. The correct format is now |jp, object, *args|") if proc_block.arity == -2
         @proc = Proc.new &proc_block
         # assign :next_node and :static_join_point so the attributes are always created
         options[:next_node] ||= nil  
@@ -38,17 +40,17 @@ module Aquarium
         end
       end
   
-      def call jp, *args
-        do_call @proc, "", jp, *args
+      def call jp, obj, *args
+        do_call @proc, "", jp, obj, *args
       end
 
-      def invoke_original_join_point current_jp, *args
-        do_call last, "While executing the original join_point: ", current_jp, *args
+      def invoke_original_join_point current_jp, obj, *args
+        do_call last, "While executing the original join_point: ", current_jp, obj, *args
       end
       
-      def do_call proc_to, error_message_prefix, jp, *args
+      def do_call proc_to, error_message_prefix, jp, obj, *args
         begin
-          proc_to.call jp, *args
+          proc_to.call jp, obj, *args
         rescue => e
           class_or_instance_method_separater = jp.instance_method? ? "#" : "."
           context_message = error_message_prefix + "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
@@ -104,7 +106,7 @@ module Aquarium
       # Note that we extract the block passed to the original method call, if any, 
       # from the context and pass it to method invocation.
       def initialize options = {}
-        super(options) { |jp, *args| 
+        super(options) { |jp, obj, *args| 
           block_for_method = jp.context.block_for_method
           method = invoking_object(jp).method(@alias_method_name)
           block_for_method.nil? ? 
@@ -121,20 +123,20 @@ module Aquarium
 
     class BeforeAdviceChainNode < AdviceChainNode
       def initialize options = {}
-        super(options) { |jp, *args| 
+        super(options) { |jp, obj, *args| 
           before_jp = jp.make_current_context_join_point :advice_kind => :before
-          advice.call(before_jp, *args)
-          next_node.call(jp, *args)
+          advice.call(before_jp, obj, *args)
+          next_node.call(jp, obj, *args)
         }
       end
     end
 
     class AfterReturningAdviceChainNode < AdviceChainNode
       def initialize options = {}
-        super(options) { |jp, *args| 
-          returned_value = next_node.call(jp, *args)
+        super(options) { |jp, obj, *args| 
+          returned_value = next_node.call(jp, obj, *args)
           next_jp = jp.make_current_context_join_point :advice_kind => :after_returning, :returned_value => returned_value
-          advice.call(next_jp, *args)
+          advice.call(next_jp, obj, *args)
           next_jp.context.returned_value   # allow advice to modify the returned value
         }
       end
@@ -145,13 +147,13 @@ module Aquarium
     class AfterRaisingAdviceChainNode < AdviceChainNode
       include Aquarium::Utils::ArrayUtils
       def initialize options = {}
-        super(options) { |jp, *args| 
+        super(options) { |jp, obj, *args| 
           begin
-            next_node.call(jp, *args)
+            next_node.call(jp, obj, *args)
           rescue Object => raised_exception
             if after_raising_exceptions_list_includes raised_exception
               next_jp = jp.make_current_context_join_point :advice_kind => :after_raising, :raised_exception => raised_exception
-              advice.call(next_jp, *args)
+              advice.call(next_jp, obj, *args)
               raised_exception = next_jp.context.raised_exception   # allow advice to modify raised exception
             end
             raise raised_exception
@@ -172,17 +174,17 @@ module Aquarium
 
     class AfterAdviceChainNode < AdviceChainNode
       def initialize options = {}
-        super(options) { |jp, *args| 
+        super(options) { |jp, obj, *args| 
           # advice.call is invoked in each bloc, rather than once in an "ensure" clause, so the invocation in the rescue class
           # can allow the advice to change the exception that will be raised.
           begin
-            returned_value = next_node.call(jp, *args)
+            returned_value = next_node.call(jp, obj, *args)
             next_jp = jp.make_current_context_join_point :advice_kind => :after, :returned_value => returned_value
-            advice.call(next_jp, *args)
+            advice.call(next_jp, obj, *args)
             next_jp.context.returned_value   # allow advice to modify the returned value
           rescue Object => raised_exception
             next_jp = jp.make_current_context_join_point :advice_kind => :after, :raised_exception => raised_exception
-            advice.call(next_jp, *args)
+            advice.call(next_jp, obj, *args)
             raise next_jp.context.raised_exception
           end
         }
@@ -191,9 +193,9 @@ module Aquarium
 
     class AroundAdviceChainNode < AdviceChainNode
       def initialize options = {}
-        super(options) { |jp, *args| 
+        super(options) { |jp, obj, *args| 
           around_jp = jp.make_current_context_join_point :advice_kind => :around, :proceed_proc => next_node
-          advice.call(around_jp, *args)
+          advice.call(around_jp, obj, *args)
         }
       end
     end

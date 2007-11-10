@@ -8,6 +8,9 @@ module Aquarium
   module Aspects
     class JoinPoint
 
+      class ProceedMethodNotAvailable < Exception; end
+      class ContextNotDefined < Exception; end
+      
       class Context
         attr_accessor :advice_kind, :advised_object, :parameters, :block_for_method, :returned_value, :raised_exception, :proceed_proc
 
@@ -26,7 +29,7 @@ module Aquarium
         end
     
         def proceed enclosing_join_point, *args, &block
-          raise "It looks like you tried to call \"JoinPoint#proceed\" (or \"JoinPoint::Context#proceed\") from within advice that isn't \"around\" advice. Only around advice can call proceed. (Specific error: JoinPoint#proceed cannot be called because no \"@proceed_proc\" attribute was set on the corresponding JoinPoint::Context object.)" unless @proceed_proc
+          raise ProceedMethodNotAvailable.new("It looks like you tried to call \"JoinPoint#proceed\" (or \"JoinPoint::Context#proceed\") from within advice that isn't \"around\" advice. Only around advice can call proceed. (Specific error: JoinPoint#proceed cannot be called because no \"@proceed_proc\" attribute was set on the corresponding JoinPoint::Context object.)") if @proceed_proc.nil?
           do_invoke :call, enclosing_join_point, *args, &block
         end
         
@@ -37,7 +40,7 @@ module Aquarium
         def do_invoke method, enclosing_join_point, *args, &block
           args = parameters if (args.nil? or args.size == 0)
           enclosing_join_point.context.block_for_method = block if block 
-          proceed_proc.send method, enclosing_join_point, *args
+          proceed_proc.send method, enclosing_join_point, advised_object, *args
         end
         protected :do_invoke
         
@@ -109,7 +112,7 @@ module Aquarium
         results = Aquarium::Finders::MethodFinder.new.find type_or_object_sym => type_or_object, 
                             :method => method_name, 
                             :options => [visibility, instance_or_class_method]
-        raise Exception("MethodFinder returned more than one item! #{results.inspect}") if (results.matched.size + results.not_matched.size) != 1
+        raise Aquarium::Utils::LogicError("MethodFinder returned more than one item! #{results.inspect}") if (results.matched.size + results.not_matched.size) != 1
         return results.matched.size == 1 ? true : false
       end
       
@@ -117,7 +120,7 @@ module Aquarium
       # This method can only be called if the join point has a context object defined that represents an actual
       # runtime "state".
       def proceed *args, &block
-        raise ":proceed can't be called unless the join point has a context object." if context.nil?
+        raise ContextNotDefined.new(":proceed can't be called unless the join point has a context object.") if context.nil?
         context.proceed self, *args, &block
       end
 
@@ -125,7 +128,7 @@ module Aquarium
       # This method can only be called if the join point has a context object defined that represents an actual
       # runtime "state".
       def invoke_original_join_point *args, &block
-        raise ":invoke_original_join_point can't be called unless the join point has a context object." if context.nil?
+        raise ContextNotDefined.new(":invoke_original_join_point can't be called unless the join point has a context object.") if context.nil?
         context.invoke_original_join_point self, *args, &block
       end
       

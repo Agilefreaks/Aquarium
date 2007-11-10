@@ -63,17 +63,17 @@ end
 
 describe Aspect, "#new parameters that specify join points" do
   it "should contain at least one of :method(s), :pointcut(s), :type(s), or :object(s)." do
-    lambda {Aspect.new(:after) {|jp, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda {Aspect.new(:after) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should contain at least one of :pointcut(s), :type(s), or :object(s) unless :default_object => object is given." do
-    aspect = Aspect.new(:after, :default_object => Watchful.new, :methods => :public_watchful_method) {|jp, *args| true}
+    aspect = Aspect.new(:after, :default_object => Watchful.new, :methods => :public_watchful_method) {|jp, obj, *args| true}
     aspect.unadvise
   end
 
   it "should not contain :pointcut(s) and either :type(s) or :object(s)." do
-    lambda {Aspect.new(:after, :pointcuts => {:type => Watchful, :methods => :public_watchful_method}, :type => Watchful, :methods => :public_watchful_method) {|jp, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda {Aspect.new(:after, :pointcuts => {:type => Watchful, :methods => :public_watchful_method}, :object => Watchful.new, :methods => :public_watchful_method) {|jp, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda {Aspect.new(:after, :pointcuts => {:type => Watchful, :methods => :public_watchful_method}, :type => Watchful, :methods => :public_watchful_method) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda {Aspect.new(:after, :pointcuts => {:type => Watchful, :methods => :public_watchful_method}, :object => Watchful.new, :methods => :public_watchful_method) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should include an advice block or :advice => advice parameter." do
@@ -154,7 +154,7 @@ describe Aspect, "#new with a :type(s) parameter and a :method(s) parameter" do
   def do_type_spec
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types => @type_spec, :methods => @method_spec, :method_options => @method_options do |jp, *args|
+    aspect = Aspect.new :before, :types => @type_spec, :methods => @method_spec, :method_options => @method_options do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
@@ -278,7 +278,7 @@ describe Aspect, "#new with a :type(s) parameter and a :attribute(s) parameter" 
   def do_type_attribute_spec
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types => @type_spec, :attributes => @attribute_spec, :attribute_options => @attribute_options do |jp, *args|
+    aspect = Aspect.new :before, :types => @type_spec, :attributes => @attribute_spec, :attribute_options => @attribute_options do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       expected_args = make_array(@expected_args)
@@ -416,7 +416,7 @@ describe Aspect, "#new with a :object(s) parameter and a :method(s) parameter" d
   def do_object_spec
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :objects => @object_spec, :methods => @method_spec, :method_options => @method_options do |jp, *args|
+    aspect = Aspect.new :before, :objects => @object_spec, :methods => @method_spec, :method_options => @method_options do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
@@ -508,7 +508,7 @@ describe Aspect, "#new with a :object(s) parameter and a :attribute(s) parameter
   def do_object_attribute_spec
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :objects => @object_spec, :attributes => @attribute_spec, :attribute_options => @attribute_options do |jp, *args|
+    aspect = Aspect.new :before, :objects => @object_spec, :attributes => @attribute_spec, :attribute_options => @attribute_options do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       expected_args = make_array(@expected_args)
@@ -606,7 +606,7 @@ describe Aspect, "#new with a :pointcut parameter taking a hash with type specif
   def do_type_pointcut_spec
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :pointcut => @pointcut_hash do |jp, *args|
+    aspect = Aspect.new :before, :pointcut => @pointcut_hash do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
@@ -706,7 +706,7 @@ describe Aspect, "#new with a :pointcut parameter taking a hash with object spec
   def do_object_pointcut_spec
     aspect = nil
     advice_count = 0
-    aspect = Aspect.new :before, :pointcut => @pointcut_hash do |jp, *args|
+    aspect = Aspect.new :before, :pointcut => @pointcut_hash do |jp, obj, *args|
       advice_count += 1
       jp.should_not be_nil
       args.size.should == 4
@@ -756,7 +756,7 @@ describe Aspect, "#new with a :pointcut parameter and a Pointcut object or an ar
   def do_pointcut_pointcut_spec
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :pointcut => @pointcuts do |jp, *args|
+    aspect = Aspect.new :before, :pointcut => @pointcuts do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
@@ -783,7 +783,7 @@ end
 describe Aspect, "#new with a :pointcut parameter and an array of Pointcuts" do  
   it "should treat the array as if it is one Pointcut \"or'ed\" together." do
     advice_called = 0
-    advice = Proc.new {|jp, *args|
+    advice = Proc.new {|jp, obj, *args|
       advice_called += 1
       jp.should_not be_nil
       args.size.should == 4
@@ -809,7 +809,7 @@ end
 
 describe Aspect, "#new with a :type(s) parameter and a :method(s) parameter or one of several equivalent :pointcut parameters" do
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @expected_methods = [:public_watchful_method]
   end
   after :each do
@@ -852,7 +852,7 @@ describe Aspect, "#new with a :type(s) parameter and an :attributes(s) parameter
   end
   
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @expected_methods = [:state, :state=]
   end
   after :each do
@@ -904,7 +904,7 @@ end
 
 describe Aspect, "#new with a :object(s) parameter and a :method(s) parameter or one of several equivalent :pointcut parameters" do
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @expected_methods = [:public_watchful_method]
   end
   after :each do
@@ -946,7 +946,7 @@ describe Aspect, "#new with a :object(s) parameter and an :attributes(s) paramet
   end
   
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @object = ClassWithAttrib2.new
     @expected_methods = [:state, :state=]
   end
@@ -1001,7 +1001,7 @@ describe Aspect, "#new block for advice" do
   it "should accept a block as the advice to use." do
     watchful = Watchful.new
     advice_called = false
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method do |jp, *args|
+    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
@@ -1015,7 +1015,7 @@ describe Aspect, "#new block for advice" do
   it "should accept an :advice => Proc parameter indicating the advice to use." do
     watchful = Watchful.new
     advice_called = false
-    advice = Proc.new {|jp, *args|
+    advice = Proc.new {|jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
@@ -1030,7 +1030,7 @@ describe Aspect, "#new block for advice" do
   it "should accept a :call => Proc parameter as a synonym for :advice." do
     watchful = Watchful.new
     advice_called = false
-    advice = Proc.new {|jp, *args|
+    advice = Proc.new {|jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
@@ -1045,7 +1045,7 @@ describe Aspect, "#new block for advice" do
   it "should accept a :invoke => Proc parameter as a synonym for :advice." do
     watchful = Watchful.new
     advice_called = false
-    advice = Proc.new {|jp, *args|
+    advice = Proc.new {|jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
@@ -1060,7 +1060,7 @@ describe Aspect, "#new block for advice" do
   it "should accept a :advise_with => Proc parameter as a synonym for :advice." do
     watchful = Watchful.new
     advice_called = false
-    advice = Proc.new {|jp, *args|
+    advice = Proc.new {|jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
@@ -1075,9 +1075,9 @@ describe Aspect, "#new block for advice" do
   it "should ignore all other advice parameters if a block is given." do
     watchful = Watchful.new
     advice_called = false
-    advice1 = Proc.new {|jp, *args| fail "advice1"}
-    advice2 = Proc.new {|jp, *args| fail "advice2"}
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advice => advice1, :invoke => advice2 do |jp, *args|
+    advice1 = Proc.new {|jp, obj, *args| fail "advice1"}
+    advice2 = Proc.new {|jp, obj, *args| fail "advice2"}
+    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advice => advice1, :invoke => advice2 do |jp, obj, *args|
       advice_called = true
     end
     watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
@@ -1088,13 +1088,13 @@ describe Aspect, "#new block for advice" do
   it "should ignore all but the last advice parameter, using any synonym, if there is no advice block." do
     watchful = Watchful.new
     advice_called = false
-    advice1 = Proc.new {|jp, *args|
+    advice1 = Proc.new {|jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     }
-    advice2 = Proc.new {|jp, *args| raise "should not be called"}
+    advice2 = Proc.new {|jp, obj, *args| raise "should not be called"}
     aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advice => advice2, :advice => advice1
     watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
@@ -1134,7 +1134,7 @@ describe Aspect, "#new with a :type(s) parameter and an :exclude_type(s) paramet
     excluded_types = [Exclude1, Exclude2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types => (included_types + excluded_types), exclude_type_sym => excluded_types, :methods => :doit do |jp, *args|
+    aspect = Aspect.new :before, :types => (included_types + excluded_types), exclude_type_sym => excluded_types, :methods => :doit do |jp, obj, *args|
       advice_called = true
       excluded_types.should_not include(jp.target_type)
     end 
@@ -1171,7 +1171,7 @@ describe Aspect, "#new with a :object(s) parameter and an :exclude_object(s) par
     excluded_objects = [exclude1, exclude2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_object_sym => excluded_objects, :methods => :doit do |jp, *args|
+    aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_object_sym => excluded_objects, :methods => :doit do |jp, obj, *args|
       advice_called = true
       excluded_objects.should_not include(jp.context.advised_object)
     end 
@@ -1211,7 +1211,7 @@ describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s)
     excluded_join_points = [excluded_join_point1, excluded_join_point2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_join_points_sym => excluded_join_points, :methods => :doit do |jp, *args|
+    aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_join_points_sym => excluded_join_points, :methods => :doit do |jp, obj, *args|
       advice_called = true
       excluded_objects.should_not include(jp.context.advised_object)
     end 
@@ -1245,7 +1245,7 @@ describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s)
     excluded_join_points = [excluded_join_point1, excluded_join_point2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types => (included_types + excluded_types), :exclude_join_points => excluded_join_points, :methods => :doit do |jp, *args|
+    aspect = Aspect.new :before, :types => (included_types + excluded_types), :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|
       advice_called = true
       excluded_types.should_not include(jp.target_type)
     end 
@@ -1273,7 +1273,7 @@ describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s)
     pointcut2 = Pointcut.new :types => excluded_types, :method => :doit
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_join_points => excluded_join_points do |jp, *args|
+    aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_join_points => excluded_join_points do |jp, obj, *args|
       advice_called = true
       excluded_types.should_not include(jp.target_type)
     end 
@@ -1304,7 +1304,7 @@ describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s)
     excluded_pointcuts = [excluded_pointcut1, excluded_pointcut2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_pointcuts_sym => excluded_pointcuts, :methods => :doit do |jp, *args|
+    aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_pointcuts_sym => excluded_pointcuts, :methods => :doit do |jp, obj, *args|
       advice_called = true
       excluded_objects.should_not include(jp.context.advised_object)
     end 
@@ -1338,7 +1338,7 @@ describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s)
     excluded_pointcuts = [excluded_pointcut1, excluded_pointcut2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types => (included_types + excluded_types), :exclude_pointcuts => excluded_pointcuts, :methods => :doit do |jp, *args|
+    aspect = Aspect.new :before, :types => (included_types + excluded_types), :exclude_pointcuts => excluded_pointcuts, :methods => :doit do |jp, obj, *args|
       advice_called = true
       excluded_types.should_not include(jp.target_type)
     end 
@@ -1366,7 +1366,7 @@ describe Aspect, "#new with a :pointcut(s), :type(s), :object(s), and :method(s)
     pointcut2 = Pointcut.new :types => excluded_types, :method => :doit
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_pointcuts => excluded_pointcuts do |jp, *args|
+    aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_pointcuts => excluded_pointcuts do |jp, obj, *args|
       advice_called = true
       excluded_types.should_not include(jp.target_type)
     end 
@@ -1393,7 +1393,7 @@ describe Aspect, "#new with type-based :pointcut(s) and :exclude_type(s) paramet
     pointcut2 = Pointcut.new :types => excluded_types, :method => :doit
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_types => excluded_types do |jp, *args|
+    aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_types => excluded_types do |jp, obj, *args|
       advice_called = true
       excluded_types.should_not include(jp.target_type)
     end 
@@ -1426,7 +1426,7 @@ describe Aspect, "#new with object-based :pointcut(s) and :exclude_object(s) or 
     pointcut2 = Pointcut.new :objects => excluded_objects, :method => :doit
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_objects => excluded_objects do |jp, *args|
+    aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_objects => excluded_objects do |jp, obj, *args|
       advice_called = true
       excluded_objects.should_not include(jp.context.advised_object)
     end 
@@ -1467,7 +1467,7 @@ describe Aspect, "#new with :method(s) and :exclude_method(s) parameter" do
     parameter_hash[:exclude_method] = :doit3    
     aspect = nil
     advice_called = false
-    aspect = Aspect.new parameter_hash do |jp, *args|
+    aspect = Aspect.new parameter_hash do |jp, obj, *args|
       advice_called = true
       @excluded_methods.should_not include(jp.method_name)
     end 
@@ -1525,7 +1525,7 @@ describe Aspect, "#new with :method(s) and :exclude_method(s) parameter" do
   #   parameter_hash[:method] = /doit/  
   #   aspect = nil
   #   advice_called = false
-  #   aspect = Aspect.new parameter_hash do |jp, *args|
+  #   aspect = Aspect.new parameter_hash do |jp, obj, *args|
   #     advice_called = true
   #     @excluded_methods.should_not include(jp.method_name)
   #   end 
@@ -1540,7 +1540,7 @@ describe Aspect, "#new with :method(s) and :exclude_method(s) parameter" do
   # def buggy parameter_hash
   #   parameter_hash[:before] = ''
   #   parameter_hash[:exclude_method] = :doit3  
-  #   aspect = Aspect.new parameter_hash do |jp, *args|
+  #   aspect = Aspect.new parameter_hash do |jp, obj, *args|
   #   end 
   #   @excluded_objects.each do |object|
   #     object.doit

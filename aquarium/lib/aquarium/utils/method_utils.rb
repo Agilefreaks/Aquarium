@@ -1,4 +1,5 @@
 require 'aquarium/utils/type_utils'
+require 'aquarium/utils/logic_error'
 
 module Aquarium
   module Utils
@@ -69,7 +70,7 @@ module Aquarium
         if candidates.size == 2 and Aquarium::Utils::TypeUtils.is_type?(type_or_instance) == false
           return determine_actual_parent(type_or_instance, candidates)
         end
-        candidates.size == 1 ? candidates.first : raise("Bug: Got multiple types #{candidates.inspect} that implement method #{method_sym}")
+        candidates.size == 1 ? candidates.first : raise(Aquarium::Utils::LogicError.new("Bug: Got multiple types #{candidates.inspect} that implement method #{method_sym}"))
       end
       
       def self.determine_actual_parent object, candidates

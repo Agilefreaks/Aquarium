@@ -28,7 +28,7 @@ echo1.say "hello", "world!"
 echo1.log "something", "interesting..."
 echo1.shout "theater", "in", "a", "crowded", "firehouse!"
 
-Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Echo, :method => :method_missing do |join_point, sym, *args|
+Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Echo, :method => :method_missing do |join_point, obj, sym, *args|
   if sym == :log 
     p "--- Sending to log: #{args.join(" ")}" 
   else

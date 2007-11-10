@@ -11,7 +11,7 @@ describe "Aspects that specify the private implementation methods inserted by ot
     class WithAspectLikeMethod
       def _aspect_foo; end
     end
-    aspect = Aspect.new(:after, :pointcut => {:type => WithAspectLikeMethod, :methods => :_aspect_foo}) {|jp, *args| fail}
+    aspect = Aspect.new(:after, :pointcut => {:type => WithAspectLikeMethod, :methods => :_aspect_foo}) {|jp, obj, *args| fail}
     WithAspectLikeMethod.new._aspect_foo
     aspect.unadvise
   end
@@ -69,7 +69,7 @@ describe "Aspects with :before advice" do
   it "should pass the context information to the advice, including self and the method parameters." do
     watchful = Watchful.new
     context = nil
-    @aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -83,7 +83,7 @@ describe "Aspects with :before advice" do
   end
 
   it "should evaluate the advice before the method body and its block (if any)." do
-    @aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       @advice_called += 1
     end 
     do_watchful_public_protected_private 
@@ -98,7 +98,7 @@ describe "Aspects with :after advice" do
   it "should pass the context information to the advice, including self, the method parameters, and the return value when the method returns normally." do
     watchful = Watchful.new
     context = nil
-    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -114,7 +114,7 @@ describe "Aspects with :after advice" do
   it "should pass the context information to the advice, including self, the method parameters, and the rescued exception when an exception is raised." do
     watchful = Watchful.new
     context = nil
-    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => /public_watchful_method/} do |jp, *args|
+    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => /public_watchful_method/} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -127,7 +127,7 @@ describe "Aspects with :after advice" do
   end
 
   it "should evaluate the advice after the method body and its block (if any)." do
-    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       @advice_called += 1
     end 
     do_watchful_public_protected_private 
@@ -141,7 +141,7 @@ describe "Aspects with :after advice" do
     end
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
-    @aspect = Aspect.new :after, :type => ReturningValue, :method => :doit do |jp, *args|
+    @aspect = Aspect.new :after, :type => ReturningValue, :method => :doit do |jp, obj, *args|
       %w[aa] + jp.context.returned_value + %w[e]
     end 
     ReturningValue.new.doit(ary).should == %w[a b c d]
@@ -155,7 +155,7 @@ describe "Aspects with :after advice" do
     end
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
-    @aspect = Aspect.new :after, :type => ReturningValue, :method => :doit do |jp, *args|
+    @aspect = Aspect.new :after, :type => ReturningValue, :method => :doit do |jp, obj, *args|
       jp.context.returned_value = %w[aa] + jp.context.returned_value + %w[e]
     end 
     ReturningValue.new.doit(ary).should == %w[aa a b c d e]
@@ -170,7 +170,7 @@ describe "Aspects with :after_returning advice" do
   it "should pass the context information to the advice, including self, the method parameters, and the return value." do
     watchful = Watchful.new
     context = nil
-    @aspect = Aspect.new :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -184,7 +184,7 @@ describe "Aspects with :after_returning advice" do
   end
 
   it "should evaluate the advice after the method body and its block (if any)." do
-    @aspect = Aspect.new :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       @advice_called += 1
     end 
     do_watchful_public_protected_private 
@@ -198,7 +198,7 @@ describe "Aspects with :after_returning advice" do
     end
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
-    @aspect = Aspect.new :after_returning, :type => ReturningValue, :method => :doit do |jp, *args|
+    @aspect = Aspect.new :after_returning, :type => ReturningValue, :method => :doit do |jp, obj, *args|
       %w[aa] + jp.context.returned_value + %w[e]
     end 
     ReturningValue.new.doit(ary).should == %w[a b c d]
@@ -212,7 +212,7 @@ describe "Aspects with :after_returning advice" do
     end
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
-    @aspect = Aspect.new :after_returning, :type => ReturningValue, :method => :doit do |jp, *args|
+    @aspect = Aspect.new :after_returning, :type => ReturningValue, :method => :doit do |jp, obj, *args|
       jp.context.returned_value = %w[aa] + jp.context.returned_value + %w[e]
     end 
     ReturningValue.new.doit(ary).should == %w[aa a b c d e]
@@ -227,7 +227,7 @@ describe "Aspects with :after_raising advice" do
   it "should pass the context information to the advice, including self, the method parameters, and the rescued exception." do
     watchful = Watchful.new
     context = nil
-    @aspect = Aspect.new :after_raising, :pointcut => {:type => Watchful, :methods => /public_watchful_method/} do |jp, *args|
+    @aspect = Aspect.new :after_raising, :pointcut => {:type => Watchful, :methods => /public_watchful_method/} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -241,7 +241,7 @@ describe "Aspects with :after_raising advice" do
   end
 
   it "should evaluate the advice after the method body and its block (if any)." do
-    @aspect = Aspect.new :after_raising, :pointcut => {:type => Watchful, :methods => /public_watchful_method/} do |jp, *args|
+    @aspect = Aspect.new :after_raising, :pointcut => {:type => Watchful, :methods => /public_watchful_method/} do |jp, obj, *args|
       @advice_called += 1
     end 
     do_watchful_public_protected_private true
@@ -250,7 +250,7 @@ describe "Aspects with :after_raising advice" do
   it "should not advise rescue clauses for raised exceptions of types that don't match the specified exception" do
     class MyError < StandardError; end
     aspect_advice_invoked = false
-    @aspect = Aspect.new(:after_raising => MyError, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, *args| aspect_advice_invoked = true}
+    @aspect = Aspect.new(:after_raising => MyError, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
     lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
@@ -262,7 +262,7 @@ describe "Aspects with :after_raising advice" do
     class MyError1 < StandardError; end
     class MyError2 < StandardError; end
     aspect_advice_invoked = false
-    @aspect = Aspect.new(:after_raising => [MyError1, MyError2], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, *args| aspect_advice_invoked = true}
+    @aspect = Aspect.new(:after_raising => [MyError1, MyError2], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
     lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
@@ -278,7 +278,7 @@ describe "Aspects with :after_raising advice" do
       end
     end
     aspect_advice_invoked = false
-    @aspect = Aspect.new :after_raising, :pointcut => {:type => ClassThatRaises, :methods => :raises} do |jp, *args|
+    @aspect = Aspect.new :after_raising, :pointcut => {:type => ClassThatRaises, :methods => :raises} do |jp, obj, *args|
       aspect_advice_invoked = true
     end 
     aspect_advice_invoked.should be_false
@@ -295,7 +295,7 @@ describe "Aspects with :before and :after advice" do
 
   it "should pass the context information to the advice, including self and the method parameters, plus the return value for the after-advice case." do
     contexts = []
-    @aspect = Aspect.new :before, :after, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, *args|
+    @aspect = Aspect.new :before, :after, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, obj, *args|
       contexts << jp.context
     end 
     watchful = Watchful.new
@@ -322,7 +322,7 @@ describe "Aspects with :before and :after advice" do
   end
 
   it "should evaluate the advice before and after the method body and its block (if any)." do
-    @aspect = Aspect.new :before, :after, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :before, :after, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       @advice_called += 1
     end 
     do_watchful_public_protected_private false, 2 
@@ -337,7 +337,7 @@ describe "Aspects with :before and :after_returning advice" do
   it "should pass the context information to the advice, including self and the method parameters, plus the return value for the after-advice case." do
     watchful = Watchful.new
     contexts = []
-    @aspect = Aspect.new :before, :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :before, :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       contexts << jp.context
     end 
     block_called = 0
@@ -356,7 +356,7 @@ describe "Aspects with :before and :after_returning advice" do
   end
 
   it "should evaluate the advice before and after the method body and its block (if any)." do
-    @aspect = Aspect.new :before, :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :before, :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       @advice_called += 1
     end 
     do_watchful_public_protected_private false, 2 
@@ -371,7 +371,7 @@ describe "Aspects with :before and :after_raising advice" do
   it "should pass the context information to the advice, including self and the method parameters, plus the raised exception for the after-advice case." do
     watchful = Watchful.new
     contexts = []
-    @aspect = Aspect.new :before, :after_raising, :pointcut => {:type => Watchful, :methods => :public_watchful_method_that_raises} do |jp, *args|
+    @aspect = Aspect.new :before, :after_raising, :pointcut => {:type => Watchful, :methods => :public_watchful_method_that_raises} do |jp, obj, *args|
       contexts << jp.context
     end 
     block_called = 0
@@ -390,7 +390,7 @@ describe "Aspects with :before and :after_raising advice" do
   end
 
   it "should evaluate the advice before and after the method body and its block (if any)." do
-    @aspect = Aspect.new :before, :after_raising, :pointcut => {:type => Watchful, :methods => :public_watchful_method_that_raises} do |jp, *args|
+    @aspect = Aspect.new :before, :after_raising, :pointcut => {:type => Watchful, :methods => :public_watchful_method_that_raises} do |jp, obj, *args|
       @advice_called += 1
     end 
     do_watchful_public_protected_private true, 2 
@@ -404,7 +404,7 @@ describe "Aspects with :around advice" do
 
   it "should pass the context information to the advice, including the object, advice kind, the method invocation parameters, etc." do
     contexts = []
-    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, *args|
+    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, obj, *args|
       contexts << jp.context
     end 
     watchful = Watchful.new
@@ -445,7 +445,7 @@ describe "Aspects with :around advice" do
     end
     
     context = nil
-    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSuperClass::SuperClass, :methods => [:public_method]} do |jp, *args|
+    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSuperClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
       context = jp.context
     end 
     child = AdvisingSuperClass::SubClass.new
@@ -485,7 +485,7 @@ describe "Aspects with :around advice" do
     end
     
     context = nil
-    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSubClass::SuperClass, :methods => [:public_method]} do |jp, *args|
+    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSubClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
       context = jp.context
     end 
     child = AdvisingSubClass::SubClass.new
@@ -517,7 +517,7 @@ describe "Aspects with :around advice" do
         @override_called = false
       end
     end
-    @aspect = Aspect.new(:around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]}) {|jp, *args| fail}
+    @aspect = Aspect.new(:around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]}) {|jp, obj, *args| fail}
     child = WatchfulChild2.new
     public_block_called = false
     child.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| public_block_called = true }
@@ -542,7 +542,7 @@ describe "Aspects with :around advice" do
   
   it "should pass parameters and a block passed explicitly to JoinPoint#proceed, rather than the original method parameters and block." do
     override_block_called = false
-    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       jp.proceed(:a4, :a5, :a6) {|*args| override_block_called = true}
     end 
     watchful = Watchful.new
@@ -561,7 +561,7 @@ describe "Aspects with :around advice" do
     end
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
-    @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, *args|
+    @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, obj, *args|
       jp.proceed
       %w[aa bb cc]
     end 
@@ -576,7 +576,7 @@ describe "Aspects with :around advice" do
     end
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
-    @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, *args|
+    @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, obj, *args|
       begin
         jp.proceed
       ensure
@@ -587,7 +587,7 @@ describe "Aspects with :around advice" do
   end
 
   def do_around_spec *args_passed_to_proceed
-    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args|
+    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       @advice_called += 1
       returned_value = args_passed_to_proceed.empty? ? jp.proceed : jp.proceed(*args_passed_to_proceed) 
       @advice_called += 1
@@ -605,10 +605,8 @@ describe Aspect, "with advise that calls JoinPoint#invoke_original_join_point" d
   end
   
   it "should not call the intermediate advices" do
-    aspect1 = Aspect.new :around, :type => AdvicesInvocationCounter, :method => :increment do |jp, *args|
-      fail
-    end
-    aspect2 = Aspect.new :around, :type => AdvicesInvocationCounter, :method => :increment do |jp, *args|
+    aspect1 = Aspect.new :around, :type => AdvicesInvocationCounter, :method => :increment do |jp, obj, *args|; fail; end
+    aspect2 = Aspect.new :around, :type => AdvicesInvocationCounter, :method => :increment do |jp, obj, *args|
       jp.invoke_original_join_point
     end
     aic = AdvicesInvocationCounter.new
@@ -680,7 +678,7 @@ describe Aspect, "#unadvise for removes all traces of the aspect" do
     parameters[:after] = ''
     expected_methods = send(which_get_methods)
     advice_called = false
-    aspect = Aspect.new(:after, parameters) {|jp, *args| advice_called = true}
+    aspect = Aspect.new(:after, parameters) {|jp, obj, *args| advice_called = true}
     diff_methods send(which_get_methods), expected_methods, true
     aspect.unadvise
     diff_methods send(which_get_methods), expected_methods
@@ -711,8 +709,8 @@ describe Aspect, "#unadvise for removes all traces of the aspect" do
       def bar; end
     end
     before = Foo.private_instance_methods.sort
-    aspect1 = Aspect.new(:before, :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, *args| true}
-    aspect2 = Aspect.new(:after,  :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, *args| true}
+    aspect1 = Aspect.new(:before, :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, obj, *args| true}
+    aspect2 = Aspect.new(:after,  :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, obj, *args| true}
     after  = Foo.private_instance_methods
     (after - before).should_not == []
     aspect1.unadvise
@@ -728,8 +726,8 @@ describe Aspect, "#unadvise for removes all traces of the aspect" do
       def bar; end
     end
     before = Foo.private_instance_methods.sort
-    aspect1 = Aspect.new(:before, :type => Foo, :method_options => :exclude_ancestor_methods) {|jp, *args| true}
-    aspect2 = Aspect.new(:after,  :type => Foo, :method_options => :exclude_ancestor_methods) {|jp, *args| true}
+    aspect1 = Aspect.new(:before, :type => Foo, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
+    aspect2 = Aspect.new(:after,  :type => Foo, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
     after  = Foo.private_instance_methods
     (after - before).should_not == []
     aspect1.unadvise
@@ -746,8 +744,8 @@ describe Aspect, "#unadvise for removes all traces of the aspect" do
     end
     overhead = Overhead.new
     before = overhead.private_methods.sort
-    aspect1 = Aspect.new(:before, :object => overhead, :method_options => :exclude_ancestor_methods) {|jp, *args| true}
-    aspect2 = Aspect.new(:after,  :object => overhead, :method_options => :exclude_ancestor_methods) {|jp, *args| true}
+    aspect1 = Aspect.new(:before, :object => overhead, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
+    aspect2 = Aspect.new(:after,  :object => overhead, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
     after  = overhead.private_methods
     (after - before).should_not == []
     aspect1.unadvise
@@ -765,7 +763,7 @@ describe "invariant protection level of methods under advising and unadvising", 
       meta   = "#{protection}_instance_methods"
       method = "#{protection}_watchful_method"
       Watchful.send(meta).should include(method)
-      aspect = Aspect.new(:after, :type => Watchful, :method => method.intern) {|jp, *args| true }
+      aspect = Aspect.new(:after, :type => Watchful, :method => method.intern) {|jp, obj, *args| true }
       Watchful.send(meta).should include(method)
       aspect.unadvise
       Watchful.send(meta).should include(method)
@@ -833,7 +831,7 @@ describe "Aspects advising methods with non-alphanumeric characters" do
   it "should work with any valid ruby character" do
     actual = ""
     Aspect.new :before, :type => Aquarium::Aspects::ClassWithMethodNamesContainingOddChars, 
-      :methods => Aquarium::Aspects::ClassWithMethodNamesContainingOddChars.method_names do |jp, *args|
+      :methods => Aquarium::Aspects::ClassWithMethodNamesContainingOddChars.method_names do |jp, obj, *args|
       actual += ", #{jp.method_name}"
     end
     object = Aquarium::Aspects::ClassWithMethodNamesContainingOddChars.new

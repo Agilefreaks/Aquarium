@@ -70,7 +70,7 @@ module Aquarium
       #    ((:types => [...] | :objects => [...]), 
       #     :methods => [], :method_options => [...], \
       #     :attributes => [...], :attribute_options[...]), \
-      #    (:advice = advice | do |join_point, *args| ...; end)
+      #    (:advice = advice | do |join_point, obj, *args| ...; end)
       # 
       # where the parameters often have many synonyms (mostly to support a "humane
       # interface") and they are interpreted as followed:
@@ -164,6 +164,9 @@ module Aquarium
       # <tt>:exclude_attribute   => attribute || [attribute_list]</tt>::
       #   Exclude the specified "things" from the matched join points.
       #
+      # The actual advice to execute is the block or you can pass a Proc using :advice => proc.
+      # Note that the advice takes a join_point argument, which will include a non-nil 
+      # JoinPoint#Context object, the object being executed, and the argument list to the method.
       def initialize *options, &block
         process_input options, &block
         init_pointcuts
@@ -402,7 +405,7 @@ module Aquarium
             :advised_object => #{target_self}, 
             :parameters => args, 
             :block_for_method => block_for_method)
-          advice_chain.call advice_join_point, *args
+          advice_chain.call advice_join_point, #{target_self}, *args
         end
         #{join_point.visibility.to_s} :#{join_point.method_name}
         private :#{alias_method_name}

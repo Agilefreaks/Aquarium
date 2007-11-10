@@ -33,7 +33,7 @@ describe Aspect, " when advising overridden methods that call super" do
 
   it "should correctly invoke and advise subclass and superclass methods." do
     advised_types = []
-    @aspect = Aspect.new :before, :pointcut => {:types => /SubTypeAspects::.*/, :methods => :doit} do |jp, *args|
+    @aspect = Aspect.new :before, :pointcut => {:types => /SubTypeAspects::.*/, :methods => :doit} do |jp, obj, *args|
       advised_types << jp.target_type
     end 
     derived = SubTypeAspects::Derived.new

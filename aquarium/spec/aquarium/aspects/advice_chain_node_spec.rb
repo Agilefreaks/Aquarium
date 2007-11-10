@@ -9,7 +9,7 @@ include Aquarium::Aspects::Advice
 describe Aquarium::Aspects::AdviceChainNode, "#each" do
   it "should return each node in succession" do
     static_join_point = :static_join_point
-    advice = lambda {|jp, *args| p ":none advice"}
+    advice = lambda {|jp, obj, *args| p ":none advice"}
     options = {
       :advice_kind => :none, 
       :advice => advice,
@@ -18,7 +18,7 @@ describe Aquarium::Aspects::AdviceChainNode, "#each" do
     advice_chain = Aquarium::Aspects::AdviceChainNodeFactory.make_node options
 
     KINDS_IN_PRIORITY_ORDER.each do |advice_kind|
-      advice = lambda {|jp, *args| p "#{advice_kind} advice"}
+      advice = lambda {|jp, obj, *args| p "#{advice_kind} advice"}
       options[:advice_kind] = advice_kind
       options[:advice]      = advice,
       options[:next_node]   = advice_chain

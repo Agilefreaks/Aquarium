@@ -7,7 +7,7 @@ describe Aquarium::Extras::DesignByContract, "precondition" do
     def action *args
     end
     
-    precondition :method => :action, :message => "Must pass more than one argument." do |jp, *args|
+    precondition :method => :action, :message => "Must pass more than one argument." do |jp, obj, *args|
       args.size > 0
     end
   end
@@ -27,7 +27,7 @@ describe Aquarium::Extras::DesignByContract, "postcondition" do
     def action *args
     end
     
-    postcondition :method => :action, :message => "Must pass more than one argument and first argument must be non-empty." do |jp, *args|
+    postcondition :method => :action, :message => "Must pass more than one argument and first argument must be non-empty." do |jp, obj, *args|
       args.size > 0 && ! args[0].empty?
     end
   end
@@ -58,7 +58,7 @@ describe Aquarium::Extras::DesignByContract, "invariant" do
       "bad"
     end
     
-    invariant :methods => /action$/, :message => "Must not change the @invar value." do |jp, *args|
+    invariant :methods => /action$/, :message => "Must not change the @invar value." do |jp, obj, *args|
       jp.context.advised_object.invar == 0
     end
   end

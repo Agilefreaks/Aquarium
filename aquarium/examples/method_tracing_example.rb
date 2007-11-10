@@ -39,7 +39,7 @@ bar1.do_something_else :b3, :b4
 include Aquarium::Aspects
 
 Aspect.new :around, :types => [Aquarium::Foo, Aquarium::Bar], :methods => :all, 
-    :method_options => :exclude_ancestor_methods do |execution_point, *args|
+    :method_options => :exclude_ancestor_methods do |execution_point, obj, *args|
   begin
     p "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
     execution_point.proceed
@@ -58,7 +58,7 @@ bar1.do_something_else :b7, :b8
 # The "begin/ensure/end" idiom shown causes the advice to return the correct value; the result
 # of the "proceed", rather than the value returned by "p"!
 Aspect.new :around, :types => [Aquarium::Foo, Aquarium::Bar], :methods => :initialize, 
-    :method_options => :private do |execution_point, *args|
+    :method_options => :private do |execution_point, obj, *args|
   begin
     p "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
     execution_point.proceed

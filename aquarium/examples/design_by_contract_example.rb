@@ -15,7 +15,7 @@ module Aquarium
       p "inside :action"
     end
   
-    precondition :method => :action, :message => "Must pass more than one argument." do |jp, *args|
+    precondition :method => :action, :message => "Must pass more than one argument." do |jp, obj, *args|
       args.size > 0
     end
   end
@@ -37,7 +37,7 @@ module Aquarium
     end
   
     postcondition :method => :action, 
-      :message => "Must pass more than one argument and first argument must be non-empty." do |jp, *args|
+      :message => "Must pass more than one argument and first argument must be non-empty." do |jp, obj, *args|
       args.size > 0 && ! args[0].empty?
     end
   end
@@ -71,7 +71,7 @@ module Aquarium
       @invar = 1
     end
   
-    invariant :methods => /action$/, :message => "Must not change the @invar value." do |jp, *args|
+    invariant :methods => /action$/, :message => "Must not change the @invar value." do |jp, obj, *args|
       jp.context.advised_object.invar == 0
     end
   end

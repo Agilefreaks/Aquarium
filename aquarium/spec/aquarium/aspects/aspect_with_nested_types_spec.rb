@@ -31,7 +31,7 @@ describe Aspect, "#new when advising methods in a nested class" do
   it "should correctly advise methods in a nested class." do
     myclass = Nested1::Nested2::MyClass.new
     context = nil
-    @aspect = Aspect.new :before, :pointcut => {:type => Nested1::Nested2::MyClass, :methods => :do1} do |jp, *args|
+    @aspect = Aspect.new :before, :pointcut => {:type => Nested1::Nested2::MyClass, :methods => :do1} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -47,7 +47,7 @@ describe Aspect, "#new when advising methods in a nested class" do
   it "should correctly advise methods in an instance of the nested class." do
     myclass = Nested1::Nested2::MyClass.new
     context = nil
-    @aspect = Aspect.new :before, :pointcut => {:object => myclass, :methods => :do1} do |jp, *args|
+    @aspect = Aspect.new :before, :pointcut => {:object => myclass, :methods => :do1} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -73,7 +73,7 @@ describe Aspect, "#new when advising methods in a nested module included by a cl
 
     myclass = MyClassWithModule1.new
     context = nil
-    @aspect = Aspect.new :before, :pointcut => {:type => Nested1::Nested2::MyModule, :methods => :do2} do |jp, *args|
+    @aspect = Aspect.new :before, :pointcut => {:type => Nested1::Nested2::MyModule, :methods => :do2} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -93,7 +93,7 @@ describe Aspect, "#new when advising methods in a nested module included by a cl
 
     myclass = MyClassWithModule2.new
     context = nil
-    @aspect = Aspect.new :before, :pointcut => {:type => MyClassWithModule2, :methods => :do2} do |jp, *args|
+    @aspect = Aspect.new :before, :pointcut => {:type => MyClassWithModule2, :methods => :do2} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0
@@ -113,7 +113,7 @@ describe Aspect, "#new when advising methods in a nested module included by a cl
 
     myclass = MyClassWithModule3.new
     context = nil
-    @aspect = Aspect.new :before, :pointcut => {:object => myclass, :methods => :do2} do |jp, *args|
+    @aspect = Aspect.new :before, :pointcut => {:object => myclass, :methods => :do2} do |jp, obj, *args|
       context = jp.context
     end 
     block_called = 0

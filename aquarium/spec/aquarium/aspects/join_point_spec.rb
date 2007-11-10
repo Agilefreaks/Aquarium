@@ -190,7 +190,33 @@ end
 describe Aquarium::Aspects::JoinPoint, "#proceed" do
   it "should raise when the join point doesn't have a context" do
     jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
-    lambda { jp.proceed }.should raise_error(Exception)
+    lambda { jp.proceed }.should raise_error(Aquarium::Aspects::JoinPoint::ContextNotDefined)
+  end
+  
+  it "should raise when the the context object doesn't have a 'proceed proc'" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    ioc = InvokeOriginalClass.new
+    context_opts = {
+      :advice_kind => :around, 
+      :advised_object => ioc, 
+      :parameters => [],
+      :proceed_proc => nil
+    }
+    jp2 = jp.make_current_context_join_point context_opts
+    lambda { jp2.proceed }.should raise_error(Aquarium::Aspects::JoinPoint::ProceedMethodNotAvailable)
+  end
+
+  it "should not raise when the advice is :around advice" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    ioc = InvokeOriginalClass.new
+    context_opts = {
+      :advice_kind => :around, 
+      :advised_object => ioc, 
+      :parameters => [],
+      :proceed_proc => Aquarium::Aspects::NoAdviceChainNode.new({:alias_method_name => :invoke})
+    }
+    jp2 = jp.make_current_context_join_point context_opts
+    lambda { jp2.proceed }.should_not raise_error(Aquarium::Aspects::JoinPoint::ProceedMethodNotAvailable)
   end
   
   it "should invoke the actual join point" do
@@ -216,7 +242,7 @@ end
 describe Aquarium::Aspects::JoinPoint, "#invoke_original_join_point" do
   it "should raise when the join point doesn't have a context" do
     jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
-    lambda { jp.invoke_original_join_point }.should raise_error(Exception)
+    lambda { jp.invoke_original_join_point }.should raise_error(Aquarium::Aspects::JoinPoint::ContextNotDefined)
   end
 
   it "should invoke the original join point" do

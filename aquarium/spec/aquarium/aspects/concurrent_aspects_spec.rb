@@ -75,7 +75,7 @@ module ConcurrentAspectsSpecSupport
     else
       pointcut = Pointcut.new(:methods => method, :object => @accessed)
     end
-    @aspects[n] = Aspect.new @advice_kinds[n], :pointcut => pointcut do |jp, *args|
+    @aspects[n] = Aspect.new @advice_kinds[n], :pointcut => pointcut do |jp, obj, *args|
       @contexts[n] = jp.context
       @argss[n]    = *args
       @advice_invocation_counts[n] += 1

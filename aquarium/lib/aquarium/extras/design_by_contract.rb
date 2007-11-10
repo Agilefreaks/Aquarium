@@ -28,25 +28,25 @@ module Aquarium
 
       def invariant *args, &contract_block
         message = handle_message_arg args
-        Aspect.new make_args(:around, *args) do |jp, *params|
-          DesignByContract.test_condition "invariant failure (before invocation): #{message}", jp, *params, &contract_block
+        Aspect.new make_args(:around, *args) do |jp, obj, *params|
+          DesignByContract.test_condition "invariant failure (before invocation): #{message}", jp, obj, *params, &contract_block
           result = jp.proceed
-          DesignByContract.test_condition "invariant failure (after invocation): #{message}", jp, *params, &contract_block
+          DesignByContract.test_condition "invariant failure (after invocation): #{message}", jp, obj, *params, &contract_block
           result
         end
       end
 
       private
 
-      def self.test_condition message, jp, *args
-        unless yield(jp, *args)
+      def self.test_condition message, jp, obj, *args
+        unless yield(jp, obj, *args)
           raise ContractError.new(message)
         end
       end
       
       def add_advice kind, test_kind, message, *args, &contract_block
-        Aspect.new make_args(kind, *args) do |jp, *params|
-          DesignByContract.test_condition "#{test_kind} failure: #{message}", jp, *params, &contract_block
+        Aspect.new make_args(kind, *args) do |jp, obj, *params|
+          DesignByContract.test_condition "#{test_kind} failure: #{message}", jp, obj, *params, &contract_block
         end
       end
       

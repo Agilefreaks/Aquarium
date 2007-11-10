@@ -26,10 +26,10 @@ describe Advice, "#invoke_original_join_point" do
   end
   
   it "should invoke the original join_point" do
-    aspect1 = Aspect.new :before, :type => InvocationCounter, :method => :increment do |jp|
+    aspect1 = Aspect.new :before, :type => InvocationCounter, :method => :increment do |jp, o|
       jp.invoke_original_join_point
     end
-    aspect2 = Aspect.new :around, :type => InvocationCounter, :method => :increment do |jp|
+    aspect2 = Aspect.new :around, :type => InvocationCounter, :method => :increment do |jp, o|
       jp.invoke_original_join_point
       jp.proceed
     end
@@ -43,7 +43,7 @@ end
 
 describe Advice, "that raises an exception" do
   it "should add the kind of advice to the exception message." do
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args| 
+    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args| 
       raise SpecExceptionForTesting.new("advice called with args: #{args.inspect}")
     end
     begin
@@ -55,7 +55,7 @@ describe Advice, "that raises an exception" do
   end
 
   it "should add the \"Class#method\" of the advised object's type and method to the exception message." do
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args| 
+    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args| 
       raise "advice called with args: #{args.inspect}"
     end
     begin
@@ -67,7 +67,7 @@ describe Advice, "that raises an exception" do
   end
 
   it "should add the \"Class.method\" of the advised type's class method to the exception message." do
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, *args| 
+    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
       raise "advice called with args: #{args.inspect}"
     end
     begin
@@ -80,7 +80,7 @@ describe Advice, "that raises an exception" do
 
   it "should rethrow an exception of the same type as the original exception." do
     class MyException < Exception; end
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, *args| 
+    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
       raise MyException.new("advice called with args: #{args.inspect}")
     end
     lambda { Watchful.public_class_watchful_method :a1, :a2 }.should raise_error(MyException)
@@ -90,7 +90,7 @@ describe Advice, "that raises an exception" do
   it "should rethrow an exception with the same backtrace as the original exception." do
     class MyException < Exception; end
     @backtrace = nil
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, *args| 
+    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
       begin
         exception = MyException.new("advice called with args: #{args.inspect}")
         raise exception
@@ -105,6 +105,15 @@ describe Advice, "that raises an exception" do
       e.backtrace.should == @backtrace
     end
     aspect.unadvise
+  end
+end
+
+describe AdviceChainNode, "#new" do
+  it "should raise if no advice block is specified" do
+    lambda { Aquarium::Aspects::AdviceChainNode.new }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+  it "should raise if advice block appears to use an obsolete parameter list format" do
+    lambda { Aquarium::Aspects::AdviceChainNode.new do |jp, *args|; end }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
 

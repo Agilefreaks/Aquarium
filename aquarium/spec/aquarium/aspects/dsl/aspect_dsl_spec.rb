@@ -8,7 +8,7 @@ end
 
 describe "DSL method #before" do  
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -24,7 +24,7 @@ end
 
 describe "DSL method #after" do    
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -41,7 +41,7 @@ end
 describe "DSL method #after_raising_within_or_returning_from" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -58,7 +58,7 @@ end
 describe "DSL method #after_returning" do      
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -75,7 +75,7 @@ end
 describe "DSL method #after_returning_from" do      
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -92,7 +92,7 @@ end
 describe "DSL method #after_raising" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -112,7 +112,7 @@ end
 describe "DSL method #after_raising_within" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -132,7 +132,7 @@ end
 describe "DSL method #before_and_after" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -149,7 +149,7 @@ end
 describe "DSL method #before_and_after_raising_within_or_returning_from" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -166,7 +166,7 @@ end
 describe "DSL method #before_and_after_returning" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -183,7 +183,7 @@ end
 describe "DSL method #before_and_after_returning_from" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -200,7 +200,7 @@ end
 describe "DSL method #before_and_after_raising" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -217,7 +217,7 @@ end
 describe "DSL method #around" do    
   before :each do
     @dsl = DSLClass.new
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -243,11 +243,11 @@ describe "DSL method #advise, when determining the \"self\" to advise," do
     class Watchful1
       include Aquarium::Aspects::DSL::AspectDSL
       @@watchful = Watchful1.new
-      @@aspect = after(:object => @@watchful, :method => :public_watchful_method) {|jp,*args|}
+      @@aspect = after(:object => @@watchful, :method => :public_watchful_method) {|jp, obj, *args|}
       def self.watchful; @@watchful; end
       def self.aspect; @@aspect; end
     end
-    @aspects << DSLClass.after(:object => Watchful1.watchful, :method => :public_watchful_method) {|jp,*args|}
+    @aspects << DSLClass.after(:object => Watchful1.watchful, :method => :public_watchful_method) {|jp, obj, *args|}
     @aspects << Watchful1.aspect
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
     @aspects[1].pointcuts.should == @aspects[0].pointcuts
@@ -256,10 +256,10 @@ describe "DSL method #advise, when determining the \"self\" to advise," do
   it "should ignore the default object \"self\" when a :type is specified." do
     class Watchful2
       include Aquarium::Aspects::DSL::AspectDSL
-      @@aspect = after(:type => Watchful2, :method => :public_watchful_method) {|jp,*args|}
+      @@aspect = after(:type => Watchful2, :method => :public_watchful_method) {|jp, obj, *args|}
       def self.aspect; @@aspect; end
     end
-    @aspects << DSLClass.after(:type => Watchful2, :method => :public_watchful_method) {|jp,*args|}
+    @aspects << DSLClass.after(:type => Watchful2, :method => :public_watchful_method) {|jp, obj, *args|}
     @aspects << Watchful2.aspect
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
     @aspects[1].pointcuts.should == @aspects[0].pointcuts
@@ -282,9 +282,9 @@ describe "DSL method #advise, when determining the type or object to advise," do
   end
 
   it "should infer the type as \"self\" when no :object, :type, or :pointcut is specified." do
-    @aspects << DSLClass.after(:type => WatchfulSelf, :method => :public_watchful_method) {|jp,*args|}
+    @aspects << DSLClass.after(:type => WatchfulSelf, :method => :public_watchful_method) {|jp, obj, *args|}
     class WatchfulSelf
-      @@aspect = after(:method => :public_watchful_method) {|jp,*args|}
+      @@aspect = after(:method => :public_watchful_method) {|jp, obj, *args|}
     end
     @aspects << WatchfulSelf.aspect
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
@@ -294,14 +294,14 @@ describe "DSL method #advise, when determining the type or object to advise," do
   it "should infer the object as \"self\" when no :object, :type, or :pointcut is specified." do
     watchful_self = WatchfulSelf.new
     watchful_self.extend Aquarium::Aspects::DSL::AspectDSL
-    @aspects << watchful_self.after(:method => :public_watchful_method)  {|jp,*args|}
-    @aspects << DSLClass.advise(         :after, :pointcut => {:object => watchful_self, :method => :public_watchful_method}) {|jp,*args|}
+    @aspects << watchful_self.after(:method => :public_watchful_method)  {|jp, obj, *args|}
+    @aspects << DSLClass.advise(         :after, :pointcut => {:object => watchful_self, :method => :public_watchful_method}) {|jp, obj, *args|}
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
     @aspects[1].pointcuts.should == @aspects[0].pointcuts
   end
 
   it "should infer no types or objects if a :pointcut => {...} parameter is used and it does not specify a type or object." do
-    @aspects << DSLClass.after(:pointcut => {:method => /method/}) {|jp,*args|}
+    @aspects << DSLClass.after(:pointcut => {:method => /method/}) {|jp, obj, *args|}
     @aspects[0].join_points_matched.size.should == 0 
   end
 end
@@ -320,7 +320,7 @@ describe "DSL method #advise, when parsing the parameter list," do
   end
 
   it "should infer the first symbol parameter after the advice kind parameter to be the method name to advise if no other :method => ... parameter is used." do
-    @aspects << Watchful3.after(:public_watchful_method) {|jp,*args|}
+    @aspects << Watchful3.after(:public_watchful_method) {|jp, obj, *args|}
     @aspects.each do |aspect|
       aspect.join_points_matched.size.should == 1 
       aspect.specification[:methods].should == Set.new([:public_watchful_method])
@@ -342,7 +342,7 @@ describe "DSL method #advise, when determining instance or class methods to advi
       def public_watchful_method *args; end
     end
     advice_called = 0
-    WatchfulExampleWithSeparateAdviseCall.advise :before, :public_watchful_method do |jp, *args|
+    WatchfulExampleWithSeparateAdviseCall.advise :before, :public_watchful_method do |jp, obj, *args|
       advice_called += 1
     end
     WatchfulExampleWithSeparateAdviseCall.new.public_watchful_method :a1, :a2
@@ -357,7 +357,7 @@ describe "DSL method #advise, when determining instance or class methods to advi
       def public_watchful_method *args; end
     end
     advice_called = 0
-    WatchfulExampleWithSeparateAdviseCall2.advise :before, :type => WatchfulExampleWithSeparateAdviseCall2, :methods => /public_watchful_method/, :method_options =>[:instance] do |jp, *args|
+    WatchfulExampleWithSeparateAdviseCall2.advise :before, :type => WatchfulExampleWithSeparateAdviseCall2, :methods => /public_watchful_method/, :method_options =>[:instance] do |jp, obj, *args|
       advice_called += 1
     end
     WatchfulExampleWithSeparateAdviseCall2.class_public_watchful_method :a1, :a2
@@ -375,7 +375,7 @@ describe "DSL method #advise, when determining instance or class methods to advi
       def public_watchful_method *args; end
     end
     advice_called = 0
-    WatchfulExampleWithSeparateAdviseCall3.advise :before, :methods => /public_watchful_method/, :method_options =>[:class] do |jp, *args|
+    WatchfulExampleWithSeparateAdviseCall3.advise :before, :methods => /public_watchful_method/, :method_options =>[:class] do |jp, obj, *args|
       advice_called += 1
     end
     WatchfulExampleWithSeparateAdviseCall3.class_public_watchful_method :a1, :a2
@@ -391,7 +391,7 @@ describe "DSL method #advise, when determining instance or class methods to advi
       include Aquarium::Aspects::DSL::AspectDSL
       @@advice_called = 0
       def public_watchful_method *args; end
-      before :public_watchful_method do |jp, *args|
+      before :public_watchful_method do |jp, obj, *args|
         @@advice_called += 1
       end
       def self.advice_called; @@advice_called; end
@@ -409,7 +409,7 @@ describe "DSL methods for the advice kind, when determining instance or class me
   end
 
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = []
   end
   after :each do
@@ -429,7 +429,7 @@ end
 
 describe "Synonyms for :types" do
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = [DSLClass.after(:noop, :types => Watchful, :methods => :public_watchful_method, &@advice)]
   end
   after :each do
@@ -454,7 +454,7 @@ end
 
 describe "Synonyms for :objects" do
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = [DSLClass.after(:noop, :objects => @watchful, :methods => :public_watchful_method, &@advice)]
   end
   after :each do
@@ -479,7 +479,7 @@ end
 
 describe "Synonyms for :methods" do
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = [DSLClass.after(:noop, :objects => @watchful, :methods => :public_watchful_method, &@advice)]
   end
   after :each do
@@ -504,7 +504,7 @@ end
 
 describe "Synonyms for :pointcut" do
   before :each do
-    @advice = proc {|jp,*args| "advice"}
+    @advice = proc {|jp, obj, *args| "advice"}
     @aspects = [DSLClass.after(:noop, :pointcut => {:objects => @watchful, :methods => :public_watchful_method}, &@advice)]
   end
   after :each do
@@ -533,7 +533,7 @@ describe "DSL method #advise (or synonyms) called within a type body" do
       include Aquarium::Aspects::DSL::AspectDSL
       @@advice_called = 0
       def public_watchful_method *args; end
-      before :public_watchful_method do |jp, *args|
+      before :public_watchful_method do |jp, obj, *args|
         @@advice_called += 1
       end
       def self.advice_called; @@advice_called; end
@@ -544,7 +544,7 @@ describe "DSL method #advise (or synonyms) called within a type body" do
     class WatchfulWithMethodNotYetDefined
       include Aquarium::Aspects::DSL::AspectDSL
       @@advice_called = 0
-      before(:public_watchful_method) {|jp, *args| @@advice_called += 1}
+      before(:public_watchful_method) {|jp, obj, *args| @@advice_called += 1}
       def public_watchful_method *args; end
       def self.advice_called; @@advice_called; end
     end

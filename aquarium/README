@@ -61,20 +61,20 @@ In most cases, you can either declare the appropriate classes or use the optiona
 Here is an example that traces invocations of all public instance methods (included inherited ones) of the classes or modules Foo and Bar.
 
 	require 'aquarium'
-	Aspect.new :around, :types => [Foo, Bar], :methods => :all do |join_point, *args|
-		p "Entering: #{join_point.target_type.name}##{join_point.method_name}"
+	Aspect.new :around, :types => [Foo, Bar], :methods => :all do |join_point, object, *args|
+		p "Entering: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
 		result = join_point.proceed
-		p "Leaving: #{join_point.target_type.name}##{join_point.method_name}"
+		p "Leaving: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
 		result  # block needs to return the result of the "proceed"!
 	end
 
 The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, excluding inherited (ancestor) methods, etc.) Here is the same example using the convenience DSL that adds aspect methods to Object (available only if you require aquarium/aspects/dsl/object_dsl', since other toolkits, like Rails, define similar methods on Object!).
 
 	require 'aquarium/aspects/dsl/object_dsl'
-	around :types => [Foo, Bar], :methods => :all do |join_point, *args|
-		p "Entering: #{join_point.target_type.name}##{join_point.method_name}"
+	around :types => [Foo, Bar], :methods => :all do |join_point, object, *args|
+		p "Entering: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
 		result = join_point.proceed
-		p "Leaving: #{join_point.target_type.name}##{join_point.method_name}"
+		p "Leaving: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
 		result  # block needs to return the result of the "proceed"!
 	end
 
@@ -106,7 +106,7 @@ If you use the DSL inside a class and omit the :type(s) and :object(s) options, 
 	end
 	...
 	class Foo
-		around :critical_operation do |join_point, *args|
+		around :critical_operation do |join_point, object, *args|
 			p "Entering: Foo#critical_operation"
 			result = join_point.proceed
 			p "Leaving: Foo#critical_operation"
@@ -116,22 +116,22 @@ If you use the DSL inside a class and omit the :type(s) and :object(s) options, 
 
 It is important to note that aspect "instances" usually behave like class (static) variables, in terms of the lifetime of their effects. In the example shown, class Foo is permanently modified to do the print statements shown for all "critical methods", unless you save the result of calling "around" to a variable, e.g., critical_operation_logging, and you explicitly call "critical_operation_logging.unadvise" at some future time. Put another way, the effects scope just like changes made when you reopen a class or module.
 
-A common mistake is to create an aspect in an initialize method and assign it to an attribute. This usually means that you are creating long-lived, redundant aspects every time an instance is created. The aspect modifications remain in effect even when the instances themselves are garbage collected!
+A common mistake is to create an aspect in an initialize method and assign it to an attribute. This usually means that you are creating long-lived, redundant aspects every time an instance of your class is created. The aspect modifications remain in effect even when the instances themselves are garbage collected!
  
 Here are some more succinct examples, illustrating the API (using the DSL methods).
 
 You can pass in pointcuts defined elsewhere:
 
 	my_pointcut = Pointcut.new :types => /Foo::Bar::/, :methods => /^do_/
-	around :pointcuts => my_pointcut do |jp, *args| ...         # Pass in a pointcut
-	around :pointcuts => [my_pointcut, ...] do |jp, *args| ...  # Pass in a pointcut array
+	around :pointcuts => my_pointcut do |jp, obj, *args| ...         # Pass in a pointcut
+	around :pointcuts => [my_pointcut, ...] do |jp, obj, *args| ...  # Pass in a pointcut array
 
 As a convenience, since a JoinPoint is like a Pointcut with one element, you can pass a JoinPoint object where Pointcut objects are expected:
 
 my_join_point1 = JoinPoint.new :type => Foo::Bar, :method => do_this
 my_join_point2 = JoinPoint.new :type => Foo::Bar, :method => do_that
-around :pointcuts => my_join_point1 do |jp, *args| ...         
-around :pointcuts => [my_join_point1, my_join_point2, ...] do |jp, *args| ...  
+around :pointcuts => my_join_point1 do |jp, obj, *args| ...         
+around :pointcuts => [my_join_point1, my_join_point2, ...] do |jp, obj, *args| ...  
 
 You can specify a single type, a type name, a type regular expression, or an array of the same. Note that :type and :types are synonymous "sugar".
 
@@ -243,18 +243,24 @@ You can advice methods both before after. This is different from around advice, 
 	before_and_after_raising_within :types =>, ...	# synonym
 	before_and_after_raising_within_or_returning_from :types =>, ...	# synonym
 
-You can pass a block as the advice. Notice that all advice blocks and Procs (see below) are required to accept two arguments, the JoinPoint, which will contain useful context information, and "*args", which will contain the parameters used when invoking the join point (method). A block or advice argument is required, but it can be empty.
+If you pass a block to Aspect.new, it will be the advice. When invoked, the advice will be passed the following three arguments, 
+	1) the JoinPoint, which will contain a JoinPoint::Context object with useful context information, 
+	2) the object being sent the current message, and 
+	3) the parameters passed with the original message. 
+Recall that Proc don't check the number of arguments (while lambdas do), so if you don't care about any trailing parameters, you can leave them out of the parameter list. Recall that the other difference between the two is that a return statement in a Proc returns from the method that contains it. As rule, do NOT use return statements in advices!
 
-	around :type => [...], :methods => :all do |join_point, *args|
+	around :type => [...], :methods => :all do |join_point, object, *args|
 	  advice_to_execute_before_the_jp
 	  result = join_point.proceed	# Invoke the join point, passing *args implicitly (you can override...)
 	  advice_to_execute_after_the_jp
 	  result     # return the result of the "proceed", unless you override the value.
 	end
-	around(:type => [...], :methods => :all) {|join_point, *args| ...}  # (...) necessary for precedence...
+	around(:type => [...], :methods => :all) {|join_point, object, *args| ...}  # (...) necessary for precedence...
 
 In the example, we show that you must be careful to return the correct value, usually the value returned by "proceed" or a value created by the block itself.
 
+Note, prior to V0.2.0, the advice argument list was |join_point, *args|. Aquarium will look for such obsolete signatures (by looking at the arity of the proc) and raise an exception, if found. This check will be removed in a future release.
+ 
 Rather than passing a block as the advice, you can pass a previously-created Proc:
 	
 	around :type => [...], :methods => :all, :advice => advice 
