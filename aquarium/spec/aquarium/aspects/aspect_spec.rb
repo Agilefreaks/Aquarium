@@ -597,7 +597,25 @@ describe "Aspects with :around advice" do
   end
 end
 
-
+describe Aspect, "with advise that calls JoinPoint#invoke_original_join_point" do
+  class AdvicesInvocationCounter
+    def initialize; @counter = 0; end
+    def increment; @counter += 1; end
+    def counter; @counter; end
+  end
+  
+  it "should not call the intermediate advices" do
+    aspect1 = Aspect.new :around, :type => AdvicesInvocationCounter, :method => :increment do |jp, *args|
+      fail
+    end
+    aspect2 = Aspect.new :around, :type => AdvicesInvocationCounter, :method => :increment do |jp, *args|
+      jp.invoke_original_join_point
+    end
+    aic = AdvicesInvocationCounter.new
+    aic.increment
+    aic.counter.should == 1
+  end
+end
 
 describe Aspect, "#unadvise for 'empty' aspects" do
   before(:all) do
