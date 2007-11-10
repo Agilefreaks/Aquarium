@@ -181,6 +181,59 @@ describe Aquarium::Aspects::JoinPoint, "#target_object" do
     jp.target_object.should be_eql(example)
   end
 end
+
+class InvokeOriginalClass
+  def invoke; @called = true; end
+  def called; @called; end
+end
+
+describe Aquarium::Aspects::JoinPoint, "#proceed" do
+  it "should raise when the join point doesn't have a context" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    lambda { jp.proceed }.should raise_error(Exception)
+  end
+  
+  it "should invoke the actual join point" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    ioc = InvokeOriginalClass.new
+    context_opts = {
+      :advice_kind => :around, 
+      :advised_object => ioc, 
+      :parameters => [],
+      :proceed_proc => Aquarium::Aspects::NoAdviceChainNode.new({:alias_method_name => :invoke})
+    }
+    jp2 = jp.make_current_context_join_point context_opts
+    jp2.proceed
+    ioc.called.should be_true
+  end
+end
+
+class InvokeOriginalClass
+  def invoke; @called = true; end
+  def called; @called; end
+end
+
+describe Aquarium::Aspects::JoinPoint, "#invoke_original_join_point" do
+  it "should raise when the join point doesn't have a context" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    lambda { jp.invoke_original_join_point }.should raise_error(Exception)
+  end
+
+  it "should invoke the original join point" do
+    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    ioc = InvokeOriginalClass.new
+    context_opts = {
+      :advice_kind => :around, 
+      :advised_object => ioc, 
+      :parameters => [],
+      :proceed_proc => Aquarium::Aspects::NoAdviceChainNode.new({:alias_method_name => :invoke})
+    }
+    jp2 = jp.make_current_context_join_point context_opts
+    jp2.invoke_original_join_point
+    ioc.called.should be_true
+  end
+end
+
   
 describe Aquarium::Aspects::JoinPoint, "#dup" do
   it "should duplicate the fields in the join point." do

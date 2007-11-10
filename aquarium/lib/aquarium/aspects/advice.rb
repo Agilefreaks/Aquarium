@@ -39,18 +39,27 @@ module Aquarium
       end
   
       def call jp, *args
+        do_call @proc, "", jp, *args
+      end
+
+      def invoke_original_join_point current_jp, *args
+        do_call last, "While executing the original join_point: ", current_jp, *args
+      end
+      
+      def do_call proc_to, error_message_prefix, jp, *args
         begin
-          @proc.call jp, *args
+          proc_to.call jp, *args
         rescue => e
           class_or_instance_method_separater = jp.instance_method? ? "#" : "."
-          context_message = "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
+          context_message = error_message_prefix + "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
           backtrace = e.backtrace
           e2 = e.exception(context_message + e.message + " (join_point = #{jp.inspect})")
           e2.set_backtrace backtrace
           raise e2
         end
       end
-
+      protected :do_call
+      
       # Supports Enumerable
       def each 
         node = self 
@@ -59,7 +68,14 @@ module Aquarium
           node = node.next_node 
         end 
       end
-  
+      
+      def last
+        last_node = nil
+        each { |node| last_node = node unless node.nil? } #; p "<br/>last_node: #{last_node.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")}"}
+        # p "<br/><br/>returning last_node: #{last_node.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")}"
+        last_node
+      end
+      
       def size
         inject(0) {|memo, node| memo += 1}
       end
@@ -73,6 +89,12 @@ module Aquarium
       end
   
       NIL_OBJECT = Aquarium::Utils::NilObject.new
+      
+      protected
+      
+      def invoking_object join_point
+        join_point.instance_method? ? join_point.context.advised_object : join_point.target_type
+      end
     end
 
     # When invoking the original method, we use object.send(original_method_name, *args)
@@ -84,11 +106,10 @@ module Aquarium
       def initialize options = {}
         super(options) { |jp, *args| 
           block_for_method = jp.context.block_for_method
-          invoking_object = jp.instance_method? ? jp.context.advised_object : jp.target_type
-          method = invoking_object.method(@alias_method_name)
+          method = invoking_object(jp).method(@alias_method_name)
           block_for_method.nil? ? 
-            invoking_object.send(@alias_method_name, *args) : 
-            invoking_object.send(@alias_method_name, *args, &block_for_method)
+            invoking_object(jp).send(@alias_method_name, *args) : 
+            invoking_object(jp).send(@alias_method_name, *args, &block_for_method)
           # Buggy!!
           # method = invoking_object.method(@alias_method_name)
           # block_for_method.nil? ? 

@@ -27,11 +27,19 @@ module Aquarium
     
         def proceed enclosing_join_point, *args, &block
           raise "It looks like you tried to call \"JoinPoint#proceed\" (or \"JoinPoint::Context#proceed\") from within advice that isn't \"around\" advice. Only around advice can call proceed. (Specific error: JoinPoint#proceed cannot be called because no \"@proceed_proc\" attribute was set on the corresponding JoinPoint::Context object.)" unless @proceed_proc
+          do_invoke :call, enclosing_join_point, *args, &block
+        end
+        
+        def invoke_original_join_point enclosing_join_point, *args, &block
+          do_invoke :invoke_original_join_point, enclosing_join_point, *args, &block
+        end
+        
+        def do_invoke method, enclosing_join_point, *args, &block
           args = parameters if (args.nil? or args.size == 0)
           enclosing_join_point.context.block_for_method = block if block 
-          proceed_proc.call enclosing_join_point, *args
+          proceed_proc.send method, enclosing_join_point, *args
         end
-        protected :proceed
+        protected :do_invoke
         
         alias :to_s :inspect
     
@@ -105,10 +113,22 @@ module Aquarium
         return results.matched.size == 1 ? true : false
       end
       
+      # Invoke the "enclosed" join point, which could be aspect advice wrapping the original runtime join point.
+      # This method can only be called if the join point has a context object defined that represents an actual
+      # runtime "state".
       def proceed *args, &block
-        context.method(:proceed).call self, *args, &block
+        raise ":proceed can't be called unless the join point has a context object." if context.nil?
+        context.proceed self, *args, &block
       end
 
+      # Invoke the actual runtime join point, skipping any intermediate advice.
+      # This method can only be called if the join point has a context object defined that represents an actual
+      # runtime "state".
+      def invoke_original_join_point *args, &block
+        raise ":invoke_original_join_point can't be called unless the join point has a context object." if context.nil?
+        context.invoke_original_join_point self, *args, &block
+      end
+      
       def make_current_context_join_point context_options
         new_jp = dup
         if new_jp.context.nil?

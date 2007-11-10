@@ -18,6 +18,29 @@ describe Advice, "#sort_by_priority_order" do
   end
 end
 
+describe Advice, "#invoke_original_join_point" do
+  class InvocationCounter
+    def initialize; @counter = 0; end
+    def increment; @counter += 1; end
+    def counter; @counter; end
+  end
+  
+  it "should invoke the original join_point" do
+    aspect1 = Aspect.new :before, :type => InvocationCounter, :method => :increment do |jp|
+      jp.invoke_original_join_point
+    end
+    aspect2 = Aspect.new :around, :type => InvocationCounter, :method => :increment do |jp|
+      jp.invoke_original_join_point
+      jp.proceed
+    end
+    ic = InvocationCounter.new
+    ic.increment
+    ic.counter == 3
+    aspect1.unadvise
+    aspect2.unadvise
+  end
+end
+
 describe Advice, "that raises an exception" do
   it "should add the kind of advice to the exception message." do
     aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, *args| 
