@@ -34,7 +34,7 @@ describe "An example of an aspect using a class-defined pointcut." do
   it "should observe state changes in the class." do
     @new_state = nil
     observer = Aspect.new :after, :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, obj, *args|
-      @new_state = jp.context.advised_object.state
+      @new_state = obj.state
       @new_state.should be_eql(*args)
     end
     object = Aquarium::ClassWithStateAndBehavior.new(:a1, :a2, :a3)

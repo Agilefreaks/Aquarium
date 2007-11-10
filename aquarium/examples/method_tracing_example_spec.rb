@@ -59,11 +59,10 @@ describe "An example with advice on the public instance methods (excluding ances
     aspect = Aquarium::Aspects::Aspect.new :around, 
       :type => Aquarium::Foo, :methods => :all, :method_options => :exclude_ancestor_methods do |execution_point, obj, *args|
       begin
-        o = execution_point.context.advised_object
-        o.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+        obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed
       ensure
-        o.log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+        obj.log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
       end
     end
     
@@ -83,11 +82,10 @@ describe "An example with advice on the public instance methods (excluding ances
     aspect = Aquarium::Aspects::Aspect.new :around, 
       :type => Aquarium::Bar, :methods => :all, :method_options => :exclude_ancestor_methods do |execution_point, obj, *args|
       begin
-        o = execution_point.context.advised_object
-        o.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+        obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed
       ensure
-        o.log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+        obj.log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
       end
     end
     
@@ -103,11 +101,10 @@ describe "An example with advice on the public instance methods (including ances
     aspect = Aquarium::Aspects::Aspect.new :around, 
       :type => Aquarium::Bar, :methods => /^do_/ do |execution_point, obj, *args|
       begin
-        o = execution_point.context.advised_object
-        o.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+        obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed
       ensure
-        o.log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+        obj.log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
       end
     end
     
@@ -129,11 +126,10 @@ describe "An example with advice on the private initialize method of Foo and Bar
     aspect = Aquarium::Aspects::Aspect.new :around, 
       :types => [Aquarium::Foo, Aquarium::Bar], :methods => :initialize, :method_options => :private do |execution_point, obj, *args|
       begin
-        o = execution_point.context.advised_object
-        o.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+        obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed
       ensure
-        o.log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+        obj.log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
       end
     end
     

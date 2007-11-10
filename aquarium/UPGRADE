@@ -1,3 +1,14 @@
+== Upgrading to Aquarium-0.2.0
+
+This release changes the expected advice parameter list from |join_point, *method_args| to
+|join_point, object, *method_args|, where "object" is the current object receiving the message
+corresponding to the advised join point.  Therefore, when you upgrade, you will need to modify your
+advices to take this extra argument, even if you don't use it. Since an advice of |jp, *args| would
+silently "absorb" the object into the beginning of "*args", thereby potentially causing confusion,
+Aquarium will raise an exception if the advice block or proc has this obsolete signature. 
+
+Note that "JoinPoint#Context.advised_object" is still supported, even if it is now less useful.
+
 == Upgrading to Aquarium-0.1.8
 
 V0.1.7 did not successfully "register" at rubyforge. This releases fixes that problem and also adds

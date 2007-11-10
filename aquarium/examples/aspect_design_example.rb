@@ -36,7 +36,7 @@ include Aquarium::Aspects
 
 observer = Aspect.new :after, :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, obj, *args|
   p "State has changed. "
-  state = jp.context.advised_object.state
+  state = obj.state
   p "  New state is #{state.nil? ? 'nil' : state.inspect}"
   p "  Equivalent to *args: #{args.inspect}"
 end  

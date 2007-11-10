@@ -1199,7 +1199,7 @@ describe Aspect, ".new with a :object(s) parameter and an :exclude_object(s) par
     advice_called = false
     aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_object_sym => excluded_objects, :methods => :doit do |jp, obj, *args|
       advice_called = true
-      excluded_objects.should_not include(jp.context.advised_object)
+      excluded_objects.should_not include(obj)
     end 
     included_objects.each do |object|
       advice_called = false
@@ -1239,7 +1239,7 @@ describe Aspect, ".new with a :pointcut(s), :type(s), :object(s), and :method(s)
     advice_called = false
     aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_join_points_sym => excluded_join_points, :methods => :doit do |jp, obj, *args|
       advice_called = true
-      excluded_objects.should_not include(jp.context.advised_object)
+      excluded_objects.should_not include(obj)
     end 
 
     included_objects.each do |object|
@@ -1332,7 +1332,7 @@ describe Aspect, ".new with a :pointcut(s), :type(s), :object(s), and :method(s)
     advice_called = false
     aspect = Aspect.new :before, :objects => (included_objects + excluded_objects), exclude_pointcuts_sym => excluded_pointcuts, :methods => :doit do |jp, obj, *args|
       advice_called = true
-      excluded_objects.should_not include(jp.context.advised_object)
+      excluded_objects.should_not include(obj)
     end 
 
     included_objects.each do |object|
@@ -1454,7 +1454,7 @@ describe Aspect, ".new with object-based :pointcut(s) and :exclude_object(s) or 
     advice_called = false
     aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_objects => excluded_objects do |jp, obj, *args|
       advice_called = true
-      excluded_objects.should_not include(jp.context.advised_object)
+      excluded_objects.should_not include(obj)
     end 
     included_objects.each do |object|
       advice_called = false

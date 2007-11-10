@@ -59,7 +59,7 @@ describe Aquarium::Extras::DesignByContract, "invariant" do
     end
     
     invariant :methods => /action$/, :message => "Must not change the @invar value." do |jp, obj, *args|
-      jp.context.advised_object.invar == 0
+      obj.invar == 0
     end
   end
   
