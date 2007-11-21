@@ -123,7 +123,9 @@ module Aquarium
 
       def self.is_recognized_option option_or_symbol
         %w[name names type types].each do |t|
-          return true if [t, t+"_and_descendents", "exclude_"+t, "exclude_"+t+"_and_descendents"].include?(option_or_symbol.to_s)
+          ['', "exclude_"].each do |excl| 
+            return true if ["#{excl}#{t}", "#{excl}#{t}_and_descendents", "#{excl}#{t}_and_ancestors"].include?(option_or_symbol.to_s)
+          end
         end
         false
       end
@@ -182,8 +184,12 @@ module Aquarium
         rhs = suppress_rh_ctrl_z ? "" : "\\Z"
         regexp = /#{lhs}#{subexp}#{rhs}/
         enclosing_types.each do |parent|
-          parent.constants.grep(regexp).each do |m| 
-            found_types << get_type_from_parent(parent, m, regexp)
+          parent.constants.grep(regexp) do |name| 
+            begin
+              found_types << parent.const_get(name)
+            rescue NameError => e
+              # ignore
+            end
           end
         end
         found_types
@@ -238,15 +244,6 @@ module Aquarium
         thing.nil? || (thing.respond_to?(:empty?) && thing.empty?)
       end
   
-      def get_type_from_parent parent, name, regexp
-        begin
-          parent.const_get(name)
-        rescue => e
-          msg  = "ERROR: for enclosing type '#{parent.inspect}', #{parent.inspect}.constants.grep(/#{regexp.source}/) returned a list including #{name.inspect}."
-          msg += "However, #{parent.inspect}.const_get('#{name}') raised exception #{e}. Please report this bug to the Aquarium team. Thanks."
-          raise e.exception(msg)
-        end
-      end
     end
   end
 end

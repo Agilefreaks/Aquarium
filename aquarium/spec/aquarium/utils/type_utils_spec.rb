@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
-require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
 require 'aquarium/utils/type_utils'
+require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
 
 describe Aquarium::Utils::TypeUtils, ".is_type?" do
   it "should be true for a class" do
@@ -38,19 +38,9 @@ describe Aquarium::Utils::TypeUtils, ".descendents called with a class" do
   end
 
   it "should return all classes and their descendents that derive from a class" do
-    check_descendent_array D1ForDescendents,   [Aquarium::ForDescendents::NestedD31ForDescendents, D11ForDescendents, D1ForDescendents]
-    check_descendent_array BaseForDescendents, [
-      Aquarium::ForDescendents::NestedD3ForDescendents, 
-      Aquarium::ForDescendents::NestedD31ForDescendents, 
-      Aquarium::ForDescendents::NestedD4ForDescendents, 
-      BaseForDescendents, 
-      D11ForDescendents, 
-      D1ForDescendents, 
-      D2ForDescendents]
-    check_descendent_array Aquarium::ForDescendents::NestedBaseForDescendents, [
-      Aquarium::ForDescendents::NestedD1ForDescendents,
-      Aquarium::ForDescendents::NestedD11ForDescendents,
-      Aquarium::ForDescendents::NestedD2ForDescendents]
+    Aquarium::Utils::TypeUtils.sample_classes.each do |t|
+      check_descendent_array t, Aquarium::Utils::TypeUtils.sample_classes_descendents[t]
+    end 
   end
 end
 
@@ -61,11 +51,9 @@ describe Aquarium::Utils::TypeUtils, ".descendents called with a module" do
   end
 
   it "should return all classes and their descendents that include a module" do
-    check_descendent_array ModuleForDescendents, [D11ForDescendents, D1ForDescendents, ModuleForDescendents]
-    check_descendent_array Aquarium::ForDescendents::NestedModuleForDescendents, [
-      Aquarium::ForDescendents::NestedModuleForDescendents, 
-      Aquarium::ForDescendents::NestedD1ForDescendents,
-      Aquarium::ForDescendents::NestedD11ForDescendents]
+    Aquarium::Utils::TypeUtils.sample_modules.each do |t|
+      check_descendent_array t, Aquarium::Utils::TypeUtils.sample_modules_descendents[t]
+    end 
   end
   
   it "should return all modules that include a module" do

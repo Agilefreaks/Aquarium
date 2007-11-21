@@ -169,6 +169,18 @@ describe Aquarium::Aspects::Pointcut, " (types specified using names)" do
   end
 end
 
+describe Aquarium::Aspects::Pointcut, " (types and their descendents)" do
+  before(:each) do
+    before_pointcut_spec
+  end
+
+  it "should match the types specified and their descendents." do
+    pc = Aquarium::Aspects::Pointcut.new :types => @example_types.map {|t| t.to_s}, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == @expected_matched_jps
+    pc.join_points_not_matched.should == @expected_not_matched_jps
+  end
+end
+  
 describe Aquarium::Aspects::Pointcut, " (objects specified)" do
   before(:each) do
     before_pointcut_spec

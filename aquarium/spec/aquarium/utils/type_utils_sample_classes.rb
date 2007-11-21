@@ -28,3 +28,176 @@ module Aquarium
   end
 end
 
+module Aquarium
+  module Utils
+    module TypeUtils
+      @@sample_modules = [
+        ModuleForDescendents,
+        Aquarium::ForDescendents::NestedModuleForDescendents,
+        Aquarium::ForDescendents::Nested2ModuleForDescendents]
+
+      @@sample_classes = [
+        BaseForDescendents,
+        D1ForDescendents,
+        D2ForDescendents,
+        D11ForDescendents,
+        Aquarium::ForDescendents::NestedBaseForDescendents,
+        Aquarium::ForDescendents::NestedD1ForDescendents,
+        Aquarium::ForDescendents::NestedD2ForDescendents,
+        Aquarium::ForDescendents::NestedD11ForDescendents,
+        Aquarium::ForDescendents::NestedD3ForDescendents,
+        Aquarium::ForDescendents::NestedD4ForDescendents,
+        Aquarium::ForDescendents::NestedD31ForDescendents]
+
+      @@sample_types = @@sample_modules + @@sample_classes
+
+      def self.sample_types;   @@sample_types;   end
+      def self.sample_modules; @@sample_modules; end
+      def self.sample_classes; @@sample_classes; end
+      
+      
+      @@sample_modules_descendents = {
+        ModuleForDescendents => [
+          Aquarium::ForDescendents::Nested2ModuleForDescendents,
+          Aquarium::ForDescendents::NestedD31ForDescendents,
+          Aquarium::ForDescendents::NestedD3ForDescendents,
+          D11ForDescendents,
+          D1ForDescendents,
+          ModuleForDescendents],
+        Aquarium::ForDescendents::NestedModuleForDescendents => [
+          Aquarium::ForDescendents::NestedD11ForDescendents,
+          Aquarium::ForDescendents::NestedD1ForDescendents,
+          Aquarium::ForDescendents::NestedModuleForDescendents],
+        Aquarium::ForDescendents::Nested2ModuleForDescendents => [
+          Aquarium::ForDescendents::Nested2ModuleForDescendents]}
+
+      @@sample_classes_descendents = {
+        BaseForDescendents => [
+          Aquarium::ForDescendents::NestedD31ForDescendents,
+          Aquarium::ForDescendents::NestedD3ForDescendents,
+          Aquarium::ForDescendents::NestedD4ForDescendents,
+          BaseForDescendents,
+          D11ForDescendents,
+          D1ForDescendents,
+          D2ForDescendents],
+        D1ForDescendents => [
+          Aquarium::ForDescendents::NestedD31ForDescendents,
+          D11ForDescendents,
+          D1ForDescendents],
+        D2ForDescendents => [D2ForDescendents],
+        D11ForDescendents => [D11ForDescendents],
+        Aquarium::ForDescendents::NestedBaseForDescendents => [
+          Aquarium::ForDescendents::NestedBaseForDescendents,
+          Aquarium::ForDescendents::NestedD11ForDescendents,
+          Aquarium::ForDescendents::NestedD1ForDescendents,
+          Aquarium::ForDescendents::NestedD2ForDescendents],
+        Aquarium::ForDescendents::NestedD1ForDescendents => [
+          Aquarium::ForDescendents::NestedD11ForDescendents,
+          Aquarium::ForDescendents::NestedD1ForDescendents],
+        Aquarium::ForDescendents::NestedD2ForDescendents => [
+          Aquarium::ForDescendents::NestedD2ForDescendents],
+        Aquarium::ForDescendents::NestedD11ForDescendents => [
+          Aquarium::ForDescendents::NestedD11ForDescendents],
+        Aquarium::ForDescendents::NestedD3ForDescendents => [
+          Aquarium::ForDescendents::NestedD3ForDescendents],
+        Aquarium::ForDescendents::NestedD4ForDescendents => [
+          Aquarium::ForDescendents::NestedD4ForDescendents],
+        Aquarium::ForDescendents::NestedD31ForDescendents => [
+          Aquarium::ForDescendents::NestedD31ForDescendents]}
+  
+      @@sample_types_descendents = @@sample_classes_descendents.merge @@sample_modules_descendents
+
+
+      @@sample_modules_ancestors = {
+        ModuleForDescendents => [ModuleForDescendents],
+        Aquarium::ForDescendents::NestedModuleForDescendents => [Aquarium::ForDescendents::NestedModuleForDescendents],
+        Aquarium::ForDescendents::Nested2ModuleForDescendents => [
+          Aquarium::ForDescendents::Nested2ModuleForDescendents,
+          ModuleForDescendents]}
+
+      @@sample_classes_ancestors = {
+        BaseForDescendents => [
+          BaseForDescendents,
+          Object,
+          Kernel],
+        D1ForDescendents => [
+          D1ForDescendents,
+          ModuleForDescendents,
+          BaseForDescendents,
+          Object,
+          Kernel],
+        D2ForDescendents => [
+          D2ForDescendents,
+          BaseForDescendents,
+          Object,
+          Kernel],
+        D11ForDescendents => [
+          D11ForDescendents,
+          D1ForDescendents,
+          ModuleForDescendents,
+          BaseForDescendents,
+          Object,
+          Kernel],
+        Aquarium::ForDescendents::NestedBaseForDescendents => [
+          Aquarium::ForDescendents::NestedBaseForDescendents,
+          Object,
+          Kernel],
+        Aquarium::ForDescendents::NestedD1ForDescendents => [
+          Aquarium::ForDescendents::NestedD1ForDescendents,
+          Aquarium::ForDescendents::NestedModuleForDescendents,
+          Aquarium::ForDescendents::NestedBaseForDescendents,
+          Object,
+          Kernel],
+        Aquarium::ForDescendents::NestedD2ForDescendents => [
+          Aquarium::ForDescendents::NestedD2ForDescendents,
+          Aquarium::ForDescendents::NestedBaseForDescendents,
+          Object,
+          Kernel],
+        Aquarium::ForDescendents::NestedD11ForDescendents => [
+          Aquarium::ForDescendents::NestedD11ForDescendents,
+          Aquarium::ForDescendents::NestedD1ForDescendents,
+          Aquarium::ForDescendents::NestedModuleForDescendents,
+          Aquarium::ForDescendents::NestedBaseForDescendents,
+          Object,
+          Kernel],
+        Aquarium::ForDescendents::NestedD3ForDescendents => [
+          Aquarium::ForDescendents::NestedD3ForDescendents,
+          ModuleForDescendents,
+          BaseForDescendents,
+          Object,
+          Kernel],
+        Aquarium::ForDescendents::NestedD4ForDescendents => [
+          Aquarium::ForDescendents::NestedD4ForDescendents,
+          BaseForDescendents,
+          Object,
+          Kernel],
+        Aquarium::ForDescendents::NestedD31ForDescendents => [
+          Aquarium::ForDescendents::NestedD31ForDescendents,
+          D1ForDescendents,
+          ModuleForDescendents,
+          BaseForDescendents,
+          Object,
+          Kernel]}
+          
+        @@sample_types_ancestors = @@sample_classes_ancestors.merge @@sample_modules_ancestors 
+          
+
+        %w[types modules classes].each do |x|
+          class_eval <<-EOF
+            def self.sample_#{x}_descendents
+              @@sample_#{x}_descendents
+            end
+            def self.sample_#{x}_ancestors
+              @@sample_#{x}_ancestors
+            end
+            def self.sample_#{x}_descendents_and_ancestors
+              self.sample_#{x}_descendents & sample_#{x}_ancestors
+            end
+          EOF
+        end
+          
+    end
+  end
+end
+    
+    

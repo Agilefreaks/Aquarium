@@ -36,6 +36,13 @@ module Aquarium
       # <tt>:type  => type || [type_list]</tt>::
       #   One or an array of types, type names and/or type regular expessions to match. 
       #
+      # <tt>:types_and_descendents => type || [type_list]</tt>::
+      # <tt>:type_and_descendents  => type || [type_list]</tt>::
+      # <tt>:types_and_ancestors   => type || [type_list]</tt>::
+      # <tt>:type_and_ancestors    => type || [type_list]</tt>::
+      #   One or an array of types and either their descendents or ancestors. 
+      #   If you want both the descendents _and_ ancestors, use both options.
+      #
       # <tt>:objects => object || [object_list]</tt>::
       # <tt>:object  => object || [object_list]</tt>::
       #   Objects to match.
@@ -85,6 +92,15 @@ module Aquarium
       #   Exclude the specified "things" from the matched join points. If pointcuts are
       #   excluded, they should be subsets of the matched pointcuts. Otherwise, the
       #   resulting pointcut will be empty!
+      #
+      # <tt>:exclude_types_and_descendents => type || [type_list]</tt>::
+      # <tt>:exclude_types_and_descendents => type || [type_list]</tt>::
+      # <tt>:exclude_type_and_descendents  => type || [type_list]</tt>::
+      # <tt>:exclude_types_and_ancestors   => type || [type_list]</tt>::
+      # <tt>:exclude_types_and_ancestors   => type || [type_list]</tt>::
+      # <tt>:exclude_type_and_ancestors    => type || [type_list]</tt>::
+      #   Exclude the specified types and their descendents, ancestors.
+      #   If you want to exclude both the descendents _and_ ancestors, use both options.
       #
       def initialize options = {} 
         init_specification options

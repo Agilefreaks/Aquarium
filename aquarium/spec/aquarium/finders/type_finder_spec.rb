@@ -1,5 +1,4 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
-require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
 require 'aquarium/finders/type_finder'
 
 describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
@@ -111,64 +110,6 @@ describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :
   end
 end
   
-describe "#find with types and descendents", :shared => true do
-  it "should find the matching types and their descendents subclasses, even in different nested modules." do
-    expected_found_types = {
-      BaseForDescendents => [
-        Aquarium::ForDescendents::NestedD3ForDescendents, 
-        Aquarium::ForDescendents::NestedD31ForDescendents, 
-        Aquarium::ForDescendents::NestedD4ForDescendents, 
-        BaseForDescendents, 
-        D11ForDescendents, 
-        D1ForDescendents, 
-        D2ForDescendents],
-      ModuleForDescendents => [
-        D11ForDescendents, 
-        D1ForDescendents, 
-        ModuleForDescendents,
-        Aquarium::ForDescendents::NestedD3ForDescendents,
-        Aquarium::ForDescendents::NestedD31ForDescendents,
-        Aquarium::ForDescendents::Nested2ModuleForDescendents],
-      Aquarium::ForDescendents::NestedModuleForDescendents => [
-        Aquarium::ForDescendents::NestedModuleForDescendents,
-        Aquarium::ForDescendents::NestedD1ForDescendents,
-        Aquarium::ForDescendents::NestedD11ForDescendents],
-      Aquarium::ForDescendents::NestedBaseForDescendents => [
-        Aquarium::ForDescendents::NestedBaseForDescendents,
-        Aquarium::ForDescendents::NestedD1ForDescendents,
-        Aquarium::ForDescendents::NestedD11ForDescendents,
-        Aquarium::ForDescendents::NestedD2ForDescendents]}
-        
-    expected_found_types.keys.each do |t|
-      actual = Aquarium::Finders::TypeFinder.new.find :type_and_descendents => (t.name)
-      p "#{t}"
-      actual.matched_keys.sort{|x,y| x.name <=> y.name}.should == expected_found_types[t].sort{|x,y| x.name <=> y.name}
-      actual.not_matched_keys.should == []
-    end
-  end
-
-  it "should find types with :: namespace delimiters using their names." do
-    expected_found_types  = [Outside::Inside1, Outside::Inside2]
-    expected_unfound_exps = %w[Foo::Bar::Baz]
-    actual = Aquarium::Finders::TypeFinder.new.find :names => (expected_found_types.map {|t| t.to_s} + expected_unfound_exps)
-    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
-    actual.not_matched_keys.sort.should == expected_unfound_exps.sort
-  end
-end
-
-describe Aquarium::Finders::TypeFinder, "#find with :types_and_descendent used to specify one or more names" do
-  it_should_behave_like "#find with types and descendents"
-end
-describe Aquarium::Finders::TypeFinder, "#find with :type_and_descendent used to specify one or more names" do
-  it_should_behave_like "#find with types and descendents"
-end
-describe Aquarium::Finders::TypeFinder, "#find with :names_and_descendent used to specify one or more names" do
-  it_should_behave_like "#find with types and descendents"
-end
-describe Aquarium::Finders::TypeFinder, "#find with :name_and_descendent used to specify one or more names" do
-  it_should_behave_like "#find with types and descendents"
-end
-
 describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :name used to specify one or more regular expressions" do
   it "should find types matching simple names (without :: namespace delimiters) using lists of regular expressions." do
     expected_found_types  = [Class, Kernel, Module, Object]
