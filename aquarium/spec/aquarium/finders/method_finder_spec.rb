@@ -15,6 +15,18 @@ module M
   end
   def mmodule2
   end
+  def self.cmmodule1
+  end
+end
+
+module M2
+  include M
+  def mmodule3
+  end
+  def mmodule4
+  end
+  def self.cmmodule3
+  end
 end
 
 class Derived < Base
@@ -25,7 +37,23 @@ class Derived < Base
   end
   def mmodule1
   end
+  def mmodule2b
+  end
+end
+
+class Derived2 < Base
+  include M2
+  def mbase1
+  end
+  def mderived1
+  end
+  def mmodule1
+  end
+  def mmodule2b
+  end
   def mmodule3
+  end
+  def mmodule4b
   end
 end
 
@@ -203,30 +231,75 @@ describe Aquarium::Finders::MethodFinder, "#find (behavior for derived classes)"
     before_method_finder_spec
   end
     
-  it "should find Base and Derived methods in the specified class, by default." do
+  it "should find base and derived methods in the specified class, by default." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mbase/, /^mmodule/]
     actual.matched.size.should == 1
-    actual.matched[Derived].should == Set.new([:mbase1, :mbase2, :mmodule1, :mmodule2, :mmodule3])
+    actual.matched[Derived].should == Set.new([:mbase1, :mbase2, :mmodule1, :mmodule2, :mmodule2b])
   end
    
-  it "should find Base and Derived methods in the specified object, by default." do
+  it "should find base and derived methods in the specified object, by default." do
     child = Derived.new
     actual = Aquarium::Finders::MethodFinder.new.find :object => child, :methods => [/^mbase/, /^mderived/, /^mmodule/]
     actual.matched.size.should == 1
-    actual.matched[child].should == Set.new([:mbase1, :mbase2, :mderived1, :mmodule1, :mmodule2, :mmodule3])
+    actual.matched[child].should == Set.new([:mbase1, :mbase2, :mderived1, :mmodule1, :mmodule2, :mmodule2b])
   end
    
-  it "should find Derived methods only for a type when ancestor methods are suppressed, which also suppresses method overrides." do
+  it "should only find Derived methods for a type when ancestor methods are excluded, which also excludes method overrides." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :options => [:exclude_ancestor_methods]
     actual.matched.size.should == 1
-    actual.matched[Derived].should == Set.new([:mderived1, :mmodule3])
+    actual.matched[Derived].should == Set.new([:mderived1, :mmodule2b])
   end
 
-  it "should find Derived methods only for an object when ancestor methods are suppressed, which also suppresses method overrides." do
+  it "should only find Derived methods for an object when ancestor methods are excluded, which also excludes method overrides." do
     child = Derived.new
     actual = Aquarium::Finders::MethodFinder.new.find :object => child, :methods => [/^mder/, /^mmodule/], :options => [:exclude_ancestor_methods]
     actual.matched.size.should == 1
-    actual.matched[child].should == Set.new([:mderived1, :mmodule3])
+    actual.matched[child].should == Set.new([:mderived1, :mmodule2b])
+  end
+end
+  
+describe Aquarium::Finders::MethodFinder, "#find (behavior for included modules)" do
+  before(:each) do
+    before_method_finder_spec
+  end
+    
+  it "should find included and defined methods in the specified modules, by default." do
+    actual = Aquarium::Finders::MethodFinder.new.find :type => [M, M2], :methods => /^mmodule/
+    actual.matched.size.should == 2
+    actual.matched[M].should  == Set.new([:mmodule1, :mmodule2])
+    actual.matched[M2].should == Set.new([:mmodule1, :mmodule2, :mmodule3, :mmodule4])
+  end
+   
+  it "should find included and overridden methods in classes that include the specified modules, by default." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [Derived, Derived2], :methods => /^mmodule/
+    actual.matched.size.should == 2
+    actual.matched[Derived].should  == Set.new([:mmodule1, :mmodule2, :mmodule2b])
+    actual.matched[Derived2].should == Set.new([:mmodule1, :mmodule2, :mmodule2b, :mmodule3, :mmodule4, :mmodule4b])
+  end
+   
+  it "should find included and overridden methods in instances of classes that include the specified modules, by default." do
+    child  = Derived.new
+    child2 = Derived2.new
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => [child, child2], :methods => /^mmodule/
+    actual.matched.size.should == 2
+    actual.matched[child].should  == Set.new([:mmodule1, :mmodule2, :mmodule2b])
+    actual.matched[child2].should == Set.new([:mmodule1, :mmodule2, :mmodule2b, :mmodule3, :mmodule4, :mmodule4b])
+  end
+   
+  it "should only find defined methods for a module when ancestor methods are excluded, which also excludes method overrides." do
+    actual = Aquarium::Finders::MethodFinder.new.find :type => [M, M2], :methods => /^mmod/, :options => [:exclude_ancestor_methods]
+    actual.matched.size.should == 2
+    actual.matched[M].should  == Set.new([:mmodule1, :mmodule2])
+    actual.matched[M2].should == Set.new([:mmodule3, :mmodule4])
+  end
+
+  it "should not find any methods from included modules in classes when ancestor methods are excluded, which also excludes method overrides." do
+    child  = Derived.new
+    child2 = Derived2.new
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => [child, child2], :methods => /^mmodule/, :options => [:exclude_ancestor_methods]
+    actual.matched.size.should == 2
+    actual.matched[child].should  == Set.new([:mmodule2b])
+    actual.matched[child2].should == Set.new([:mmodule2b, :mmodule4b])
   end
 end
   
@@ -235,7 +308,7 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
     before_method_finder_spec
   end
   
-  it "should find all class methods matching a regular expression for types when :class is used." do
+  it "should find all class methods specified by regular expression for types when :class is used." do
     # Have to add some rspec methods to the expected lists!
     expected = {}
     expected[Kernel] = [:chomp!, :chop!, :respond_to?]
@@ -266,17 +339,72 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
   end
 end
   
+describe Aquarium::Finders::MethodFinder, "#find (searching for class methods defined in modules)" do
+  before(:each) do
+    before_method_finder_spec
+  end
+
+  def do_class_methods_for_modules method_spec, options_spec
+    actual = Aquarium::Finders::MethodFinder.new.find :type => [M, M2], :methods => method_spec, :options => options_spec
+    actual.matched.size.should == 2
+    actual.matched[M].should  == Set.new([:cmmodule1])
+    actual.matched[M2].should == Set.new([:cmmodule3])
+  end
+  
+  it "should find all class methods specified by regular expression for modules when :class is used." do
+    do_class_methods_for_modules /^cmmodule/, [:class]
+  end
+  
+  it "should find all class methods specified by name for modules when :class is used." do
+    do_class_methods_for_modules [:cmmodule1, :cmmodule3], [:class]
+  end
+  
+  it "should not find class methods defined in included modules, because they do not become class methods in the including module." do
+    do_class_methods_for_modules /^cmmodule/, [:class]
+  end
+  
+  it "should not find class methods defined in included modules, if ancestor methods are excluded explicitly." do
+    do_class_methods_for_modules /^cmmodule/, [:class, :exclude_ancestor_methods]
+  end
+  
+  it "should find all public class methods in types when searching with the :all method specification and the :class option." do
+    actual = Aquarium::Finders::MethodFinder.new.find :type => [M, M2], :methods => :all, :options => [:class]
+    actual.matched.size.should == 2
+    actual.matched[M].should  == Set.new(M.public_methods.sort.map{|m| m.intern})
+    actual.matched[M2].should == Set.new(M2.public_methods.sort.map{|m| m.intern})
+  end
+  
+  it "should not find any module-defined class methods in classes that include the modules." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [Derived, Derived2], :methods => /^cmmodule/, :options => [:class]
+    actual.matched.size.should == 0
+  end
+   
+  it "should not find any module-defined class methods in instances of classes that include the modules." do
+    child  = Derived.new
+    child2 = Derived2.new
+    actual = Aquarium::Finders::MethodFinder.new.find :objects => [child, child2], :methods => /^cmmodule/, :options => [:class]
+    actual.matched.size.should == 0
+  end
+end
+
 describe Aquarium::Finders::MethodFinder, "#find (searching for instance methods)" do
   before(:each) do
     before_method_finder_spec
   end
   
-  it "should find all public instance methods in types when searching with the :all method specification." do
+  it "should find all public instance methods in classes when searching with the :all method specification." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicInstanceMethod, ClassWithProtectedInstanceMethod, ClassWithPrivateInstanceMethod], :methods => :all
     actual.matched.size.should == 3
     [ClassWithPublicInstanceMethod, ClassWithProtectedInstanceMethod, ClassWithPrivateInstanceMethod].each do |c|
       actual.matched[c].should == Set.new(c.public_instance_methods.sort.map {|m| m.intern})
     end
+  end
+  
+  it "should find all public instance methods in modules when searching with the :all method specification." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [M, M2], :methods => :all
+    actual.matched.size.should == 2
+    actual.matched[M].should  == Set.new([:mmodule1, :mmodule2])
+    actual.matched[M2].should == Set.new([:mmodule1, :mmodule2, :mmodule3, :mmodule4])
   end
   
   it "should find all public instance methods in objects when searching with the :all method specification." do
@@ -288,6 +416,22 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for instance methods
     [pub, pro, pri].each do |c|
       actual.matched[c].should == Set.new(c.public_methods.sort.map {|m| m.intern})
     end
+  end
+  
+  it "should find the module-defined public instance methods in when searching a class with the :all method specification." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [Derived, Derived2], :methods => :all
+    actual.matched.size.should == 2
+    [:mmodule1, :mmodule2].each {|m| actual.matched[Derived].should include(m)}
+    [:mmodule1, :mmodule2, :mmodule3, :mmodule4].each {|m| actual.matched[Derived2].should include(m)}
+  end
+  
+  it "should find the module-defined public instance methods in when searching an instance of a class with the :all method specification." do
+    child  = Derived.new
+    child2 = Derived2.new
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [child, child2], :methods => :all
+    actual.matched.size.should == 2
+    [:mmodule1, :mmodule2].each {|m| actual.matched[child].should include(m)}
+    [:mmodule1, :mmodule2, :mmodule3, :mmodule4].each {|m| actual.matched[child2].should include(m)}
   end
   
   it "should find only one instance method for a type when searching with a regexp matching one method." do
@@ -443,18 +587,40 @@ class ExcludeMethodTester
 end
   
 describe Aquarium::Finders::MethodFinder, "#find for types (using :exclude_methods)" do
-  it "should return an empty result if :exclude_methods => :all specified." do
+  it "should return an empty result for classes if :exclude_methods => :all specified." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_methods => :all, :options => :exclude_ancestor_methods
     actual.matched.size.should == 0
     actual.not_matched.size.should == 0
   end
+  it "should return an empty result for modules if :exclude_methods => :all specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => M2, :methods => :all, :exclude_methods => :all, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 0
+    actual.not_matched.size.should == 0
+  end
+  it "should return an empty result for classes including modules if :exclude_methods => :all specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => Derived2, :methods => :all, :exclude_methods => :all, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 0
+    actual.not_matched.size.should == 0
+  end
   
-  it "should remove excluded methods from the result where a single excluded methods is specified by name." do
+  it "should remove excluded methods from the result for classes where a single excluded methods is specified by name." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => ExcludeMethodTester, :methods => :all, :exclude_method => :method1, :options => :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[ExcludeMethodTester].size.should == 2
     actual.matched[ExcludeMethodTester].should == Set.new([:method2, :method3])
     actual.not_matched.size.should == 0
+  end
+  it "should remove excluded methods from the result for modules where a single excluded methods is specified by name." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => M, :methods => :all, :exclude_method => :mmodule1
+    actual.matched.size.should == 1
+    actual.matched[M].size.should == 1
+    actual.matched[M].should == Set.new([:mmodule2])
+    actual.not_matched.size.should == 0
+  end
+  it "should remove excluded methods from the result for classes that include modules where a single excluded methods is specified by name." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => :all, :exclude_method => :mmodule1
+    actual.matched.size.should == 1
+    actual.matched[Derived].should_not include(:mmodule1)
   end
   
   it "should remove excluded methods from the result where the excluded methods are specified by an array of names." do
@@ -488,8 +654,13 @@ describe Aquarium::Finders::MethodFinder, "#find for types (using :exclude_metho
 end
   
 describe Aquarium::Finders::MethodFinder, "#find for objects (using :exclude_methods)" do
-  it "should return an empty result if :exclude_methods => :all specified." do
+  it "should return an empty result for instances of classes if :exclude_methods => :all specified." do
     actual = Aquarium::Finders::MethodFinder.new.find :object => ExcludeMethodTester.new, :methods => :all, :exclude_methods => :all, :options => :exclude_ancestor_methods
+    actual.matched.size.should == 0
+    actual.not_matched.size.should == 0
+  end
+  it "should return an empty result for for instances of classes that include modules if :exclude_methods => :all specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :object => Derived2.new, :methods => :all, :exclude_methods => :all, :options => :exclude_ancestor_methods
     actual.matched.size.should == 0
     actual.not_matched.size.should == 0
   end
@@ -542,7 +713,7 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => :exclude_anc
     before_method_finder_spec
   end
   
-  it "should suppress ancestor methods for types when :exclude_ancestor_methods is specified." do
+  it "should suppress ancestor methods for classes when :exclude_ancestor_methods is specified." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => @test_classes, :methods => /test_method/, :options => [:public, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicInstanceMethod].should    == Set.new([:public_instance_test_method])
@@ -552,7 +723,6 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => :exclude_anc
     actual.not_matched[ClassWithPublicClassMethod].should       == Set.new([/test_method/])
     actual.not_matched[ClassWithPrivateClassMethod].should      == Set.new([/test_method/])
   end
-
   it "should suppress ancestor methods for objects when :exclude_ancestor_methods is specified." do
     actual = Aquarium::Finders::MethodFinder.new.find :objects => @test_objects, :methods => /test_method/, :options => [:public, :instance, :exclude_ancestor_methods]
     actual.matched.size.should == 1
@@ -562,6 +732,29 @@ describe Aquarium::Finders::MethodFinder, "#find (using :options => :exclude_anc
     actual.not_matched[@pri].should  == Set.new([/test_method/])
     actual.not_matched[@cpub].should == Set.new([/test_method/])
     actual.not_matched[@cpri].should == Set.new([/test_method/])
+  end
+
+  it "should suppress ancestor methods for modules when :exclude_ancestor_methods is specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :type => M2, :methods => /^mmodule/, :options => [:instance, :exclude_ancestor_methods]
+    actual.matched.size.should == 1
+    actual.matched[M2].should == Set.new([:mmodule3, :mmodule4])
+    actual.not_matched.size.should == 0
+  end
+  it "should suppress ancestor methods for classes including modules when :exclude_ancestor_methods is specified." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [Derived, Derived2], :methods => /^mmodule/, :options => [:instance, :exclude_ancestor_methods]
+    actual.matched.size.should == 2
+    actual.matched[Derived].should  == Set.new([:mmodule2b])
+    actual.matched[Derived2].should == Set.new([:mmodule2b, :mmodule4b])
+    actual.not_matched.size.should == 0
+  end
+  it "should suppress ancestor methods for instances of classes including modules when :exclude_ancestor_methods is specified." do
+    child  = Derived.new
+    child2 = Derived2.new
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [child, child2], :methods => /^mmodule/, :options => [:instance, :exclude_ancestor_methods]
+    actual.matched.size.should == 2
+    actual.matched[child].should  == Set.new([:mmodule2b])
+    actual.matched[child2].should == Set.new([:mmodule2b, :mmodule4b])
+    actual.not_matched.size.should == 0
   end
 end
   

@@ -5,6 +5,7 @@
 module Aquarium
   module Utils
     class Aquarium::Utils::NilObject
+            
       def method_missing method_sym, *args
         self
       end

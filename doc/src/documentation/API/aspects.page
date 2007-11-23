@@ -42,12 +42,12 @@ h4. Usage
 Aspects are implemented as classes and you can either create instances of them or use the convenient methods that are added to <code>Object</code>, by default. For example, the following two sections of code are equivalent:
 
 <ruby>
-aspect1 = Aspect.new :before, :types => /*Service$/, :methods => :all do |join_point, *args|
+aspect1 = Aspect.new :before, :types => /*Service$/, :methods => :all do |join_point, object, *args|
   log("calling #{join_point.inspect}")
 end
 
 include Aquarium::Aspects::DSL::AspectDSL
-aspect2 = before :types => /*Service$/, :methods => :all do |join_point, *args|
+aspect2 = before :types => /*Service$/, :methods => :all do |join_point, object, *args|
   log("calling #{join_point.inspect}")
 end
 </ruby>
@@ -58,7 +58,7 @@ Here is a similar example that advises just a single instance of the <code>MySer
 
 <ruby>
 service = MyService.new(...)
-aspect = before :object => service, :methods => :all do |join_point, *args|
+aspect = before :object => service, :methods => :all do |join_point, object, *args|
   log("calling #{join_point.inspect}")
 end
 </ruby>
@@ -68,7 +68,7 @@ Here is effectively the same example that uses a previously-defined <span class=
 <ruby>
 service = MyService.new(...)
 pointcut = Pointcut.new :object => service, :methods => :all 
-aspect = before :pointcut => pointcut do |join_point, *args|
+aspect = before :pointcut => pointcut do |join_point, object, *args|
   log("calling #{join_point.inspect}")
 end
 </ruby>

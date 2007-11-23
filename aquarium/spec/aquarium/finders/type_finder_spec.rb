@@ -1,6 +1,13 @@
 require File.dirname(__FILE__) + '/../spec_helper.rb'
 require 'aquarium/finders/type_finder'
 
+class Outside
+  class Inside1; end
+  class Inside2
+    class ReallyInside; end
+  end
+end
+
 describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
 
   it "should raise if an uknown option is specified." do
@@ -40,6 +47,15 @@ describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
     actual.matched.should == {}
     actual.not_matched.should == {}
   end
+
+  it "should accept a hash and treat it as equivalent to an explicit list parameters." do
+    expected_found_types  = [Outside::Inside1, Outside::Inside2]
+    expected_unfound_exps = %w[Foo::Bar::Baz]
+    hash = {:names => (expected_found_types.map {|t| t.to_s} + expected_unfound_exps)}
+    actual = Aquarium::Finders::TypeFinder.new.find hash
+    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+    actual.not_matched_keys.sort.should == expected_unfound_exps.sort
+  end
 end
 
 describe Aquarium::Finders::TypeFinder, "#is_recognized_option" do
@@ -59,12 +75,6 @@ describe Aquarium::Finders::TypeFinder, "#is_recognized_option" do
   end
 end
 
-class Outside
-  class Inside1; end
-  class Inside2
-    class ReallyInside; end
-  end
-end
 
 describe Aquarium::Finders::TypeFinder, "#find with :type or :name used to specify a single type" do
   it "should find a type matching a simple name (without :: namespace delimiters) using its name and the :type option." do

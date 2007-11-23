@@ -47,7 +47,6 @@ module ConcurrentAspectsSpecSupport
   end
 
   def check_results_for iteration
-    number_of_unadvised_aspects = iteration + 1
     @accessed.invoked_count.should == @aspects.size 
     @accessed.invoked_args.should == [:a1, :a2]
     iteration.times do |n| 

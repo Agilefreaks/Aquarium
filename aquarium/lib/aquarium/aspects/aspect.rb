@@ -109,6 +109,17 @@ module Aquarium
       #   All the :types, :objects, :methods, :attributes, :method_options, and :attribute_options
       #   are used to construct Pointcuts internally.
       #
+      # <tt>:types_and_descendents => type || [type_list]</tt>::
+      # <tt>:type_and_descendents  => type || [type_list]</tt>::
+      # <tt>:types_and_ancestors   => type || [type_list]</tt>::
+      # <tt>:type_and_ancestors    => type || [type_list]</tt>::
+      # <tt>:within_types_and_descendents => type || [type_list]</tt>::
+      # <tt>:within_type_and_descendents  => type || [type_list]</tt>::
+      # <tt>:within_types_and_ancestors   => type || [type_list]</tt>::
+      # <tt>:within_type_and_ancestors    => type || [type_list]</tt>::
+      #   One or an array of types and either their descendents or ancestors. 
+      #   If you want both the descendents _and_ ancestors, use both options.
+      #
       # <tt>:objects => object || [object_list]</tt>::
       # <tt>:object  => object || [object_list]</tt>::
       # <tt>:within_object  => object || [object_list]</tt>::
@@ -163,6 +174,13 @@ module Aquarium
       # <tt>:exclude_attributes  => attribute || [attribute_list]</tt>::
       # <tt>:exclude_attribute   => attribute || [attribute_list]</tt>::
       #   Exclude the specified "things" from the matched join points.
+      #
+      # <tt>:exclude_types_and_descendents => type || [type_list]</tt>::
+      # <tt>:exclude_type_and_descendents  => type || [type_list]</tt>::
+      # <tt>:exclude_types_and_ancestors   => type || [type_list]</tt>::
+      # <tt>:exclude_type_and_ancestors    => type || [type_list]</tt>::
+      #   Exclude the specified types and their descendents, ancestors.
+      #   If you want to exclude both the descendents _and_ ancestors, use both options.
       #
       # The actual advice to execute is the block or you can pass a Proc using :advice => proc.
       # Note that the advice takes a join_point argument, which will include a non-nil 
@@ -223,6 +241,7 @@ module Aquarium
         @specification = Aquarium::Utils::MethodUtils.method_args_to_hash(*opts) {|option| ""} 
         use_default_object_if_defined unless (types_given? || objects_given? || pointcuts_given?)
         use_first_nonadvice_symbol_as_method(opts) unless methods_given?
+        @specification[:exclude_types_calculated] = @specification[:exclude_types]
         @advice = determine_advice block
         validate_specification
       end
@@ -322,8 +341,8 @@ module Aquarium
       # Useful for debugging...
       def self.advice_chain_inspect advice_chain
         return "[nil]" if advice_chain.nil?
-        "<br/>"+advice_chain.inspect do |advice_chain|
-          "#{advice_chain.class.name}:#{advice_chain.object_id}: join_point = #{advice_chain.static_join_point}: aspect = #{advice_chain.aspect.object_id}, next_node = #{advice_chain_inspect advice_chain.next_node}"
+        "<br/>"+advice_chain.inspect do |ac|
+          "#{ac.class.name}:#{ac.object_id}: join_point = #{ac.static_join_point}: aspect = #{ac.aspect.object_id}, next_node = #{advice_chain_inspect ac.next_node}"
         end.gsub(/\</,"&lt;").gsub(/\>/,"&gt;")+"<br/>"
       end
 
@@ -577,6 +596,7 @@ module Aquarium
       def is_valid_parameter key
         ALLOWED_OPTIONS.include?(key) || ALLOWED_OPTIONS_SYNONYMS_MAP.keys.include?(key) || 
           ADVICE_OPTIONS_SYNONYMS_MAP.keys.include?(key) || KINDS_IN_PRIORITY_ORDER.include?(key) ||
+          key == :exclude_types_calculated ||
           parameter_is_a_method_name?(key)    # i.e., use_first_nonadvice_symbol_as_method
       end
       

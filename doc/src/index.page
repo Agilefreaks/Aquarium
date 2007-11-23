@@ -30,11 +30,11 @@ Imagine you want to trace all invocations of the public, instance methods in all
 <ruby>
 class ServiceTracer
 	include Aquarium::Aspects::DSL::AspectsDSL
-	before :types => /Service$/, :methods => :all do |execution_point, *args|
-	  log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+	before :types => /Service$/, :methods => :all do |execution_point, object, *args|
+	  log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: object = #{object}, args = #{args.inspect}" 
 	end
 	after :types => /Service$/, :methods => :all do |execution_point, *args|
-	  log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+	  log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: object = #{object}, args = #{args.inspect}" 
 	end
 end
 </ruby>
@@ -48,10 +48,10 @@ A more succinct implementation of this behavior uses <code>#around</code> advice
 <ruby>
 class ServiceTracer
 	include Aquarium::Aspects::DSL::AspectsDSL
-	around :types => /Service$/, :methods => :all do |execution_point, *args|
-	  log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+	around :types => /Service$/, :methods => :all do |execution_point, object, *args|
+	  log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: object = #{object}, args = #{args.inspect}" 
 	  result = execution_point.proceed
-	  log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}" 
+	  log "Leaving: #{execution_point.target_type.name}##{execution_point.method_name}: object = #{object}, args = #{args.inspect}" 
 	  result  # block needs to return the result of the "proceed"!
 	end
 end

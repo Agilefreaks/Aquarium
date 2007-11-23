@@ -19,13 +19,13 @@ module Aquarium
       end
 
       def self.visibility type_or_instance, method_sym, class_or_instance_only = nil, include_ancestors = true
-        find_method(type_or_instance, method_sym, class_or_instance_only, include_ancestors) do |type_or_instance, method_sym, protection| 
+        find_method(type_or_instance, method_sym, class_or_instance_only, include_ancestors) do |t_or_o, msym, protection| 
           return protection
         end
       end
       
       def self.has_method type_or_instance, method_sym, class_or_instance_only = nil, include_ancestors = true
-        found = find_method(type_or_instance, method_sym, class_or_instance_only, include_ancestors) do |type_or_instance, method_sym, protection| 
+        found = find_method(type_or_instance, method_sym, class_or_instance_only, include_ancestors) do |t_or_o, msym, protection| 
           return true
         end 
         found ? true : false   # found could be nil; return false, if so

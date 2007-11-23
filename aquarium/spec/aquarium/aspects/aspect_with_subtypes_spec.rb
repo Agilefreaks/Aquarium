@@ -6,7 +6,7 @@ require 'aquarium/aspects'
 include Aquarium::Aspects
 
 # Explicitly check that advising subtypes works correctly.
-
+# TODO Tests with modules included in classes.
 module SubTypeAspects
   class Base
     attr_reader :base_state

@@ -28,8 +28,8 @@ module Aquarium
         unless @specification[:exclude_objects].nil?
           return true if @specification[:exclude_objects].include?(type_or_object)
         end
-        unless @specification[:exclude_types].nil?
-          return true if @specification[:exclude_types].find do |t|
+        unless @specification[:exclude_types_calculated].nil?
+          return true if @specification[:exclude_types_calculated].find do |t|
             case t
             when String: type_or_object.name.eql?(t)
             when Symbol: type_or_object.name.eql?(t.to_s)

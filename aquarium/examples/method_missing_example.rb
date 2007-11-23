@@ -19,6 +19,9 @@ module Aquarium
     def method_missing sym, *args
       p "Echoing: #{sym.to_s}: #{args.join(" ")}"
     end
+    def respond_to? sym, include_private = false
+      true
+    end
   end
 end
 

@@ -171,7 +171,7 @@ module Aquarium
         begin
           found = [name.split("::").inject(Object) { |parent, const| parent.const_get(const) }]
           finish_and_make_successful_result found, option
-        rescue NameError => ne
+        rescue NameError 
           make_failed_result type_name
         end
       end

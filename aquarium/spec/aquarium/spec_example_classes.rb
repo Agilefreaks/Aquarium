@@ -11,32 +11,79 @@ class ExampleParentClass
 end
 
 class ClassWithPublicInstanceMethod < ExampleParentClass
-  def public_instance_test_method
-  end
+  def public_instance_test_method; end
 end
 class ClassWithPublicInstanceMethod2 < ExampleParentClass
-  def public_instance_test_method2
-  end
+  def public_instance_test_method2; end
 end
 class ClassWithProtectedInstanceMethod < ExampleParentClass
   protected
-  def protected_instance_test_method
-  end
+  def protected_instance_test_method; end
 end
 class ClassWithPrivateInstanceMethod < ExampleParentClass
   private
-  def private_instance_test_method
-  end
+  def private_instance_test_method; end
 end
 
 class ClassWithPublicClassMethod < ExampleParentClass
-  def self.public_class_test_method
-  end
+  def self.public_class_test_method; end
 end
 class ClassWithPrivateClassMethod < ExampleParentClass
-  def self.private_class_test_method
-  end
+  def self.private_class_test_method; end
   private_class_method :private_class_test_method
+end
+
+module ModuleWithPublicInstanceMethod
+  def public_instance_module_test_method; end
+end
+module ModuleWithProtectedInstanceMethod
+  protected
+  def protected_instance_module_test_method; end
+end
+module ModuleWithPrivateInstanceMethod
+  private
+  def private_instance_module_test_method; end
+end
+
+module ModuleWithPublicClassMethod
+  def self.public_class_module_test_method; end
+end
+module ModuleWithPrivateClassMethod
+  def self.private_class_module_test_method; end
+  private_class_method :private_class_module_test_method
+end
+
+class ClassIncludingModuleWithPublicInstanceMethod
+  include ModuleWithPublicInstanceMethod
+  def public_instance_class_including_module_test_method; end
+end
+class ClassIncludingModuleWithProtectedInstanceMethod
+  include ModuleWithProtectedInstanceMethod
+  protected
+  def protected_instance_class_including_module_test_method; end
+end
+class ClassIncludingModuleWithPrivateInstanceMethod
+  include ModuleWithPrivateInstanceMethod
+  private
+  def private_instance_class_including_module_test_method; end
+end
+class ClassIncludingModuleWithPublicClassMethod
+  include ModuleWithPublicClassMethod
+  def self.public_class_class_including_module_test_method; end
+end
+class ClassIncludingModuleWithPrivateClassMethod
+  include ModuleWithPrivateClassMethod
+  def self.private_class_class_including_module_test_method; end
+  private_class_method :private_class_class_including_module_test_method
+end
+
+module ModuleIncludingModuleWithPublicInstanceMethod
+  include ModuleWithPublicInstanceMethod
+  def public_instance_module_including_module_test_method; end
+end
+class ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod < ClassIncludingModuleWithPublicInstanceMethod
+  include ModuleIncludingModuleWithPublicInstanceMethod
+  def public_instance_class_derived_from_class_including_module_test_method; end
 end
 
 class ClassWithAttribs < ExampleParentClass
@@ -44,6 +91,7 @@ class ClassWithAttribs < ExampleParentClass
   attr_reader   :attrR_ClassWithAttribs
   attr_writer   :attrW_ClassWithAttribs
   def initialize
+    super
     @name = "Name"
   end
   def eql? other
@@ -57,6 +105,7 @@ class Watchful
   class WatchfulError < Exception
     def initialize message = nil
       super
+      @message = message
     end
   end
   
@@ -136,3 +185,17 @@ class ExcludeTestThree
   def method33; end
 end
 
+module TestableModule1
+  def module_method1; end
+  def module_method2; end
+end
+
+module TestableModule2
+  include TestableModule1
+  def module_method3; end
+end
+
+class TestableClassIncludingTestableModule1
+  include TestableModule1
+  def instance_method1; end
+end

@@ -15,11 +15,15 @@ require 'aquarium'
 
 module Aquarium
   class Echo
+        
     def method_missing sym, *args
       @log ||= []
       @log << "Echoing: #{sym.to_s}: #{args.join(" ")}"
     end
     def logged_messages; @log; end
+    def respond_to? sym, include_private = false
+      true
+    end
   end
 end
 
