@@ -25,7 +25,7 @@ module Aquarium
         %w[after after_returning after_raising].each do |after_kind|
           module_eval(<<-AFTER, __FILE__, __LINE__)
             def before_and_#{after_kind} *options, &block
-              advise(:before, :#{after_kind}, *options, &block)
+              advise :before, :#{after_kind}, *options, &block
             end
           AFTER
         end

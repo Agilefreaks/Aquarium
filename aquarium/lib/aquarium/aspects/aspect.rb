@@ -1,4 +1,5 @@
 require 'aquarium/extensions'
+require 'aquarium/finders/type_finder'
 require 'aquarium/utils'
 require 'aquarium/aspects/advice'
 require 'aquarium/aspects/exclusion_handler'
@@ -30,12 +31,15 @@ module Aquarium
       attr_accessor :verbose, :log
       attr_reader   :specification, :pointcuts, :advice
   
+      OTHER_ALLOWED_OPTIONS_SINGULAR = %w[type_and_descendents type_and_ancestors exclude_type_and_descendents exclude_type_and_ancestors].map {|o| o.intern}
+      OTHER_ALLOWED_OPTIONS_PLURAL   = %w[types_and_descendents types_and_ancestors exclude_types_and_descendents exclude_types_and_ancestors].map {|o| o.intern}
+
       ALLOWED_OPTIONS_SINGULAR = %w[advice type object method attribute method_option attribute_option pointcut default_object
        exclude_type exclude_object exclude_pointcut exclude_join_point exclude_method exclude_attribute noop].map {|o| o.intern}
   
-      ALLOWED_OPTIONS_PLURAL = ALLOWED_OPTIONS_SINGULAR.map {|o| "#{o}s".intern}
+      ALLOWED_OPTIONS_PLURAL = OTHER_ALLOWED_OPTIONS_PLURAL + ALLOWED_OPTIONS_SINGULAR.map {|o| "#{o.to_s}s".intern}
 
-      ALLOWED_OPTIONS = ALLOWED_OPTIONS_SINGULAR + ALLOWED_OPTIONS_PLURAL
+      ALLOWED_OPTIONS = ALLOWED_OPTIONS_PLURAL + ALLOWED_OPTIONS_SINGULAR + OTHER_ALLOWED_OPTIONS_SINGULAR
 
       ADVICE_OPTIONS_SYNONYMS_MAP = {
         :call               => :advice,
@@ -44,30 +48,35 @@ module Aquarium
       }
       
       ALLOWED_OPTIONS_SYNONYMS_MAP = { 
-        :type               => :types,
-        :within_type        => :types, 
-        :within_types       => :types,
-        :object             => :objects,
-        :within_object      => :objects, 
-        :within_objects     => :objects,
-        :method             => :methods,
-        :within_method      => :methods, 
-        :within_methods     => :methods,
-        :attribute          => :attributes,
-        :pointcut           => :pointcuts,
-        :within_pointcut    => :pointcuts,
-        :within_pointcuts   => :pointcuts,
-        :exclude_type       => :exclude_types,
-        :exclude_object     => :exclude_objects,
-        :exclude_pointcut   => :exclude_pointcuts,
-        :exclude_join_point => :exclude_join_points,
-        :exclude_method     => :exclude_methods,
-        :exclude_attribute  => :exclude_attributes,
+        :type                  => :types,
+        :type_and_descendents  => :types_and_descendents,
+        :type_and_ancestors    => :types_and_ancestors,
+        :within_type           => :types, 
+        :within_types          => :types,
+        :object                => :objects,
+        :within_object         => :objects, 
+        :within_objects        => :objects,
+        :method                => :methods,
+        :within_method         => :methods, 
+        :within_methods        => :methods,
+        :attribute             => :attributes,
+        :pointcut              => :pointcuts,
+        :within_pointcut       => :pointcuts,
+        :within_pointcuts      => :pointcuts,
+        :exclude_type          => :exclude_types,
+        :exclude_type_and_descendents => :exclude_types_and_descendents,
+        :exclude_type_and_ancestors   => :exclude_types_and_ancestors,
+        :exclude_object        => :exclude_objects,
+        :exclude_pointcut      => :exclude_pointcuts,
+        :exclude_join_point    => :exclude_join_points,
+        :exclude_method        => :exclude_methods,
+        :exclude_attribute     => :exclude_attributes,
       }
 
       # Aspect.new (:around | :before | :after | :after_returning | :after_raising ) \
       #   (:pointcuts => [...]), | \
-      #    ((:types => [...] | :objects => [...]), 
+      #    ((:types => [...] | :types_and_ancestors => [...] | :types_and_descendents => [...] \
+      #     :objects => [...]), 
       #     :methods => [], :method_options => [...], \
       #     :attributes => [...], :attribute_options[...]), \
       #    (:advice = advice | do |join_point, obj, *args| ...; end)
@@ -113,10 +122,6 @@ module Aquarium
       # <tt>:type_and_descendents  => type || [type_list]</tt>::
       # <tt>:types_and_ancestors   => type || [type_list]</tt>::
       # <tt>:type_and_ancestors    => type || [type_list]</tt>::
-      # <tt>:within_types_and_descendents => type || [type_list]</tt>::
-      # <tt>:within_type_and_descendents  => type || [type_list]</tt>::
-      # <tt>:within_types_and_ancestors   => type || [type_list]</tt>::
-      # <tt>:within_type_and_ancestors    => type || [type_list]</tt>::
       #   One or an array of types and either their descendents or ancestors. 
       #   If you want both the descendents _and_ ancestors, use both options.
       #
@@ -239,13 +244,22 @@ module Aquarium
         opts = rationalize_parameters options.flatten.dup
         # For non-hash inputs, use an empty string for the value
         @specification = Aquarium::Utils::MethodUtils.method_args_to_hash(*opts) {|option| ""} 
-        use_default_object_if_defined unless (types_given? || objects_given? || pointcuts_given?)
+        use_default_object_if_defined unless some_type_or_pc_option_given? 
         use_first_nonadvice_symbol_as_method(opts) unless methods_given?
-        @specification[:exclude_types_calculated] = @specification[:exclude_types]
+        calculate_excluded_types
         @advice = determine_advice block
         validate_specification
       end
 
+      def calculate_excluded_types
+        type_finder_options = {}
+        %w[types types_and_ancestors types_and_descendents].each do |opt|
+          type_finder_options[opt.intern] = @specification["exclude_#{opt}".intern] if @specification["exclude_#{opt}".intern]
+        end
+        excluded_types = Aquarium::Finders::TypeFinder.new.find type_finder_options
+        @specification[:exclude_types_calculated] = excluded_types.matched.keys
+      end
+      
       def determine_advice block
         # There can be only one advice; take the last one...
         block || (@specification[:advice].kind_of?(Array) ? @specification[:advice].last : @specification[:advice])
@@ -514,14 +528,16 @@ module Aquarium
         "_aspect_"
       end
   
+      def some_type_or_pc_option_given?
+        pointcuts_given? or some_type_option_given? or objects_given? #or default_objects_given?
+      end
+      
+      def some_type_option_given?
+        types_given? or types_and_ancestors_given? or types_and_descendents_given? 
+      end
+      
       def self.determine_type_or_object join_point
         join_point.type_or_object
-        # type_or_object = join_point.type_or_object
-        # method_type = join_point.instance_or_class_method
-        # if is_type_join_point? join_point
-        #   type_or_object = Aquarium::Utils::MethodUtils.definer type_or_object, join_point.method_name, "#{method_type}_method_only".intern
-        # end
-        # type_or_object
       end
       
       def self.make_type_or_object_key join_point
@@ -572,10 +588,10 @@ module Aquarium
         bad_options(":after can't be used with :after_returning.")   if after_given_with? :after_returning
         bad_options(":after can't be used with :after_raising.")     if after_given_with? :after_raising
         bad_options(":after_returning can't be used with :after_raising.") if after_returning_given_with? :after_raising
-        unless pointcuts_given? or types_given? or objects_given? or default_objects_given?
-          bad_options("At least one of :pointcut(s), :type(s), :object(s) is required.") 
+        unless some_type_or_pc_option_given?
+          bad_options("At least one of :pointcut(s), :type(s), :type(s)_with_ancestors, :type(s)_with_descendents, :object(s) is required.") 
         end
-        if pointcuts_given? and (types_given? or objects_given?)
+        if pointcuts_given? and (some_type_option_given? or objects_given?)
           bad_options("Can't specify both :pointcut(s) and one or more of :type(s), and/or :object(s).") 
         end
         @specification.each_key do |parameter|

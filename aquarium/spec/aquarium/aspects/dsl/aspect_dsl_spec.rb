@@ -294,8 +294,8 @@ describe "DSL method #advise, when determining the type or object to advise," do
   it "should infer the object as \"self\" when no :object, :type, or :pointcut is specified." do
     watchful_self = WatchfulSelf.new
     watchful_self.extend Aquarium::Aspects::DSL::AspectDSL
+    @aspects << DSLClass.advise(:after, :pointcut => {:object => watchful_self, :method => :public_watchful_method}) {|jp, obj, *args|}
     @aspects << watchful_self.after(:method => :public_watchful_method)  {|jp, obj, *args|}
-    @aspects << DSLClass.advise(         :after, :pointcut => {:object => watchful_self, :method => :public_watchful_method}) {|jp, obj, *args|}
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
     @aspects[1].pointcuts.should == @aspects[0].pointcuts
   end

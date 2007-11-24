@@ -597,7 +597,7 @@ describe "Aspects with :around advice" do
   end
 end
 
-describe Aspect, "with advise that calls JoinPoint#invoke_original_join_point" do
+describe Aspect, " with advice that calls JoinPoint#invoke_original_join_point" do
   class AdvicesInvocationCounter
     def initialize; @counter = 0; end
     def increment; @counter += 1; end

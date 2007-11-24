@@ -29,35 +29,49 @@ def join_points_should_be_equal num_jps, aspect1, aspect2
   aspect1.join_points_not_matched.should eql(aspect2.join_points_not_matched)
 end
 
+module Aquarium
+  class AspectInvocationTestClass
+    include Aquarium::Aspects::DSL::AspectDSL
+    attr_accessor :public_test_method_args
+    def public_test_method *args; @args=args; end
+    protected
+    def protected_test_method *args; @args=args; end
+    private
+    def private_test_method *args; @args=args; end
+    def self.public_class_test_method *args; end
+    def self.private_class_test_method *args; end
+    private_class_method :private_class_test_method
+  end
+end
 
 describe Aspect, ".new parameters that specify the kind of advice" do
   it "should require the kind of advice as the first parameter." do
-    lambda { Aspect.new :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should contain no other advice types if :around advice specified." do
-    lambda { Aspect.new :around, :before,          :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aspect.new :around, :after,           :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aspect.new :around, :after_returning, :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aspect.new :around, :after_raising,   :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :around, :before,          :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :around, :after,           :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :around, :after_returning, :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :around, :after_raising,   :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should allow only one of :after, :after_returning, or :after_raising advice to be specified." do
-    lambda { Aspect.new :after, :after_returning, :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aspect.new :after, :after_raising,   :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aspect.new :after_returning, :after_raising, :pointcut => {:type => Watchful} }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :after, :after_returning, :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :after, :after_raising,   :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :after_returning, :after_raising, :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should allow :before to be specified with :after." do
-    lambda { Aspect.new :before, :after, :pointcut => {:type => Watchful}, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :before, :after, :pointcut => {:type => Aquarium::AspectInvocationTestClass}, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should allow :before to be specified with :after_returning." do
-    lambda { Aspect.new :before, :after_returning, :pointcut => {:type => Watchful}, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :before, :after_returning, :pointcut => {:type => Aquarium::AspectInvocationTestClass}, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should allow :before to be specified with :after_raising." do
-    lambda { Aspect.new :before, :after_raising,   :pointcut => {:type => Watchful}, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :before, :after_raising,   :pointcut => {:type => Aquarium::AspectInvocationTestClass}, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
 
@@ -67,17 +81,17 @@ describe Aspect, ".new parameters that specify join points" do
   end
 
   it "should contain at least one of :pointcut(s), :type(s), or :object(s) unless :default_object => object is given." do
-    aspect = Aspect.new(:after, :default_object => Watchful.new, :methods => :public_watchful_method) {|jp, obj, *args| true}
+    aspect = Aspect.new(:after, :default_object => Aquarium::AspectInvocationTestClass.new, :methods => :public_test_method) {|jp, obj, *args| true}
     aspect.unadvise
   end
 
   it "should not contain :pointcut(s) and either :type(s) or :object(s)." do
-    lambda {Aspect.new(:after, :pointcuts => {:type => Watchful, :methods => :public_watchful_method}, :type => Watchful, :methods => :public_watchful_method) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda {Aspect.new(:after, :pointcuts => {:type => Watchful, :methods => :public_watchful_method}, :object => Watchful.new, :methods => :public_watchful_method) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda {Aspect.new(:after, :pointcuts => {:type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method}, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda {Aspect.new(:after, :pointcuts => {:type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method}, :object => Aquarium::AspectInvocationTestClass.new, :methods => :public_test_method) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should include an advice block or :advice => advice parameter." do
-    lambda {Aspect.new(:after, :type => Watchful, :methods => :public_watchful_method)}.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda {Aspect.new(:after, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method)}.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
 
@@ -85,9 +99,9 @@ end
 describe Aspect, ".new :type parameter" do
   it "should be accepted as a synonym for :types" do
     @advice = Proc.new {}
-    @expected_methods = [:public_watchful_method]
-    aspect1 = Aspect.new :before, :type  => Watchful, :method => @expected_methods, :advice => @advice
-    aspect2 = Aspect.new :before, :types => Watchful, :method => @expected_methods, :advice => @advice
+    @expected_methods = [:public_test_method]
+    aspect1 = Aspect.new :before, :type  => Aquarium::AspectInvocationTestClass, :method => @expected_methods, :advice => @advice
+    aspect2 = Aspect.new :before, :types => Aquarium::AspectInvocationTestClass, :method => @expected_methods, :advice => @advice
     aspects_should_be_equal 1, aspect1, aspect2
     aspect1.unadvise
     aspect2.unadvise
@@ -97,9 +111,9 @@ end
 describe Aspect, ".new :pointcut parameter" do
   it "should be accepted as a synonym for :pointcuts" do
     @advice = Proc.new {}
-    @expected_methods = [:public_watchful_method]
-    aspect1 = Aspect.new :before, :pointcut  => {:type => Watchful, :method => @expected_methods}, :advice => @advice
-    aspect2 = Aspect.new :before, :pointcuts => {:type => Watchful, :method => @expected_methods}, :advice => @advice
+    @expected_methods = [:public_test_method]
+    aspect1 = Aspect.new :before, :pointcut  => {:type => Aquarium::AspectInvocationTestClass, :method => @expected_methods}, :advice => @advice
+    aspect2 = Aspect.new :before, :pointcuts => {:type => Aquarium::AspectInvocationTestClass, :method => @expected_methods}, :advice => @advice
     aspects_should_be_equal 1, aspect1, aspect2
     aspect1.unadvise
     aspect2.unadvise
@@ -109,10 +123,10 @@ end
 describe Aspect, ".new :object parameter" do
   it "should be accepted as a synonym for :objects" do
     @advice = Proc.new {}
-    @expected_methods = [:public_watchful_method]
-    watchful = Watchful.new
-    aspect1 = Aspect.new :before, :object  => watchful, :method => @expected_methods, :advice => @advice
-    aspect2 = Aspect.new :before, :objects => watchful, :method => @expected_methods, :advice => @advice
+    @expected_methods = [:public_test_method]
+    object = Aquarium::AspectInvocationTestClass.new
+    aspect1 = Aspect.new :before, :object  => object, :method => @expected_methods, :advice => @advice
+    aspect2 = Aspect.new :before, :objects => object, :method => @expected_methods, :advice => @advice
     aspects_should_be_equal 1, aspect1, aspect2
     aspect1.unadvise
     aspect2.unadvise
@@ -122,9 +136,9 @@ end
 describe Aspect, ".new :method parameter" do
   it "should be accepted as a synonym for :methods" do
     @advice = Proc.new {}
-    @expected_methods = [:public_watchful_method]
-    aspect1 = Aspect.new :before, :type => Watchful, :method  => @expected_methods, :advice => @advice
-    aspect2 = Aspect.new :before, :type => Watchful, :methods => @expected_methods, :advice => @advice
+    @expected_methods = [:public_test_method]
+    aspect1 = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :method  => @expected_methods, :advice => @advice
+    aspect2 = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => @expected_methods, :advice => @advice
     aspects_should_be_equal 1, aspect1, aspect2
     aspect1.unadvise
     aspect2.unadvise
@@ -134,9 +148,9 @@ end
 describe Aspect, ".new :attribute parameter" do
   it "should be accepted as a synonym for :attributes" do
     @advice = Proc.new {}
-    @expected_methods = [:public_watchful_method_args, :public_watchful_method_args=]
-    aspect1 = Aspect.new :before, :type => Watchful, :attribute  => @expected_methods, :advice => @advice
-    aspect2 = Aspect.new :before, :type => Watchful, :attributes => @expected_methods, :advice => @advice
+    @expected_methods = [:public_test_method_args, :public_test_method_args=]
+    aspect1 = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :attribute  => @expected_methods, :advice => @advice
+    aspect2 = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :attributes => @expected_methods, :advice => @advice
     aspects_should_be_equal 2, aspect1, aspect2
     aspect1.unadvise
     aspect2.unadvise
@@ -148,99 +162,142 @@ describe Aspect, ".new with a :type(s) parameter and a :method(s) parameter" do
   before :each do
     @protection = 'public'
     @are_class_methods = false
+    @types_option = :types
     @method_options = []
   end
   
   def do_type_spec
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types => @type_spec, :methods => @method_spec, :method_options => @method_options do |jp, obj, *args|
+    aspect = Aspect.new :before, @types_option => @type_spec, :methods => @method_spec, :method_options => @method_options do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
     if @are_class_methods
-      Watchful.method("#{@protection}_class_watchful_method").call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+      Aquarium::AspectInvocationTestClass.method("#{@protection}_class_test_method").call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     else
-      Watchful.new.method("#{@protection}_watchful_method").call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+      Aquarium::AspectInvocationTestClass.new.method("#{@protection}_test_method").call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     end
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should accept :type(s) => [T1, ...], :methods => [m, ...]" do  
-    @type_spec = [Watchful]
-    @method_spec = [:public_watchful_method]
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s)_and_ancestors => [T1, ...], :methods => [m, ...]" do  
+    @types_option = :types_and_ancestors
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s)_and_descendents => [T1, ...], :methods => [m, ...]" do  
+    @types_option = :types_and_descendents
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @method_spec = [:public_test_method]
     do_type_spec
   end
 
   it "should accept :type(s) => [T1, ...], :methods => m" do  
-    @type_spec = [Watchful]
-    @method_spec = :public_watchful_method
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @method_spec = :public_test_method
     do_type_spec
   end
 
   it "should accept :type(s) => [T1, ...], :methods => /m/" do  
-    @type_spec = [Watchful]
-    @method_spec = /watchful_method/
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @method_spec = /test_method/
     do_type_spec
   end
 
   it "should accept :type(s) => T1, :methods => [m, ...]" do  
-    @type_spec = Watchful
-    @method_spec = [:public_watchful_method]
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s)_and_ancestors => T1, :methods => [m, ...]" do  
+    @types_option = :types_and_ancestors
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s)_and_descendents => T1, :methods => [m, ...]" do  
+    @types_option = :types_and_descendents
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @method_spec = [:public_test_method]
     do_type_spec
   end
 
   it "should accept :type(s) => T1, :methods => m" do  
-    @type_spec = Watchful
-    @method_spec = :public_watchful_method
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @method_spec = :public_test_method
     do_type_spec
   end
 
   it "should accept :type(s) => T1, :methods => /m/" do  
-    @type_spec = Watchful
-    @method_spec = /watchful_method/
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @method_spec = /test_method/
     do_type_spec
   end
 
   it "should accept :type(s) => /T1/, :methods => [m, ...]" do  
-    @type_spec = /Watchful/
-    @method_spec = [:public_watchful_method]
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s)_and_ancestors => /T1/, :methods => [m, ...]" do  
+    @types_option = :types_and_ancestors
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s)_and_descendents => /T1/, :methods => [m, ...]" do  
+    @types_option = :types_and_descendents
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = [:public_test_method]
     do_type_spec
   end
 
   it "should accept :type(s) => /T1/, :methods => m" do  
-    @type_spec = /Watchful/
-    @method_spec = :public_watchful_method
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = :public_test_method
     do_type_spec
   end
 
   it "should accept :type(s) => /T1/, :methods => /m/" do  
-    @type_spec = /Watchful/
-    @method_spec = /watchful_method/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = /test_method/
     do_type_spec
   end
 
   it "should accept :type(s) => ..., :methods => ..., :method_options => [:exclude_ancestor_methods] to exclude methods defined in ancestors" do  
-    @type_spec = /Watchful/
-    @method_spec = /watchful_method/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = /test_method/
     @method_options = [:exclude_ancestor_methods]
     do_type_spec
   end
 
   it "should accept :type(s) => ..., :methods => ..., :method_options => [:instance, :public] to match only instance and public (both are the defaults) methods" do  
-    @type_spec = /Watchful/
-    @method_spec = /watchful_method/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = /test_method/
     @method_options = [:instance, :public]
     do_type_spec
   end
 
   %w[public protected private].each do |protection|
     it "should accept :type(s) => ..., :methods => ..., :method_options => [#{protection.intern}] to match only instance (default) #{protection} methods" do  
-      @type_spec = /Watchful/
-      @method_spec = /watchful_method/
+      @type_spec = /Aquarium::AspectInvocationTestClass/
+      @method_spec = /test_method/
       @method_options = [protection.intern]
       @protection = protection
       do_type_spec
@@ -248,8 +305,8 @@ describe Aspect, ".new with a :type(s) parameter and a :method(s) parameter" do
   end
 
   it "should accept :type(s) => ..., :methods => ..., :method_options => [:class] to match only public (default) class methods" do  
-    @type_spec = /Watchful/
-    @method_spec = /watchful_method/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = /test_method/
     @method_options = [:class]
     @are_class_methods = true
     do_type_spec
@@ -257,8 +314,8 @@ describe Aspect, ".new with a :type(s) parameter and a :method(s) parameter" do
 
   %w[public private].each do |protection|
     it "should accept :type(s) => ..., :methods => ..., :method_options => [:class, :#{protection.intern}] to match only class #{protection} methods" do  
-      @type_spec = /Watchful/
-      @method_spec = /watchful_method/
+      @type_spec = /Aquarium::AspectInvocationTestClass/
+      @method_spec = /test_method/
       @method_options = [:class, protection.intern]
       @protection = protection
       @are_class_methods = true
@@ -285,121 +342,121 @@ describe Aspect, ".new with a :type(s) parameter and a :attribute(s) parameter" 
       args.should == expected_args
       args.size.should == expected_args.size
     end 
-    watchful = Watchful.new
+    object = Aquarium::AspectInvocationTestClass.new
     @expected_args = nil
-    watchful.method("#{@protection}_watchful_method_args".intern).call 
+    object.method("#{@protection}_test_method_args".intern).call 
     @expected_args = :a1
-    watchful.method("#{@protection}_watchful_method_args=".intern).call @expected_args
+    object.method("#{@protection}_test_method_args=".intern).call @expected_args
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should accept :type(s) => [T1, ...], :attribute(s) => [a, ...]" do  
-    @type_spec = [Watchful]
-    @attribute_spec = [:public_watchful_method_args]
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @attribute_spec = [:public_test_method_args]
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => [T1, ...], :attribute(s) => a" do  
-    @type_spec = [Watchful]
-    @attribute_spec = :public_watchful_method_args
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @attribute_spec = :public_test_method_args
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => [T1, ...], :attribute(s) => /a/" do  
-    @type_spec = [Watchful]
-    @attribute_spec = /watchful_method_args/
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @attribute_spec = /test_method_args/
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => T1, :attribute(s) => [a]" do  
-    @type_spec = Watchful
-    @attribute_spec = [:public_watchful_method_args]
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @attribute_spec = [:public_test_method_args]
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => T1, :attribute(s) => a" do  
-    @type_spec = Watchful
-    @attribute_spec = :public_watchful_method_args
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @attribute_spec = :public_test_method_args
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => T1, :attribute(s) => /a/" do  
-    @type_spec = Watchful
-    @attribute_spec = /watchful_method_args/
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @attribute_spec = /test_method_args/
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => /T1/, :attribute(s) => [a, ...]" do  
-    @type_spec = /Watchful/
-    @attribute_spec = [:public_watchful_method_args]
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = [:public_test_method_args]
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => /T1/, :attribute(s) => a" do  
-    @type_spec = /Watchful/
-    @attribute_spec = :public_watchful_method_args
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = :public_test_method_args
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => /T1/, :attribute(s) => a" do  
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => ..., :attributes => ..., :attribute_options => [:readers, :writers] to include both attribute reader and writer methods (default)" do  
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     @attribute_options = [:readers, :writers]
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => ..., :attributes => ..., :attribute_options => [:readers] to include only attribute reader methods" do  
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     @attribute_options = [:readers]
     do_type_attribute_spec
   end
 
   it "should accept attribute option :reader as a synonym for :readers" do
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     @attribute_options = [:reader]
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => ..., :attributes => ..., :attribute_options => [:writers] to include only attribute writer methods" do  
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     @attribute_options = [:writers]
     do_type_attribute_spec
   end
 
   it "should accept attribute option :writer as a synonym for :writers" do
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     @attribute_options = [:writer]
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => ..., :attributes => ..., :attribute_options => [:class, :readers, :writers] to include both attribute reader and writer methods (default) for class methods" do  
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     @attribute_options = [:class, :readers, :writers]
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => ..., :attributes => ..., :attribute_options => [:class, :readers] to include only attribute reader class methods" do  
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     @attribute_options = [:class, :readers]
     do_type_attribute_spec
   end
 
   it "should accept :type(s) => ..., :attributes => ..., :attribute_options => [:class, :writers] to include only attribute writer class methods" do  
-    @type_spec = /Watchful/
-    @attribute_spec = /watchful_method_args/
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @attribute_spec = /test_method_args/
     @attribute_options = [:class, :writers]
     do_type_attribute_spec
   end
@@ -407,8 +464,8 @@ end
 
 describe Aspect, ".new with a :object(s) parameter and a :method(s) parameter" do  
   before :each do
-    @watchful1 = Watchful.new
-    @watchful2 = Watchful.new
+    @object1 = Aquarium::AspectInvocationTestClass.new
+    @object2 = Aquarium::AspectInvocationTestClass.new
     @protection = 'public'
     @method_options = []
   end
@@ -422,74 +479,74 @@ describe Aspect, ".new with a :object(s) parameter and a :method(s) parameter" d
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
     make_array(@object_spec).each do |object|
-      object.method("#{@protection}_watchful_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+      object.method("#{@protection}_test_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     end
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should accept :object(s) => [o1, ...], :methods => [m, ...]" do  
-    @object_spec = [@watchful1, @watchful2]
-    @method_spec = [:public_watchful_method]
+    @object_spec = [@object1, @object2]
+    @method_spec = [:public_test_method]
     do_object_spec
   end
 
   it "should accept :object(s) => [o1, ...], :methods => m" do  
-    @object_spec = [@watchful1, @watchful2]
-    @method_spec = :public_watchful_method
+    @object_spec = [@object1, @object2]
+    @method_spec = :public_test_method
     do_object_spec
   end
 
   it "should accept :object(s) => [o1, ...], :methods => /m/" do  
-    @object_spec = [@watchful1, @watchful2]
-    @method_spec = /watchful_method/
+    @object_spec = [@object1, @object2]
+    @method_spec = /test_method/
     do_object_spec
   end
 
   it "should accept :object(s) => o1, :methods => [m, ...]" do  
-    @object_spec = @watchful1
-    @method_spec = [:public_watchful_method]
+    @object_spec = @object1
+    @method_spec = [:public_test_method]
     do_object_spec
   end
 
   it "should accept :object(s) => o1, :methods => m" do  
-    @object_spec = @watchful1
-    @method_spec = :public_watchful_method
+    @object_spec = @object1
+    @method_spec = :public_test_method
     do_object_spec
   end
 
   it "should accept :object(s) => o1, :methods => /m/" do  
-    @object_spec = @watchful1
-    @method_spec = /watchful_method/
+    @object_spec = @object1
+    @method_spec = /test_method/
     do_object_spec
   end
 
   it "should accept :object(s) => ..., :methods => ..., :method_options => [:exclude_ancestor_methods] to exclude methods defined in ancestors" do  
-    @object_spec = @watchful1
-    @method_spec = /watchful_method/
+    @object_spec = @object1
+    @method_spec = /test_method/
     @method_options = [:exclude_ancestor_methods]
     do_object_spec
   end
 
   it "should accept :object(s) => ..., :methods => ..., :method_options => [:instance, :public] to match only instance and public (both are the defaults) methods" do  
-    @object_spec = @watchful1
-    @method_spec = /watchful_method/
+    @object_spec = @object1
+    @method_spec = /test_method/
     @method_options = [:instance, :public]
     do_object_spec
   end
 
   %w[public protected private].each do |protection|
     it "should accept :object(s) => ..., :methods => ..., :method_options => [#{protection.intern}] to match only instance (default) #{protection} methods" do  
-      @object_spec = @watchful1
-      @method_spec = /watchful_method/
+      @object_spec = @object1
+      @method_spec = /test_method/
       @method_options = [protection.intern]
       @protection = protection
       do_object_spec
     end
 
     it "should accept :object(s) => ..., :methods => ..., :method_options => [:instance, #{protection.intern}] to match only instance #{protection} methods" do  
-      @object_spec = @watchful1
-      @method_spec = /watchful_method/
+      @object_spec = @object1
+      @method_spec = /test_method/
       @method_options = [:instance, protection.intern]
       @protection = protection
       do_object_spec
@@ -499,8 +556,8 @@ end
 
 describe Aspect, ".new with a :object(s) parameter and a :attribute(s) parameter" do  
   before :each do
-    @watchful1 = Watchful.new
-    @watchful2 = Watchful.new
+    @object1 = Aquarium::AspectInvocationTestClass.new
+    @object2 = Aquarium::AspectInvocationTestClass.new
     @protection = 'public'
     @attribute_options = []
   end
@@ -517,81 +574,81 @@ describe Aspect, ".new with a :object(s) parameter and a :attribute(s) parameter
     end 
     make_array(@object_spec).each do |object|
       @expected_args = nil
-      object.method("#{@protection}_watchful_method_args".intern).call 
+      object.method("#{@protection}_test_method_args".intern).call 
       @expected_args = :a1
-      object.method("#{@protection}_watchful_method_args=".intern).call @expected_args
+      object.method("#{@protection}_test_method_args=".intern).call @expected_args
       advice_called.should be_true
     end
     aspect.unadvise
   end
 
   it "should accept :object(s) => [T1, ...], :attribute(s) => [a, ...]" do  
-    @object_spec = [@watchful1, @watchful2]
-    @attribute_spec = [:public_watchful_method_args]
+    @object_spec = [@object1, @object2]
+    @attribute_spec = [:public_test_method_args]
     do_object_attribute_spec
   end
 
   it "should accept :object(s) => [T1, ...], :attribute(s) => a" do  
-    @object_spec = [@watchful1, @watchful2]
-    @attribute_spec = :public_watchful_method_args
+    @object_spec = [@object1, @object2]
+    @attribute_spec = :public_test_method_args
     do_object_attribute_spec
   end
 
   it "should accept :object(s) => [T1, ...], :attribute(s) => /a/" do  
-    @object_spec = [@watchful1, @watchful2]
-    @attribute_spec = /watchful_method_args/
+    @object_spec = [@object1, @object2]
+    @attribute_spec = /test_method_args/
     do_object_attribute_spec
   end
 
   it "should accept :object(s) => T1, :attribute(s) => [a]" do  
-    @object_spec = @watchful1
-    @attribute_spec = [:public_watchful_method_args]
+    @object_spec = @object1
+    @attribute_spec = [:public_test_method_args]
     do_object_attribute_spec
   end
 
   it "should accept :object(s) => T1, :attribute(s) => a" do  
-    @object_spec = @watchful1
-    @attribute_spec = :public_watchful_method_args
+    @object_spec = @object1
+    @attribute_spec = :public_test_method_args
     do_object_attribute_spec
   end
 
   it "should accept :object(s) => T1, :attribute(s) => /a/" do  
-    @object_spec = @watchful1
-    @attribute_spec = /watchful_method_args/
+    @object_spec = @object1
+    @attribute_spec = /test_method_args/
     do_object_attribute_spec
   end
 
   it "should accept :object(s) => ..., :attributes => ..., :attribute_options => [:readers, :writers] to include both attribute reader and writer methods (default)" do  
-    @object_spec = @watchful1
-    @attribute_spec = /watchful_method_args/
+    @object_spec = @object1
+    @attribute_spec = /test_method_args/
     @attribute_options = [:readers, :writers]
     do_object_attribute_spec
   end
 
   it "should accept :object(s) => ..., :attributes => ..., :attribute_options => [:readers] to include only attribute reader methods" do  
-    @object_spec = @watchful1
-    @attribute_spec = /watchful_method_args/
+    @object_spec = @object1
+    @attribute_spec = /test_method_args/
     @attribute_options = [:readers]
     do_object_attribute_spec
   end
 
   it "should accept attribute option :reader as a synonym for :readers" do
-    @object_spec = @watchful1
-    @attribute_spec = /watchful_method_args/
+    @object_spec = @object1
+    @attribute_spec = /test_method_args/
     @attribute_options = [:reader]
     do_object_attribute_spec
   end
 
   it "should accept :object(s) => ..., :attributes => ..., :attribute_options => [:writers] to include only attribute writer methods" do  
-    @object_spec = @watchful1
-    @attribute_spec = /watchful_method_args/
+    @object_spec = @object1
+    @attribute_spec = /test_method_args/
     @attribute_options = [:writers]
     do_object_attribute_spec
   end
 
   it "should accept attribute option :writer as a synonym for :writers" do
-    @object_spec = @watchful1
-    @attribute_spec = /watchful_method_args/
+    @object_spec = @object1
+    @attribute_spec = /test_method_args/
     @attribute_options = [:writer]
     do_object_attribute_spec
   end
@@ -613,70 +670,100 @@ describe Aspect, ".new with a :pointcut parameter taking a hash with type specif
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
     if @are_class_methods
-      Watchful.method("#{@protection}_class_watchful_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+      Aquarium::AspectInvocationTestClass.method("#{@protection}_class_test_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     else
-      Watchful.new.method("#{@protection}_watchful_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+      Aquarium::AspectInvocationTestClass.new.method("#{@protection}_test_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     end
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should accept {:type(s) => [T1, ...], :methods => [m, ...]} " do  
-    @pointcut_hash = {:type => [Watchful], :methods => [:public_watchful_method]}
+    @pointcut_hash = {:type => [Aquarium::AspectInvocationTestClass], :methods => [:public_test_method]}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => [T1, ...], :methods => m} " do  
-    @pointcut_hash = {:type => [Watchful], :methods => :public_watchful_method}
+    @pointcut_hash = {:type => [Aquarium::AspectInvocationTestClass], :methods => :public_test_method}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => [T1, ...], :methods => /m/} " do  
-    @pointcut_hash = {:type => [Watchful], :methods => /watchful_method/}
+    @pointcut_hash = {:type => [Aquarium::AspectInvocationTestClass], :methods => /test_method/}
+    do_type_pointcut_spec
+  end
+
+  it "should accept {:type(s)_and_ancestors => [T1, ...], :methods => /m/} " do  
+    @pointcut_hash = {:type_and_ancestors => [Aquarium::AspectInvocationTestClass], :methods => /test_method/}
+    do_type_pointcut_spec
+  end
+
+  it "should accept {:type(s)_and_descendents => [T1, ...], :methods => /m/} " do  
+    @pointcut_hash = {:type_and_descendents => [Aquarium::AspectInvocationTestClass], :methods => /test_method/}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => T1, :methods => [m, ...]} " do  
-    @pointcut_hash = {:type => Watchful, :methods => [:public_watchful_method]}
+    @pointcut_hash = {:type => Aquarium::AspectInvocationTestClass, :methods => [:public_test_method]}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => T1, :methods => m} " do  
-    @pointcut_hash = {:type => Watchful, :methods => :public_watchful_method}
+    @pointcut_hash = {:type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => T1, :methods => /m/} " do  
-    @pointcut_hash = {:type => Watchful, :methods => /watchful_method/}
+    @pointcut_hash = {:type => Aquarium::AspectInvocationTestClass, :methods => /test_method/}
+    do_type_pointcut_spec
+  end
+
+  it "should accept {:type(s)_and_ancestors => T1, :methods => /m/} " do  
+    @pointcut_hash = {:type_and_ancestors => Aquarium::AspectInvocationTestClass, :methods => /test_method/}
+    do_type_pointcut_spec
+  end
+
+  it "should accept {:type(s)_and_descendents => T1, :methods => /m/} " do  
+    @pointcut_hash = {:type_and_descendents => Aquarium::AspectInvocationTestClass, :methods => /test_method/}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => /T1/, :methods => [m, ...]} " do  
-    @pointcut_hash = {:type => /Watchful/, :methods => [:public_watchful_method]}
+    @pointcut_hash = {:type => /Aquarium::AspectInvocationTestClass/, :methods => [:public_test_method]}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => /T1/, :methods => m} " do  
-    @pointcut_hash = {:type => /Watchful/, :methods => :public_watchful_method}
+    @pointcut_hash = {:type => /Aquarium::AspectInvocationTestClass/, :methods => :public_test_method}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => /T1/, :methods => /m/} " do  
-    @pointcut_hash = {:type => /Watchful/, :methods => /watchful_method/}
+    @pointcut_hash = {:type => /Aquarium::AspectInvocationTestClass/, :methods => /test_method/}
+    do_type_pointcut_spec
+  end
+
+  it "should accept {:type(s)_and_ancestors => /T1/, :methods => /m/} " do  
+    @pointcut_hash = {:type_and_ancestors => /Aquarium::AspectInvocationTestClass/, :methods => /test_method/}
+    do_type_pointcut_spec
+  end
+
+  it "should accept {:type(s)_and_descendents => /T1/, :methods => /m/} " do  
+    @pointcut_hash = {:type_and_descendents => /Aquarium::AspectInvocationTestClass/, :methods => /test_method/}
     do_type_pointcut_spec
   end
 
   %w[public protected private].each do |protection|
     it "should accept {:type(s) => T1, :methods => /m/, :method_options =>[:instance, #{protection}]} " do  
       @protection = protection
-      @pointcut_hash = {:type => Watchful, :methods => /watchful_method/, :method_options =>[:instance, protection.intern]}
+      @pointcut_hash = {:type => Aquarium::AspectInvocationTestClass, :methods => /test_method/, :method_options =>[:instance, protection.intern]}
       do_type_pointcut_spec
     end
   end
 
   %w[public private].each do |protection|
     it "should accept {:type(s) => T1, :methods => /m/, :method_options =>[:class, #{protection}]} " do  
-      @pointcut_hash = {:type => Watchful, :methods => /class_watchful_method/, :method_options =>[:class, protection.intern]}
+      @pointcut_hash = {:type => Aquarium::AspectInvocationTestClass, :methods => /class_test_method/, :method_options =>[:class, protection.intern]}
       @protection = protection
       @are_class_methods = true
       do_type_pointcut_spec
@@ -684,12 +771,12 @@ describe Aspect, ".new with a :pointcut parameter taking a hash with type specif
   end
 
   it "should accept {:type(s) => T1, :methods => /m/, :method_options =>[:instance]} defaults to public methods" do  
-    @pointcut_hash = {:type => Watchful, :methods => /watchful_method/, :method_options =>[:instance]}
+    @pointcut_hash = {:type => Aquarium::AspectInvocationTestClass, :methods => /test_method/, :method_options =>[:instance]}
     do_type_pointcut_spec
   end
 
   it "should accept {:type(s) => T1, :methods => /m/, :method_options =>[:class]} defaults to public class methods" do  
-    @pointcut_hash = {:type => Watchful, :methods => /watchful_method/, :method_options =>[:class]}
+    @pointcut_hash = {:type => Aquarium::AspectInvocationTestClass, :methods => /test_method/, :method_options =>[:class]}
     @are_class_methods = true
     do_type_pointcut_spec
   end
@@ -699,8 +786,8 @@ describe Aspect, ".new with a :pointcut parameter taking a hash with object spec
   before :each do
     @protection = 'public'
     @expected_advice_count = 2
-    @watchful1 = Watchful.new
-    @watchful2 = Watchful.new
+    @object1 = Aquarium::AspectInvocationTestClass.new
+    @object2 = Aquarium::AspectInvocationTestClass.new
   end
   
   def do_object_pointcut_spec
@@ -712,42 +799,42 @@ describe Aspect, ".new with a :pointcut parameter taking a hash with object spec
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
-    @watchful1.method("#{@protection}_watchful_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    @watchful2.method("#{@protection}_watchful_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    @object1.method("#{@protection}_test_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    @object2.method("#{@protection}_test_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_count.should == @expected_advice_count
     aspect.unadvise
   end
 
   it "should accept {:objects => [o1, ...], :methods => [m, ...]} " do  
-    @pointcut_hash = {:objects => [@watchful1, @watchful2], :methods => [:public_watchful_method]}
+    @pointcut_hash = {:objects => [@object1, @object2], :methods => [:public_test_method]}
     do_object_pointcut_spec
   end
 
   it "should accept {:objects => [o1, ...], :methods => m} " do  
-    @pointcut_hash = {:objects => [@watchful1, @watchful2], :methods => :public_watchful_method}
+    @pointcut_hash = {:objects => [@object1, @object2], :methods => :public_test_method}
     do_object_pointcut_spec
   end
 
   it "should accept {:objects => [o1, ...], :methods => /m/} " do  
-    @pointcut_hash = {:objects => [@watchful1, @watchful2], :methods => /watchful_method/}
+    @pointcut_hash = {:objects => [@object1, @object2], :methods => /test_method/}
     do_object_pointcut_spec
   end
 
   it "should accept {:object => o1, :methods => [m, ...]} " do  
     @expected_advice_count = 1
-    @pointcut_hash = {:object => @watchful1, :methods => [:public_watchful_method]}
+    @pointcut_hash = {:object => @object1, :methods => [:public_test_method]}
     do_object_pointcut_spec
   end
 
   it "should accept {:objects => o1, :methods => m} " do  
     @expected_advice_count = 1
-    @pointcut_hash = {:objects => @watchful1, :methods => :public_watchful_method}
+    @pointcut_hash = {:objects => @object1, :methods => :public_test_method}
     do_object_pointcut_spec
   end
 
   it "should accept {:objects => o1, :methods => /m/} " do  
     @expected_advice_count = 1
-    @pointcut_hash = {:objects => @watchful1, :methods => /watchful_method/}
+    @pointcut_hash = {:objects => @object1, :methods => /test_method/}
     do_object_pointcut_spec
   end
 end
@@ -762,19 +849,19 @@ describe Aspect, ".new with a :pointcut parameter and a Pointcut object or an ar
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    Aquarium::AspectInvocationTestClass.new.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should accept a single Pointcut object." do
-    @pointcuts = Pointcut.new :type => [Watchful], :methods => :public_watchful_method
+    @pointcuts = Pointcut.new :type => [Aquarium::AspectInvocationTestClass], :methods => :public_test_method
     do_pointcut_pointcut_spec
   end
   
   it "should accept an array of Pointcut objects." do
-    pointcut1 = Pointcut.new :type => [Watchful], :methods => :public_watchful_method
-    pointcut2 = Pointcut.new :type => [Watchful], :methods => :public_class_watchful_method, :method_options => [:class]
+    pointcut1 = Pointcut.new :type => [Aquarium::AspectInvocationTestClass], :methods => :public_test_method
+    pointcut2 = Pointcut.new :type => [Aquarium::AspectInvocationTestClass], :methods => :public_class_test_method, :method_options => [:class]
     @pointcuts = [pointcut1, pointcut2]
     do_pointcut_pointcut_spec
   end
@@ -789,18 +876,18 @@ describe Aspect, ".new with a :pointcut parameter and an array of Pointcuts" do
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     }
-    pointcut1 = Pointcut.new :type => [Watchful], :methods => :public_watchful_method
-    pointcut2 = Pointcut.new :type => [Watchful], :methods => :public_class_watchful_method, :method_options => [:class]
+    pointcut1 = Pointcut.new :type => [Aquarium::AspectInvocationTestClass], :methods => :public_test_method
+    pointcut2 = Pointcut.new :type => [Aquarium::AspectInvocationTestClass], :methods => :public_class_test_method, :method_options => [:class]
     pointcut12 = pointcut1.or pointcut2
     aspect1 = Aspect.new :before, :pointcut => [pointcut1, pointcut2], :advice => advice
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    Watchful.public_class_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    Aquarium::AspectInvocationTestClass.new.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    Aquarium::AspectInvocationTestClass.public_class_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should == 2
     aspect1.unadvise
     advice_called = 0
     aspect2 = Aspect.new :before, :pointcut => pointcut12, :advice => advice
-    Watchful.new.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-    Watchful.public_class_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    Aquarium::AspectInvocationTestClass.new.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    Aquarium::AspectInvocationTestClass.public_class_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should == 2
     aspect2.unadvise
     aspect1.join_points_matched.should eql(aspect2.join_points_matched)
@@ -810,7 +897,7 @@ end
 describe Aspect, ".new with a :type(s) parameter and a :method(s) parameter or one of several equivalent :pointcut parameters" do
   before :each do
     @advice = proc {|jp, obj, *args| "advice"}
-    @expected_methods = [:public_watchful_method]
+    @expected_methods = [:public_test_method]
   end
   after :each do
     @aspect1.unadvise
@@ -818,31 +905,72 @@ describe Aspect, ".new with a :type(s) parameter and a :method(s) parameter or o
   end
   
   it "should advise equivalent join points when :type => T and :method => m is used or :pointcut =>{:type => T, :method => m} is used." do
-    @aspect1 = Aspect.new :after, :type => Watchful, :method => :public_watchful_method, &@advice
-    @aspect2 = Aspect.new :after, :pointcut => {:type => Watchful, :method => :public_watchful_method}, &@advice
+    @aspect1 = Aspect.new :after, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+    @aspect2 = Aspect.new :after, :pointcut => {:type => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
     aspects_should_be_equal 1, @aspect1, @aspect2
   end
 
   it "should advise equivalent join points when :type => T and :method => m is used or :pointcut => pointcut is used, where pointcut matches :type => T and :method => m." do
-    @aspect1 = Aspect.new :after, :type => Watchful, :method => :public_watchful_method, &@advice
-    pointcut = Aquarium::Aspects::Pointcut.new :type => Watchful, :method => :public_watchful_method
+    @aspect1 = Aspect.new :after, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+    pointcut = Aquarium::Aspects::Pointcut.new :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method
     @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
     aspects_should_be_equal 1, @aspect1, @aspect2
   end
   
   it "should advise equivalent join points when :pointcut =>{:type => T, :method => m} is used or :pointcut => pointcut is used, where pointcut matches :type => T and :method => m." do
-    @aspect1 = Aspect.new :after, :pointcut => {:type => Watchful, :method => :public_watchful_method}, &@advice
-    pointcut = Aquarium::Aspects::Pointcut.new :type => Watchful, :method => :public_watchful_method
+    @aspect1 = Aspect.new :after, :pointcut => {:type => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
+    pointcut = Aquarium::Aspects::Pointcut.new :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method
     @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
     aspects_should_be_equal 1, @aspect1, @aspect2
   end
 
   it "should advise an equivalent join point when :type => T and :method => m is used or :pointcut => join_point is used, where join_point matches :type => T and :method => m." do
-    @aspect1 = Aspect.new :after, :type => Watchful, :method => :public_watchful_method, &@advice
-    join_point = Aquarium::Aspects::JoinPoint.new :type => Watchful, :method => :public_watchful_method
+    @aspect1 = Aspect.new :after, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+    join_point = Aquarium::Aspects::JoinPoint.new :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method
     @aspect2 = Aspect.new :after, :pointcut => join_point, &@advice
     join_points_should_be_equal 1, @aspect1, @aspect2
   end
+  
+  it "should advise equivalent join points when :type_and_ancestors => T and :method => m is used or :pointcut =>{:type_and_ancestors => T, :method => m} is used." do
+    @aspect1 = Aspect.new :after, :type_and_ancestors => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+    @aspect2 = Aspect.new :after, :pointcut => {:type_and_ancestors => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
+    aspects_should_be_equal 1, @aspect1, @aspect2
+  end
+
+  it "should advise equivalent join points when :type_and_ancestors => T and :method => m is used or :pointcut => pointcut is used, where pointcut matches :type_and_ancestors => T and :method => m." do
+    @aspect1 = Aspect.new :after, :type_and_ancestors => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+    pointcut = Aquarium::Aspects::Pointcut.new :type_and_ancestors => Aquarium::AspectInvocationTestClass, :method => :public_test_method
+    @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
+    aspects_should_be_equal 1, @aspect1, @aspect2
+  end
+  
+  it "should advise equivalent join points when :pointcut =>{:type_and_ancestors => T, :method => m} is used or :pointcut => pointcut is used, where pointcut matches :type_and_ancestors => T and :method => m." do
+    @aspect1 = Aspect.new :after, :pointcut => {:type_and_ancestors => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
+    pointcut = Aquarium::Aspects::Pointcut.new :type_and_ancestors => Aquarium::AspectInvocationTestClass, :method => :public_test_method
+    @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
+    aspects_should_be_equal 1, @aspect1, @aspect2
+  end
+
+  it "should advise equivalent join points when :type_and_descendents => T and :method => m is used or :pointcut =>{:type_and_descendents => T, :method => m} is used." do
+    @aspect1 = Aspect.new :after, :type_and_descendents => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+    @aspect2 = Aspect.new :after, :pointcut => {:type_and_descendents => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
+    aspects_should_be_equal 1, @aspect1, @aspect2
+  end
+
+  it "should advise equivalent join points when :type_and_descendents => T and :method => m is used or :pointcut => pointcut is used, where pointcut matches :type_and_descendents => T and :method => m." do
+    @aspect1 = Aspect.new :after, :type_and_descendents => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+    pointcut = Aquarium::Aspects::Pointcut.new :type_and_descendents => Aquarium::AspectInvocationTestClass, :method => :public_test_method
+    @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
+    aspects_should_be_equal 1, @aspect1, @aspect2
+  end
+  
+  it "should advise equivalent join points when :pointcut =>{:type_and_descendents => T, :method => m} is used or :pointcut => pointcut is used, where pointcut matches :type_and_descendents => T and :method => m." do
+    @aspect1 = Aspect.new :after, :pointcut => {:type_and_descendents => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
+    pointcut = Aquarium::Aspects::Pointcut.new :type_and_descendents => Aquarium::AspectInvocationTestClass, :method => :public_test_method
+    @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
+    aspects_should_be_equal 1, @aspect1, @aspect2
+  end
+
 end
 
 describe Aspect, ".new with a :type(s) parameter and an :attributes(s) parameter or one of several equivalent :pointcut parameters" do
@@ -905,7 +1033,7 @@ end
 describe Aspect, ".new with a :object(s) parameter and a :method(s) parameter or one of several equivalent :pointcut parameters" do
   before :each do
     @advice = proc {|jp, obj, *args| "advice"}
-    @expected_methods = [:public_watchful_method]
+    @expected_methods = [:public_test_method]
   end
   after :each do
     @aspect1.unadvise
@@ -913,24 +1041,24 @@ describe Aspect, ".new with a :object(s) parameter and a :method(s) parameter or
   end
 
   it "should advise equivalent join points when :object => o and :method => m is used or :pointcut =>{:object => o, :method => m} is used." do
-    watchful = Watchful.new
-    @aspect1 = Aspect.new :after, :object => watchful, :method => :public_watchful_method, &@advice
-    @aspect2 = Aspect.new :after, :pointcut => {:object => watchful, :method => :public_watchful_method}, &@advice
+    object = Aquarium::AspectInvocationTestClass.new
+    @aspect1 = Aspect.new :after, :object => object, :method => :public_test_method, &@advice
+    @aspect2 = Aspect.new :after, :pointcut => {:object => object, :method => :public_test_method}, &@advice
     aspects_should_be_equal 1, @aspect1, @aspect2
   end
 
   it "should advise equivalent join points when :object => o and :method => m is used or :pointcut => pointcut is used, where pointcut matches :object => o and :method => m." do
-    watchful = Watchful.new
-    @aspect1 = Aspect.new :after, :object => watchful, :method => :public_watchful_method, &@advice
-    pointcut = Aquarium::Aspects::Pointcut.new :object => watchful, :method => :public_watchful_method
+    object = Aquarium::AspectInvocationTestClass.new
+    @aspect1 = Aspect.new :after, :object => object, :method => :public_test_method, &@advice
+    pointcut = Aquarium::Aspects::Pointcut.new :object => object, :method => :public_test_method
     @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
     aspects_should_be_equal 1, @aspect1, @aspect2
   end
 
   it "should advise equivalent join points when :pointcut =>{:object => o, :method => m} is used or :pointcut => pointcut is used, where pointcut matches :object => o and :method => m." do
-    watchful = Watchful.new
-    @aspect1 = Aspect.new :after, :pointcut => {:object => watchful, :method => :public_watchful_method}, &@advice
-    pointcut = Aquarium::Aspects::Pointcut.new :object => watchful, :method => :public_watchful_method
+    object = Aquarium::AspectInvocationTestClass.new
+    @aspect1 = Aspect.new :after, :pointcut => {:object => object, :method => :public_test_method}, &@advice
+    pointcut = Aquarium::Aspects::Pointcut.new :object => object, :method => :public_test_method
     @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
     aspects_should_be_equal 1, @aspect1, @aspect2
   end
@@ -999,21 +1127,21 @@ end
 
 describe Aspect, ".new block for advice" do  
   it "should accept a block as the advice to use." do
-    watchful = Watchful.new
+    object = Aquarium::AspectInvocationTestClass.new
     advice_called = false
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method do |jp, obj, *args|
+    aspect = Aspect.new :before, :object => object, :methods => :public_test_method do |jp, obj, *args|
       advice_called = true
       jp.should_not be_nil
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should accept an :advice => Proc parameter indicating the advice to use." do
-    watchful = Watchful.new
+    object = Aquarium::AspectInvocationTestClass.new
     advice_called = false
     advice = Proc.new {|jp, obj, *args|
       advice_called = true
@@ -1021,14 +1149,14 @@ describe Aspect, ".new block for advice" do
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     }
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advice => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    aspect = Aspect.new :before, :object => object, :methods => :public_test_method, :advice => advice
+    object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
     aspect.unadvise
   end
   
   it "should accept a :call => Proc parameter as a synonym for :advice." do
-    watchful = Watchful.new
+    object = Aquarium::AspectInvocationTestClass.new
     advice_called = false
     advice = Proc.new {|jp, obj, *args|
       advice_called = true
@@ -1036,14 +1164,14 @@ describe Aspect, ".new block for advice" do
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     }
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :call => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    aspect = Aspect.new :before, :object => object, :methods => :public_test_method, :call => advice
+    object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should accept a :invoke => Proc parameter as a synonym for :advice." do
-    watchful = Watchful.new
+    object = Aquarium::AspectInvocationTestClass.new
     advice_called = false
     advice = Proc.new {|jp, obj, *args|
       advice_called = true
@@ -1051,14 +1179,14 @@ describe Aspect, ".new block for advice" do
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     }
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :invoke => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    aspect = Aspect.new :before, :object => object, :methods => :public_test_method, :invoke => advice
+    object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should accept a :advise_with => Proc parameter as a synonym for :advice." do
-    watchful = Watchful.new
+    object = Aquarium::AspectInvocationTestClass.new
     advice_called = false
     advice = Proc.new {|jp, obj, *args|
       advice_called = true
@@ -1066,27 +1194,27 @@ describe Aspect, ".new block for advice" do
       args.size.should == 4
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     }
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advise_with => advice
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    aspect = Aspect.new :before, :object => object, :methods => :public_test_method, :advise_with => advice
+    object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should ignore all other advice parameters if a block is given." do
-    watchful = Watchful.new
+    object = Aquarium::AspectInvocationTestClass.new
     advice_called = false
     advice1 = Proc.new {|jp, obj, *args| fail "advice1"}
     advice2 = Proc.new {|jp, obj, *args| fail "advice2"}
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advice => advice1, :invoke => advice2 do |jp, obj, *args|
+    aspect = Aspect.new :before, :object => object, :methods => :public_test_method, :advice => advice1, :invoke => advice2 do |jp, obj, *args|
       advice_called = true
     end
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
     aspect.unadvise
   end
 
   it "should ignore all but the last advice parameter, using any synonym, if there is no advice block." do
-    watchful = Watchful.new
+    object = Aquarium::AspectInvocationTestClass.new
     advice_called = false
     advice1 = Proc.new {|jp, obj, *args|
       advice_called = true
@@ -1095,8 +1223,8 @@ describe Aspect, ".new block for advice" do
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     }
     advice2 = Proc.new {|jp, obj, *args| raise "should not be called"}
-    aspect = Aspect.new :before, :object => watchful, :methods => :public_watchful_method, :advice => advice2, :advice => advice1
-    watchful.public_watchful_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
+    aspect = Aspect.new :before, :object => object, :methods => :public_test_method, :advice => advice2, :advice => advice1
+    object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
     advice_called.should be_true
     aspect.unadvise
   end
@@ -1104,27 +1232,27 @@ end
 
 describe Aspect, ".new advice block or proc parameter list" do  
   it "should raise if obsolete |jp, *args| list is used." do
-    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method do |jp, *args|; end }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method do |jp, *args|; end }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should accept an argument list matching |jp, object, *args|." do
-    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do |jp, object, *args|; end }.should_not raise_error(Exception)
+    lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp, object, *args|; end }.should_not raise_error(Exception)
   end
 
   it "should accept an argument list matching |jp, object|." do
-    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do |jp, object|; end }.should_not raise_error(Exception)
+    lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp, object|; end }.should_not raise_error(Exception)
   end
 
   it "should accept an argument list matching |jp|." do
-    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do |jp|; end }.should_not raise_error(Exception)
+    lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp|; end }.should_not raise_error(Exception)
   end
 
   it "should accept an argument list matching ||." do
-    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do ||; end }.should_not raise_error(Exception)
+    lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do ||; end }.should_not raise_error(Exception)
   end
 
   it "should accept no argument list." do
-    lambda { Aspect.new :before, :type => Watchful, :methods => :public_watchful_method, :noop => true do; end }.should_not raise_error(Exception)
+    lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do; end }.should_not raise_error(Exception)
   end
 end
 
@@ -1154,7 +1282,7 @@ class Exclude1c < Exclude1
   def doit3; end
 end  
 
-describe Aspect, ".new with a :type(s) parameter and an :exclude_type(s) parameter" do  
+describe Aspect, ".new with a :type(s) parameter and an :exclude_type(s), and :exclude_type(s)_and_ancestors, or an :exclude_type(s)_and_descendents parameter" do  
   def do_exclude_types exclude_type_sym
     included_types = [DontExclude1, DontExclude2]
     excluded_types = [Exclude1, Exclude2]
@@ -1177,12 +1305,28 @@ describe Aspect, ".new with a :type(s) parameter and an :exclude_type(s) paramet
     aspect.unadvise
   end
   
-  it "should accept :type(s) => [T1, ...], :exclude_type(s) => [T2, ...] and exclude join points in the excluded types" do  
+  it "should accept :type(s) => [T1, ...], :exclude_types => [T2, ...] and exclude join points in the excluded types" do  
     do_exclude_types :exclude_types
   end
   
   it "should accept :exclude_type as a synonym for :exclude_types" do  
     do_exclude_types :exclude_type
+  end
+
+  it "should accept :type(s) => [T1, ...], :exclude_types_and_ancestors => [T2, ...] and exclude join points in the excluded types" do  
+    do_exclude_types :exclude_types_and_ancestors
+  end
+  
+  it "should accept :exclude_type_and_ancestors as a synonym for :exclude_types_and_ancestors" do  
+    do_exclude_types :exclude_type_and_ancestors
+  end
+
+  it "should accept :type(s) => [T1, ...], :exclude_types_and_descendents => [T2, ...] and exclude join points in the excluded types" do  
+    do_exclude_types :exclude_types_and_descendents
+  end
+  
+  it "should accept :exclude_type_and_descendents as a synonym for :exclude_types_and_descendents" do  
+    do_exclude_types :exclude_type_and_descendents
   end
 end
 
@@ -1224,7 +1368,7 @@ describe Aspect, ".new with a :object(s) parameter and an :exclude_object(s) par
 end
 
 
-describe Aspect, ".new with a :pointcut(s), :type(s), :object(s), and :method(s) parameter and an :exclude_join_point(s) parameter" do  
+describe Aspect, ".new with a :pointcut(s), :type(s), :type(s)_with_ancestors, :type(s)_with_descendents, :object(s), and :method(s) parameter and an :exclude_join_point(s) parameter" do  
   def do_exclude_join_points exclude_join_points_sym
     dontExclude1 = DontExclude1.new(1)
     dontExclude2 = DontExclude1.new(2)
@@ -1286,6 +1430,48 @@ describe Aspect, ".new with a :pointcut(s), :type(s), :object(s), and :method(s)
       type.new(1).doit
       advice_called.should_not be_true
     end
+    aspect.unadvise
+  end
+
+  it "should accept :type(s)_with_ancestors => [T1, ...], :exclude_join_point(s) => [jps], where [jps] are the list of join points for the types and methods to exclude" do  
+    included_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
+    excluded_join_point1 = JoinPoint.new :type => ClassWithPublicInstanceMethod, :method => :public_instance_test_method
+    excluded_join_point2 = JoinPoint.new :type => ModuleWithPublicInstanceMethod, :method => :public_instance_module_test_method
+    excluded_join_points = [excluded_join_point1, excluded_join_point2]
+    aspect = nil
+    advice_called = false
+    aspect = Aspect.new :before, :types_and_ancestors => included_types, :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|
+      advice_called = true
+      excluded_types.should_not include(jp.target_type)
+    end 
+
+    advice_called = false
+    ClassWithPublicInstanceMethod.new.public_instance_test_method
+    advice_called.should be_false
+    advice_called = false
+    ClassIncludingModuleWithPublicInstanceMethod.new.public_instance_module_test_method
+    advice_called.should be_false
+    aspect.unadvise
+  end
+
+  it "should accept :type(s)_with_descendents => [T1, ...], :exclude_join_point(s) => [jps], where [jps] are the list of join points for the types and methods to exclude" do  
+    included_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
+    excluded_join_point1 = JoinPoint.new :type => ClassWithPublicInstanceMethod, :method => :public_instance_test_method
+    excluded_join_point2 = JoinPoint.new :type => ModuleWithPublicInstanceMethod, :method => :public_instance_module_test_method
+    excluded_join_points = [excluded_join_point1, excluded_join_point2]
+    aspect = nil
+    advice_called = false
+    aspect = Aspect.new :before, :types_and_descendents => included_types, :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|
+      advice_called = true
+      excluded_types.should_not include(jp.target_type)
+    end 
+
+    advice_called = false
+    ClassWithPublicInstanceMethod.new.public_instance_test_method
+    advice_called.should be_false
+    advice_called = false
+    ClassIncludingModuleWithPublicInstanceMethod.new.public_instance_module_test_method
+    advice_called.should be_false
     aspect.unadvise
   end
 
@@ -1411,7 +1597,6 @@ describe Aspect, ".new with a :pointcut(s), :type(s), :object(s), and :method(s)
 end
 
 describe Aspect, ".new with type-based :pointcut(s) and :exclude_type(s) parameter" do  
-
   it "should accept :pointcut(s) => [P1, ...], :exclude_type(s) => [types], where join points with [types] are excluded" do  
     included_types = [DontExclude1, DontExclude2]
     excluded_types = [Exclude1, Exclude2]
@@ -1434,6 +1619,40 @@ describe Aspect, ".new with type-based :pointcut(s) and :exclude_type(s) paramet
       type.new(1).doit
       advice_called.should_not be_true
     end
+    aspect.unadvise
+  end
+end
+
+describe Aspect, ".new with type-based :pointcut(s) and :exclude_type(s)_and_ancestors parameter" do  
+  it "should accept :pointcut(s) => [P1, ...], :exclude_type(s)_and_ancestors => [types], where join points with [types] are excluded" do  
+    excluded_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
+    types = excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
+    pointcut1 = Pointcut.new :types => types, :method => :all, :method_options => [:exclude_ancestor_methods]
+    advice_called = false
+    aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_ancestors => excluded_types do |jp, obj, *args|
+      advice_called = true
+      excluded_types.should_not include(jp.target_type)
+    end 
+    aspect.pointcuts.each do |pc|
+      pc.join_points_matched.each do |jp|
+        jp.target_type.should == ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod
+      end
+    end
+    aspect.unadvise
+  end
+end
+
+describe Aspect, ".new with type-based :pointcut(s) and :exclude_type(s)_and_descendents parameter" do  
+  it "should accept :pointcut(s) => [P1, ...], :exclude_type(s)_and_descendents => [types], where join points with [types] are excluded" do  
+    excluded_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
+    types = excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
+    pointcut1 = Pointcut.new :types => types, :method => :all, :method_options => [:exclude_ancestor_methods]
+    advice_called = false
+    aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_descendents => excluded_types do |jp, obj, *args|
+      advice_called = true
+      excluded_types.should_not include(jp.target_type)
+    end 
+    aspect.pointcuts.size.should == 0
     aspect.unadvise
   end
 end
