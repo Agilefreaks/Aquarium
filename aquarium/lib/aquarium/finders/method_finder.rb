@@ -75,16 +75,17 @@ module Aquarium
         result
       end
   
-      # finder_result = MethodFinder.new.find_all_by types_and_objects, [methods, [options]]
-      # where if no +methods+ are specified, all are returned, subject to the +options+,
-      # as in #find.
-      # Note: Does not support the :exclude_method(s) options.
-      def find_all_by types_and_objects, method_names_or_regexps = :all, *scope_options
-        return Aquarium::Finders::FinderResult.new if types_and_objects.nil?
-        @specification = { :options => init_method_options(scope_options) }
-        do_find_all_by types_and_objects, method_names_or_regexps
+      NIL_OBJECT = MethodFinder.new unless const_defined?(:NIL_OBJECT)
+
+      RECOGNIZED_METHOD_OPTIONS = %w[public private protected 
+                instance class exclude_ancestor_methods exclude_ancestor_methods]
+  
+      def self.is_recognized_method_option string_or_symbol
+        RECOGNIZED_METHOD_OPTIONS.include? string_or_symbol.to_s 
       end
-      
+  
+      protected
+  
       def do_find_all_by types_and_objects, method_names_or_regexps
         types_and_objects = make_array types_and_objects
         names_or_regexps  = make_methods_array method_names_or_regexps
@@ -111,17 +112,6 @@ module Aquarium
         end
         Aquarium::Finders::FinderResult.new types_and_objects_to_matched_methods.merge(:not_matched => types_and_objects_not_matched)
       end
-  
-      NIL_OBJECT = MethodFinder.new unless const_defined?(:NIL_OBJECT)
-
-      RECOGNIZED_METHOD_OPTIONS = %w[public private protected 
-                instance class exclude_ancestor_methods exclude_ancestor_methods]
-  
-      def self.is_recognized_method_option string_or_symbol
-        RECOGNIZED_METHOD_OPTIONS.include? string_or_symbol.to_s 
-      end
-  
-      protected
   
       def init_specification options
         options[:options] = init_method_options(options[:options])

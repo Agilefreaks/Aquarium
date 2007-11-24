@@ -1118,45 +1118,6 @@ describe "Aquarium::Finders::MethodFinder#find (looking for methods that end in 
   end  
 end
 
-describe "Aquarium::Finders::MethodFinder#find_all_by" do
-  it "should accept :all for the methods argument." do
-    actual = Aquarium::Finders::MethodFinder.new.find_all_by ClassWithPublicInstanceMethod, :all, :exclude_ancestor_methods
-    actual.matched.size.should == 1
-    actual.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
-    actual.not_matched.size.should == 0
-    pub = ClassWithPublicInstanceMethod.new
-    actual = Aquarium::Finders::MethodFinder.new.find_all_by pub, :all, :exclude_ancestor_methods
-    actual.matched.size.should == 1
-    actual.matched[pub].should == Set.new([:public_instance_test_method])
-    actual.not_matched.size.should == 0
-  end
-  
-  it "should behave like Aquarium::Finders::MethodFinder#find with an explicit parameter list rather than a hash." do
-    expected = Aquarium::Finders::MethodFinder.new.find :types => ClassWithPrivateInstanceMethod, 
-      :methods => /test_method/, :options => [:private, :instance, :exclude_ancestor_methods]
-    actual = Aquarium::Finders::MethodFinder.new.find_all_by ClassWithPrivateInstanceMethod, 
-      /test_method/, :private, :instance, :exclude_ancestor_methods
-    actual.should == expected
-
-    expected = Aquarium::Finders::MethodFinder.new.find :objects => @pub, 
-      :methods => /test_method/, :options => [:private, :instance, :exclude_ancestor_methods]
-    actual = Aquarium::Finders::MethodFinder.new.find_all_by @pub, 
-      /test_method/, :private, :instance, :exclude_ancestor_methods
-    actual.should == expected
-
-    expected = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicInstanceMethod, ClassWithPrivateInstanceMethod], 
-      :methods => ["foo", /test_method/], :options => [:instance, :exclude_ancestor_methods]
-    actual = Aquarium::Finders::MethodFinder.new.find_all_by [ClassWithPublicInstanceMethod, ClassWithPrivateInstanceMethod],
-      ["foo", /test_method/], :instance, :exclude_ancestor_methods
-    actual.should == expected
-
-    expected = Aquarium::Finders::MethodFinder.new.find :objects => [@pub, @pri], 
-      :methods => ["foo", /test_method/], :options => [:instance, :exclude_ancestor_methods]
-    actual = Aquarium::Finders::MethodFinder.new.find_all_by [@pub, @pri],
-      ["foo", /test_method/], :instance, :exclude_ancestor_methods
-    actual.should == expected
-  end
-end
   
 describe "Aquarium::Finders::MethodFinder.is_recognized_method_option" do
 

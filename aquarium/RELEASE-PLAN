@@ -15,11 +15,34 @@ This change will obvious break existing aspects.
 
 === Versions 0.3+.0
 
-More refinements to the API and functionality. The main thrust will be expanding the pointcut 
-language to include conditionals and stack context constructs, as well as more intuitive ways
-of expressing sets of types, such as types nested arbitrarily deep in module "namespaces",
-etc.
+More refinements and simpliciations to the API and functionality, including much-needed redundancy
+reduction. I haven't used mocks much in the specs, but they are clearly needed now to improve 
+performance of RSpec runs. 
 
+The main thrust of new feature work will be expanding the pointcut language to include 
+conditionals and stack context constructs, as well as more intuitive ways of expressing sets of 
+types, such as types nested arbitrarily deep in module "namespaces" (e.g., #13403), etc. 
+
+I'm also thinking about an alternative syntax for the DSL. Instead of just this:
+
+	Aspect.new :around :pointcuts => [pc1, pc2, ...] do |jp, object, *args| 
+		# advise
+	end
+
+How about something like the following?
+
+	around do
+ 		pointcuts pc1 or pc2
+ 		advise_with do |jp, object, *args| 
+			# advise
+		end
+	end
+
+I'm not sure it adds much (at this stage of thinking about it...) except that it could make 
+composition of complete pointcuts easier.
+	
 === Version 1.0.0
 
-Reasonable stable and full-featured API and DSL.
+Reasonable stable and full-featured API and DSL. Also, to justify Aquarium's existence ;), I want
+to produce some non-trivial examples of refactoring known APIs and demonstrating improved clarity,
+productivity, modularity, etc., etc.

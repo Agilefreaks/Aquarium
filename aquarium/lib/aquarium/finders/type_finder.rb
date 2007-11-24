@@ -184,6 +184,7 @@ module Aquarium
         rhs = suppress_rh_ctrl_z ? "" : "\\Z"
         regexp = /#{lhs}#{subexp}#{rhs}/
         enclosing_types.each do |parent|
+          next unless parent.respond_to?(:constants)
           parent.constants.grep(regexp) do |name| 
             begin
               found_types << parent.const_get(name)

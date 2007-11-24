@@ -1,34 +1,64 @@
 == Version 0.2.0
 
-V0.2.0 changes the parameter list used for advice blocks and adds numerous robustness improvements.
+V0.2.0 changes the parameter list used for advice blocks and adds numerous enhancements, robustness
+improvements and more complete "spec'ing".
 
 Bug fixes:
 none
 
 Enhancements:
+13402	Support a subclass syntax like AspectJ's "Type+"
 13984	More flexible argument list to the advise block
 14053	Remove JoinPoint#type, JoinPoint#type=, JoinPoint#object, and JoinPoint#object=
-14061	Add a control flow mechanism to skipping intermediate advice
+14061	Add a control flow mechanism to skipping (sic) intermediate advice
 15164	Deprecate ObjectFinder
 15413	Remove ObjectFinder
+15710	Eliminate redundant public methods in various "finders"
 
-#13984 adds the object argument to the advice block parameter list. This change reflects the
-fact that the object is often needed, but calling jp.context.advised_object is a bit tedious.
-This change breaks backwards compatibility. An exception is raised if advice has the signature |jp,*args|.
+#13402 adds new invocation options to specify types and their descendents (subclasses or modules
+that include the specified module(s)) and ancestors. The latter should be used cautiously as it
+will include things like Kernel, Object, and Class!  I used new command options rather than the
+AspectJ "+" suffix (and the proposed, but never implemented "-" suffix for ancestors), because
+the "+" would be confusing with regular expressions and not in the spirit of trying to make
+the pointcut language "easy to read". So, the following are now available:
+  :type_and_ancestors
+  :types_and_ancestors
+  :type_and_descendents
+  :types_and_descendents
+And the corresponding:
+  :exclude_type_and_ancestors
+  :exclude_types_and_ancestors
+  :exclude_type_and_descendents
+  :exclude_types_and_descendents
+If you want both the ancestors and descendents, just use both options with the same value.
 
-#14061 adds a new method, JoinPoint#invoke_original_join_point, which will invoke the original method
-without intermediate advice. If called within around advice, you can write advice that vetoes all 
-subsequent advice, yet invokes the original method. Use this technique cautiously, however, since you
-may not always know what other advices are involved and what side effects this control-flow change might
-cause.
+#13984 adds the object as the second argument to the advice block parameter list. This change
+reflects the fact that the object is often needed, but calling jp.context.advised_object is a
+bit tedious. THIS CHANGE BREAKS BACKWARDS COMPATIBILITY!! An exception is raised if advice has
+the signature |jp, *args|.
 
-ObjectFinder was removed because it is not used and it requires ObjectSpace, which has high overhead and
-won't be enabled, by default, in JRuby.
+#14061 adds a new method, JoinPoint#invoke_original_join_point, which will invoke the original
+method without intermediate advice. If called within around advice, you can write advice that 
+vetoes all subsequent advice, yet invokes the original method. Use this technique cautiously, 
+however, since you may not always know what other advices are involved and what side effects 
+this control-flow change might cause.
+
+#15164 and 15413 remove ObjectFinder because it is not used and it requires ObjectSpace, which 
+has high overhead and won't be enabled, by default, in JRuby (it will be optional).
+
+#15710 removes redundant methods that were becoming a maintenance issue, in particular, 
+MethodFinder#find_all_by and TypeFinder#find_by_name. This is a non-backwards-compatible API
+change. 
+
+Finally, note that I have not yet been able to resolve bug #15202, "Intermittent confusion
+between classes and objects when invoking advice." I believe this is a very rare occurrence
+and only likely to ever happen during the "torture-test" of running the RSpec suite. Please post
+a comment to Tracker if you encounter it!
 
 == Version 0.1.8
 
-V0.1.7 did not successfully "register" at rubyforge. This releases fixes that problem and also adds
-several feature enhancements and refactorings. There are no known upgrade issues.
+V0.1.7 did not successfully "register" at rubyforge. This releases fixes that problem and also
+adds several feature enhancements and refactorings. There are no known upgrade issues.
 
 Bug fixes:
 none
