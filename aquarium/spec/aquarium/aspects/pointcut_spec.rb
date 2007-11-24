@@ -92,7 +92,8 @@ def before_pointcut_module_spec
 end
 
 def ignored_join_point jp
-  jp.target_type.name =~ /^Spec/ or jp.target_type.name =~ /^Aquarium::(Aspects|Extras|Utils)/
+  # Ignore any types introduced by RSpec, other Aquarium types, and the "pretty printer" module (which Rake uses?)
+  jp.target_type.name =~ /^Spec/ or jp.target_type.name =~ /^Aquarium::(Aspects|Extras|Utils)/ or jp.target_type.name =~ /^PP/
 end
 
 

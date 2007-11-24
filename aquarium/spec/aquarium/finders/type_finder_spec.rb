@@ -18,6 +18,10 @@ describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
     lambda { Aquarium::Finders::TypeFinder.new.find "foo" }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
   
+  it "should raise if the input type value is nil." do
+    lambda { Aquarium::Finders::TypeFinder.new.find :type => nil }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+  
   it "should return no matched types and no unmatched type expressions by default (i.e., the input is empty)." do
     actual = Aquarium::Finders::TypeFinder.new.find
     actual.matched.should == {}

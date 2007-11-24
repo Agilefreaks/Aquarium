@@ -188,8 +188,7 @@ module Aquarium
           parent.constants.grep(regexp) do |name| 
             begin
               found_types << parent.const_get(name)
-            rescue NameError => e
-              # ignore
+            rescue NameError    # ignore
             end
           end
         end

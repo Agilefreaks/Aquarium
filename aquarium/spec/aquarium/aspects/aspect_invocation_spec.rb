@@ -1440,10 +1440,7 @@ describe Aspect, ".new with a :pointcut(s), :type(s), :type(s)_with_ancestors, :
     excluded_join_points = [excluded_join_point1, excluded_join_point2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types_and_ancestors => included_types, :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|
-      advice_called = true
-      excluded_types.should_not include(jp.target_type)
-    end 
+    aspect = Aspect.new :before, :types_and_ancestors => included_types, :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|; advice_called = true; end 
 
     advice_called = false
     ClassWithPublicInstanceMethod.new.public_instance_test_method
@@ -1461,10 +1458,7 @@ describe Aspect, ".new with a :pointcut(s), :type(s), :type(s)_with_ancestors, :
     excluded_join_points = [excluded_join_point1, excluded_join_point2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types_and_descendents => included_types, :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|
-      advice_called = true
-      excluded_types.should_not include(jp.target_type)
-    end 
+    aspect = Aspect.new :before, :types_and_descendents => included_types, :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|; advice_called = true; end
 
     advice_called = false
     ClassWithPublicInstanceMethod.new.public_instance_test_method
@@ -1629,10 +1623,7 @@ describe Aspect, ".new with type-based :pointcut(s) and :exclude_type(s)_and_anc
     types = excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
     pointcut1 = Pointcut.new :types => types, :method => :all, :method_options => [:exclude_ancestor_methods]
     advice_called = false
-    aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_ancestors => excluded_types do |jp, obj, *args|
-      advice_called = true
-      excluded_types.should_not include(jp.target_type)
-    end 
+    aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_ancestors => excluded_types do |jp, obj, *args|; end
     aspect.pointcuts.each do |pc|
       pc.join_points_matched.each do |jp|
         jp.target_type.should == ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod
@@ -1648,10 +1639,7 @@ describe Aspect, ".new with type-based :pointcut(s) and :exclude_type(s)_and_des
     types = excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
     pointcut1 = Pointcut.new :types => types, :method => :all, :method_options => [:exclude_ancestor_methods]
     advice_called = false
-    aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_descendents => excluded_types do |jp, obj, *args|
-      advice_called = true
-      excluded_types.should_not include(jp.target_type)
-    end 
+    aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_descendents => excluded_types do |jp, obj, *args|; end
     aspect.pointcuts.size.should == 0
     aspect.unadvise
   end

@@ -5,9 +5,9 @@ require 'aquarium/finders/type_finder'
 # TODO Mock out type_utils to speed it up!
   
 def purge_actuals actuals
-  # Remove extra stuff inserted by RSpec and Aquarium, possibly in other specs! (TODO undo those when finished...)
+  # Remove extra stuff inserted by RSpec, Aquarium, and "pretty printer" (rake?), possibly in other specs! (TODO undo those when finished...)
   actuals.matched_keys.reject do |t2| 
-    t2.name.include?("Spec::") or t2.name =~ /Aquarium::(Utils|Extras|Examples|Aspects)/
+    t2.name.include?("Spec::") or t2.name =~ /Aquarium::(Utils|Extras|Examples|Aspects)/  or t2.name =~ /^PP/
   end
 end
 

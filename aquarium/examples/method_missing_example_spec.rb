@@ -15,7 +15,6 @@ require 'aquarium'
 
 module Aquarium
   class Echo
-        
     def method_missing sym, *args
       @log ||= []
       @log << "Echoing: #{sym.to_s}: #{args.join(" ")}"
