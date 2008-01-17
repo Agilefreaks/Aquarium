@@ -462,8 +462,24 @@ describe Pointcut, " (:exclude_types => types specified)" do
     pc.join_points_not_matched.size.should == 0
   end
   
-  it "should be a synonym for :exclude_type." do
+  it "should accept :exclude_type as a synonym for :exclude_types." do
     pc = Pointcut.new :types => /ExcludeTest/, :exclude_types => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
+    actual.size.should == 1
+    actual.should include(ExcludeTestOne)
+    pc.join_points_not_matched.size.should == 0
+  end
+
+  it "should accept :exclude_on_types as a synonym for :exclude_types." do
+    pc = Pointcut.new :types => /ExcludeTest/, :exclude_on_types => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods
+    actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
+    actual.size.should == 1
+    actual.should include(ExcludeTestOne)
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should accept :exclude_on_type as a synonym for :exclude_types." do
+    pc = Pointcut.new :types => /ExcludeTest/, :exclude_on_type => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods
     actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
     actual.size.should == 1
     actual.should include(ExcludeTestOne)
@@ -944,6 +960,41 @@ describe Pointcut, " (:exclude_methods => methods specified)" do
   
   it "should remove join-point-specified JoinPoints matching the excluded methods specified by regular expression." do
     pc = Pointcut.new :join_points => @all_jps, :exclude_methods => /method[12][13]/, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 10
+    pc.join_points_matched.should == Set.new([@jp12, @jp22, @jp31, @jp32, @jp33, @ojp12, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should accept :exclude_method as a synonym for :exclude_methods." do
+    pc = Pointcut.new :join_points => @all_jps, :exclude_method => /method[12][13]/, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 10
+    pc.join_points_matched.should == Set.new([@jp12, @jp22, @jp31, @jp32, @jp33, @ojp12, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should accept :exclude_calling as a synonym for :exclude_methods." do
+    pc = Pointcut.new :join_points => @all_jps, :exclude_calling => /method[12][13]/, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 10
+    pc.join_points_matched.should == Set.new([@jp12, @jp22, @jp31, @jp32, @jp33, @ojp12, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should accept :exclude_calls_to as a synonym for :exclude_methods." do
+    pc = Pointcut.new :join_points => @all_jps, :exclude_calls_to => /method[12][13]/, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 10
+    pc.join_points_matched.should == Set.new([@jp12, @jp22, @jp31, @jp32, @jp33, @ojp12, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should accept :exclude_invoking as a synonym for :exclude_methods." do
+    pc = Pointcut.new :join_points => @all_jps, :exclude_invoking => /method[12][13]/, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.size.should == 10
+    pc.join_points_matched.should == Set.new([@jp12, @jp22, @jp31, @jp32, @jp33, @ojp12, @ojp22, @ojp31, @ojp32, @ojp33])
+    pc.join_points_not_matched.size.should == 0
+  end
+  
+  it "should accept :exclude_sending_message_to as a synonym for :exclude_methods." do
+    pc = Pointcut.new :join_points => @all_jps, :exclude_sending_message_to => /method[12][13]/, :method_options => :exclude_ancestor_methods
     pc.join_points_matched.size.should == 10
     pc.join_points_matched.should == Set.new([@jp12, @jp22, @jp31, @jp32, @jp33, @ojp12, @ojp22, @ojp31, @ojp32, @ojp33])
     pc.join_points_not_matched.size.should == 0
