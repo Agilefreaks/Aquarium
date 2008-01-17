@@ -64,17 +64,33 @@ module Aquarium
       #   One or more options supported by Aquarium::Finders::MethodFinder. The :exclude_ancestor_methods
       #   option is most useful.
       #
+      # <tt>:reading   => attribute || [attribute_list]</tt>::
+      # <tt>:writing   => attribute || [attribute_list]</tt>::
+      # <tt>:accessing => attribute || [attribute_list]</tt>::
+      #   One or an array of attribute names and/or regular expessions to match. 
+      #   This is syntactic sugar for the corresponding attribute readers and/or writers
+      #   methods. 
+      #   If <tt>:reading</tt> is specified, just attribute readers are matched.
+      #   If <tt>:writing</tt> is specified, just attribute writers are matched.
+      #   If <tt>:accessing</tt> is specified, both readers and writers are matched.
+      #   Any matches will be joined with the matched <tt>:methods.</tt>.
+      #
       # <tt>:attributes => attribute || [attribute_list]</tt>::
       # <tt>:attribute  => attribute || [attribute_list]</tt>::
       #   One or an array of attribute names and/or regular expessions to match. 
       #   This is syntactic sugar for the corresponding attribute readers and/or writers
       #   methods, as specified using the <tt>:attrbute_options</tt>. Any matches will be
-      #   joined with the matched :methods.</tt>.
+      #   joined with the matched <tt>:methods.</tt>.
       #
       # <tt>:attribute_options => [options]</tt>::
       #   One or more of <tt>:readers</tt>, <tt>:reader</tt> (synonymous), 
       #   <tt>:writers</tt>, and/or <tt>:writer</tt> (synonymous). By default, both
-      #   readers and writers are matched.
+      #   readers and writers are matched. 
+      #   <tt>:reading => ...</tt> is synonymous with <tt>:attributes => ..., 
+      #   :attribute_options => [:readers]</tt>.
+      #   <tt>:writing => ...</tt> is synonymous with <tt>:attributes => ..., 
+      #   :attribute_options => [:writers]</tt>.
+      #   <tt>:accessing => ...</tt> is synonymous with <tt>:attributes => ...</tt>.
       #
       # <tt>:exclude_pointcuts   => pc || [pc_list]</tt>::
       # <tt>:exclude_pointcut    => pc || [pc_list]</tt>::
@@ -135,47 +151,53 @@ module Aquarium
   
       alias to_s inspect
 
-      def self.make_attribute_method_names attribute_name_regexps_or_names, attribute_options = []
-        readers = make_attribute_readers attribute_name_regexps_or_names
-        return readers if read_only attribute_options 
-
-        writers = make_attribute_writers readers
-        return writers if write_only attribute_options
-        return readers + writers
-      end
-  
       protected
   
       attr_writer :join_points_matched, :join_points_not_matched, :specification, :candidate_types, :candidate_types_excluded, :candidate_objects, :candidate_join_points
 
-      ALLOWED_OPTIONS_SINGULAR = %w[
-        type object join_point method 
-        exclude_type exclude_object exclude_join_point exclude_pointcut exclude_method
-        default_object attribute method_option attribute_option]
-      
-      OTHER_ALLOWED_OPTIONS = %w[
-        type_and_descendents types_and_descendents type_and_ancestors types_and_ancestors
-        exclude_type_and_descendents exclude_types_and_descendents exclude_type_and_ancestors exclude_types_and_ancestors]
+      CANONICAL_OPTIONS = {
+        "types"                 => %w[type on_type on_types],
+        "objects"               => %w[object on_object on_objects],
+        "join_points"           => %w[join_point on_join_point on_join_points],
+        "methods"               => %w[method calling invoking calls_to sending_message_to],
+        "attributes"            => %w[attribute accessing],
+        "method_options"        => %w[method_option], 
+        "attribute_options"     => %w[attribute_option],
+        "types_and_descendents" => %w[type_and_descendents],
+        "types_and_ancestors"   => %w[type_and_ancestors],
+        "default_objects"       => %w[default_object]
+      }
+      %w[types objects join_points methods types_and_descendents types_and_ancestors].each do |key|
+        CANONICAL_OPTIONS["exclude_#{key}"] = CANONICAL_OPTIONS[key].map {|x| "exclude_#{x}"}
+      end
+      CANONICAL_OPTIONS["exclude_pointcuts"] = %w[exclude_pointcut exclude_on_pointcut exclude_on_pointcuts]
+         
+      ALL_ALLOWED_OPTIONS = %w[reading writing changing] +
+          CANONICAL_OPTIONS.keys.inject([]) {|ary,i| ary << i << CANONICAL_OPTIONS[i]}.flatten
 
-      OTHER_ALLOWED_SPEC_KEYS = {
-        "types_and_descendents" => "type_and_descendents",
-        "types_and_ancestors" => "type_and_ancestors",
-        "exclude_types_and_descendents" => "exclude_type_and_descendents",
-        "exclude_types_and_ancestors" => "exclude_type_and_ancestors" }
+      ALL_ALLOWED_OPTION_SYMBOLS = ALL_ALLOWED_OPTIONS.map {|o| o.intern}
 
       def init_specification options
         @specification = {}
         options ||= {} 
         validate_options options
-        ALLOWED_OPTIONS_SINGULAR.each do |option|
-          self.instance_eval(<<-EOF, __FILE__, __LINE__)
-            @specification[:#{option}s]= Set.new(make_array(options[:#{option}], options[:#{option}s]))
-          EOF
+        CANONICAL_OPTIONS.keys.each do |key|
+          all_related_options = make_array(options[key.intern]) || []
+          CANONICAL_OPTIONS[key].inject(all_related_options) do |ary, o| 
+            ary << options[o.intern] if options[o.intern]
+            ary
+          end
+          @specification[key.intern] = Set.new(make_array(all_related_options))
         end
-        OTHER_ALLOWED_SPEC_KEYS.keys.each do |option|
-          self.instance_eval(<<-EOF, __FILE__, __LINE__)
-            @specification[:#{option}]= Set.new(make_array(options[:#{option}], options[:#{OTHER_ALLOWED_SPEC_KEYS[option]}]))
-          EOF
+        unless options[:reading].nil? or options[:reading].empty?
+          @specification[:attributes] += Set.new(make_array(options[:reading]))
+          @specification[:attribute_options] += Set.new([:readers])
+        end
+        [:writing, :changing].each do |attr_opt|
+          unless options[attr_opt].nil? or options[attr_opt].empty?
+            @specification[:attributes] += Set.new(make_array(options[attr_opt]))
+            @specification[:attribute_options] += Set.new([:writers])
+          end
         end
         
         use_default_object_if_defined unless (types_given? || objects_given?)
@@ -183,42 +205,29 @@ module Aquarium
         raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
         init_methods_specification options
       end
-  
+    
       def init_methods_specification options
-        @specification[:methods] = Set.new(make_array(options[:methods], options[:method]))
-        @specification[:methods].add(:all) if @specification[:methods].empty? and @specification[:attributes].empty?
+        match_all_methods if no_methods_specified and no_attributes_specified
+      end
+
+      def match_all_methods
+        @specification[:methods] = Set.new([:all])
+      end
+      
+      def no_methods_specified
+        @specification[:methods].nil? or @specification[:methods].empty?
+      end
+      
+      def no_attributes_specified
+        @specification[:attributes].nil? or @specification[:attributes].empty?
       end
       
       def validate_options options
-        knowns = []
-        ALLOWED_OPTIONS_SINGULAR.each do |x| 
-          knowns << x.intern
-          knowns << "#{x}s".intern
-        end
-        OTHER_ALLOWED_OPTIONS.each do |x| 
-          knowns << x.intern
-        end
-        unknowns = options.keys - knowns
+        unknowns = options.keys - ALL_ALLOWED_OPTION_SYMBOLS
         raise Aquarium::Utils::InvalidOptions.new("Unknown options specified: #{unknowns.inspect}") if unknowns.size > 0
       end
   
-      def self.read_only attribute_options
-        read_option(attribute_options) && !write_option(attribute_options)
-      end
-  
-      def self.write_only attribute_options
-        write_option(attribute_options) && !read_option(attribute_options)
-      end
-  
-      def self.read_option attribute_options
-        attribute_options.include?(:readers)  || attribute_options.include?(:reader)
-      end
-  
-      def self.write_option attribute_options
-        attribute_options.include?(:writers)  || attribute_options.include?(:writer)
-      end
-  
-      %w[types objects join_points methods attributes method_options attribute_options].each do |name|
+      CANONICAL_OPTIONS.keys.each do |name|
         class_eval(<<-EOF, __FILE__, __LINE__)
           def #{name}_given
             @specification[:#{name}]
@@ -226,18 +235,6 @@ module Aquarium
   
           def #{name}_given?
             not (#{name}_given.nil? or #{name}_given.empty?)
-          end
-        EOF
-      end
-
-      %w[types objects join_points pointcuts methods].each do |name|
-        class_eval(<<-EOF, __FILE__, __LINE__)
-          def exclude_#{name}_given
-            @specification[:exclude_#{name}]
-          end
-  
-          def exclude_#{name}_given?
-            not (exclude_#{name}_given.nil? or exclude_#{name}_given.empty?)
           end
         EOF
       end
@@ -338,11 +335,20 @@ module Aquarium
 
       def make_all_method_names
         @specification[:methods] +
-          Pointcut.make_attribute_method_names(@specification[:attributes], @specification[:attribute_options]) -
-          @specification[:exclude_methods]
+            make_attribute_method_names(@specification[:attributes], @specification[:attribute_options]) -
+            @specification[:exclude_methods]
       end
   
-      def self.make_attribute_readers attributes
+      def make_attribute_method_names attribute_name_regexps_or_names, attribute_options = []
+        readers = make_attribute_readers attribute_name_regexps_or_names
+        return readers if read_only attribute_options 
+
+        writers = make_attribute_writers readers
+        return writers if write_only attribute_options
+        return readers + writers
+      end
+  
+      def make_attribute_readers attributes
         readers = attributes.map do |regexp_or_name|
           if regexp_or_name.kind_of? Regexp
             exp = remove_trailing_equals_and_or_dollar regexp_or_name.source
@@ -355,7 +361,7 @@ module Aquarium
         Set.new(readers.sort_by {|exp| exp.to_s})
       end  
   
-      def self.make_attribute_writers attributes
+      def make_attribute_writers attributes
         writers = attributes.map do |regexp_or_name|
           if regexp_or_name.kind_of? Regexp
             # remove the "\b$" from the end of the reader expression, if present.
@@ -367,11 +373,27 @@ module Aquarium
         Set.new(writers.sort_by {|exp| exp.to_s})
       end
   
-      def self.remove_trailing_equals_and_or_dollar exp
+      def read_only attribute_options
+        read_option(attribute_options) && !write_option(attribute_options)
+      end
+  
+      def write_only attribute_options
+        write_option(attribute_options) && !read_option(attribute_options)
+      end
+  
+      def read_option attribute_options
+        attribute_options.include?(:readers) or attribute_options.include?(:reader)
+      end
+  
+      def write_option attribute_options
+        attribute_options.include?(:writers) or attribute_options.include?(:writer)
+      end
+  
+      def remove_trailing_equals_and_or_dollar exp
         exp.gsub(/\=?\$?$/, '')
       end
   
-      def self.remove_leading_colon_or_at_sign exp
+      def remove_leading_colon_or_at_sign exp
         exp.gsub(/^\^?(@|:)/, '')
       end
     end

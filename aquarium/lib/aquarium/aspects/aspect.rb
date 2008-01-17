@@ -190,8 +190,11 @@ module Aquarium
       # The actual advice to execute is the block or you can pass a Proc using :advice => proc.
       # Note that the advice takes a join_point argument, which will include a non-nil 
       # JoinPoint#Context object, the object being executed, and the argument list to the method.
+      #
+      # <tt>:noop</tt>::
+      #   Does not actually advise any join points. Useful for testing.
       def initialize *options, &block
-        process_input options, &block
+        init_specification options, &block
         init_pointcuts
         return if specification[:noop]
         advise_join_points
@@ -233,7 +236,7 @@ module Aquarium
   
       protected
 
-      def process_input options, &block
+      def init_specification options, &block
         @original_options = options.flatten
         make_specification options, &block
         @verbose = @specification[:verbose] || false

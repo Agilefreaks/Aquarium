@@ -1,0 +1,27 @@
+Aquarium::Utils::TypeUtils.descendents called with a module should return all modules that include a module
+Aquarium::Utils::TypeUtils.descendents called with a module should return all classes and their descendents that include a module
+Aquarium::Utils::TypeUtils.descendents called with a module should return the module itself in the result
+Aquarium::Utils::TypeUtils.descendents called with a class should return all classes and their descendents that derive from a class
+Aquarium::Utils::TypeUtils.descendents called with a class should return just the class if it has no descendents
+Aquarium::Aspects::Pointcut (exclude types and their descendents and ancestors) should exclude join_points whose types match an excluded descendent types.
+Aquarium::Aspects::Pointcut (exclude types and their descendents and ancestors) should exclude classes specified and their including modules and descendent classes when excluding descendents.
+Aquarium::Aspects::Pointcut (exclude types and their descendents and ancestors) should exclude join_points whose types match an excluded descendent modules.
+Aquarium::Aspects::Pointcut (exclude types and their descendents and ancestors) should exclude modules specified and their including modules and classes when excluding descendents.
+Aquarium::Aspects::Pointcut (types and their descendents and ancestors) should match modules specified, their ancestor and descendent modules, and including classes.
+Aquarium::Aspects::Pointcut (types and their descendents and ancestors) should match classes specified and their ancestor and descendent modules and classes.
+Aquarium::Finders::TypeFinder#find regexps with :exclude_names_and_ancestors and :exclude_names_and_descendents used to specify one or more names should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors.
+Aquarium::Finders::TypeFinder#find regexps with :exclude_name_and_ancestors and :exclude_name_and_descendents used to specify one or more names should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors.
+Aquarium::Finders::TypeFinder#find regexps with :exclude_types_and_ancestors and :exclude_types_and_descendents used to specify one or more names should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors.
+Aquarium::Finders::TypeFinder#find regexps with :exclude_type_and_ancestors and :exclude_type_and_descendents used to specify one or more names should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors.
+Aquarium::Finders::TypeFinder#find regexps with :names_and_ancestors and :names_and_descendents used to specify one or more names should find the matching types, including their descendents and ancestors, even in different nested modules.
+Aquarium::Finders::TypeFinder#find regexps with :name_and_ancestors and :name_and_descendents used to specify one or more names should find the matching types, including their descendents and ancestors, even in different nested modules.
+Aquarium::Finders::TypeFinder#find regexps with :types_and_ancestors and :types_and_descendents used to specify one or more names should find the matching types, including their descendents and ancestors, even in different nested modules.
+Aquarium::Finders::TypeFinder#find regexps with :type_and_ancestors and :type_and_descendents used to specify one or more names should find the matching types, including their descendents and ancestors, even in different nested modules.
+Aquarium::Finders::TypeFinder#find with :exclude_names_and_ancestors and :exclude_names_and_descendents used to specify one or more names should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors.
+Aquarium::Finders::TypeFinder#find with :exclude_name_and_ancestors and :exclude_name_and_descendents used to specify one or more names should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors.
+Aquarium::Finders::TypeFinder#find with :exclude_types_and_ancestors and :exclude_types_and_descendents used to specify one or more names should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors.
+Aquarium::Finders::TypeFinder#find with :exclude_type_and_ancestors and :exclude_type_and_descendents used to specify one or more names should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors.
+Aquarium::Finders::TypeFinder#find with :names_and_ancestors and :names_and_descendents used to specify one or more names should find the matching types, including their descendents and ancestors, even in different nested modules.
+Aquarium::Finders::TypeFinder#find with :name_and_ancestors and :name_and_descendents used to specify one or more names should find the matching types, including their descendents and ancestors, even in different nested modules.
+Aquarium::Finders::TypeFinder#find with :types_and_ancestors and :types_and_descendents used to specify one or more names should find the matching types, including their descendents and ancestors, even in different nested modules.
+Aquarium::Finders::TypeFinder#find with :type_and_ancestors and :type_and_descendents used to specify one or more names should find the matching types, including their descendents and ancestors, even in different nested modules.
