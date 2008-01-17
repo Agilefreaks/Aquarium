@@ -216,6 +216,18 @@ describe Pointcut, " (classes specified using names)" do
     pc.join_points_matched.should == @expected_classes_matched_jps
     pc.join_points_not_matched.should == @expected_classes_not_matched_jps
   end
+
+  it "should support :on_types as a synonym for :types." do
+    pc = Pointcut.new :on_types => @example_classes, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == @expected_classes_matched_jps
+    pc.join_points_not_matched.should == @expected_classes_not_matched_jps
+  end
+
+  it "should support :on_type as a synonym for :types." do
+    pc = Pointcut.new :on_type => @example_classes, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == @expected_classes_matched_jps
+    pc.join_points_not_matched.should == @expected_classes_not_matched_jps
+  end
 end
 
 describe Pointcut, " (modules specified using regular expressions)" do
@@ -293,6 +305,18 @@ describe Pointcut, " (types and their descendents and ancestors)" do
     pc.join_points_matched.should == (@expected_modules_matched_jps + [@mimpub_jp])
     pc.join_points_not_matched.should == @expected_modules_not_matched_jps
   end
+    
+  it "should support :on_types_and_ancestors as a synonym for :types_and_ancestors and :on_types_and_descendents as a synonym for :types_and_descendents." do
+    pc = Pointcut.new :on_types_and_ancestors => /^Module.*Method/, :on_types_and_descendents => /^Module.*Method/, :methods => :all, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == (@expected_modules_matched_jps + [@mimpub_jp])
+    pc.join_points_not_matched.should == @expected_modules_not_matched_jps
+  end
+
+  it "should support :on_type_and_ancestors as a synonym for :type_and_ancestors and :on_type_and_descendents as a synonym for :type_and_descendents." do
+    pc = Pointcut.new :on_type_and_ancestors => /^Module.*Method/, :on_type_and_descendents => /^Module.*Method/, :methods => :all, :method_options => :exclude_ancestor_methods
+    pc.join_points_matched.should == (@expected_modules_matched_jps + [@mimpub_jp])
+    pc.join_points_not_matched.should == @expected_modules_not_matched_jps
+  end
 end
   
 describe Pointcut, " (objects specified)" do
@@ -323,6 +347,26 @@ describe Pointcut, " (objects specified)" do
         JoinPoint.new(:object => pro, :method_name => :protected_instance_test_method),
         JoinPoint.new(:object => pub, :method_name => :public_instance_test_method)])
   end  
+  
+  it "should support :on_objects as a synonym for :objects." do
+    pub, pro = ClassWithPublicInstanceMethod.new, ClassWithProtectedInstanceMethod.new
+    pc = Pointcut.new :on_objects => [pub, pro], :methods => :all, :method_options => [:public, :protected, :exclude_ancestor_methods]
+    pc.join_points_matched.size.should == 2
+    pc.join_points_not_matched.size.should == 0
+    pc.join_points_matched.should == Set.new([
+        JoinPoint.new(:object => pro, :method_name => :protected_instance_test_method),
+        JoinPoint.new(:object => pub, :method_name => :public_instance_test_method)])
+  end  
+
+  it "should support :on_object as a synonym for :object." do
+      pub, pro = ClassWithPublicInstanceMethod.new, ClassWithProtectedInstanceMethod.new
+      pc = Pointcut.new :on_object => [pub, pro], :methods => :all, :method_options => [:public, :protected, :exclude_ancestor_methods]
+      pc.join_points_matched.size.should == 2
+      pc.join_points_not_matched.size.should == 0
+      pc.join_points_matched.should == Set.new([
+          JoinPoint.new(:object => pro, :method_name => :protected_instance_test_method),
+          JoinPoint.new(:object => pub, :method_name => :public_instance_test_method)])
+  end
   
   it "does confuse strings specified with :objects as type names." do
     string = "mystring"
@@ -818,6 +862,43 @@ describe Pointcut, " (types or objects specified with method regular expressions
   it "should match on public method readers and writers for objects by default." do
     pc = Pointcut.new :object => @object_of_ClassWithAttribs, :methods => [/^attr/]
     pc.join_points_matched.should == @expected_for_objects
+  end
+end
+
+describe Pointcut, " (synonyms for :method and :methods)" do
+  before(:each) do
+    before_pointcut_class_spec
+    @jp_rwe = JoinPoint.new :type => ClassWithAttribs, :method_name => :attrRW_ClassWithAttribs=
+    @jp_rw  = JoinPoint.new :type => ClassWithAttribs, :method_name => :attrRW_ClassWithAttribs
+    @jp_we  = JoinPoint.new :type => ClassWithAttribs, :method_name => :attrW_ClassWithAttribs=
+    @jp_r   = JoinPoint.new :type => ClassWithAttribs, :method_name => :attrR_ClassWithAttribs
+    @expected_for_types = Set.new([@jp_rw, @jp_rwe, @jp_r, @jp_we])
+    @object_of_ClassWithAttribs = ClassWithAttribs.new
+    @jp_rwe_o = JoinPoint.new :object => @object_of_ClassWithAttribs, :method_name => :attrRW_ClassWithAttribs=
+    @jp_rw_o  = JoinPoint.new :object => @object_of_ClassWithAttribs, :method_name => :attrRW_ClassWithAttribs
+    @jp_we_o  = JoinPoint.new :object => @object_of_ClassWithAttribs, :method_name => :attrW_ClassWithAttribs=
+    @jp_r_o   = JoinPoint.new :object => @object_of_ClassWithAttribs, :method_name => :attrR_ClassWithAttribs
+    @expected_for_objects = Set.new([@jp_rw_o, @jp_rwe_o, @jp_r_o, @jp_we_o])
+  end
+  
+  it "should accept :calling as a synonym for :methods and :method." do
+    pc = Pointcut.new :types => "ClassWithAttribs", :calling => [/^attr/]
+    pc.join_points_matched.should == @expected_for_types
+  end
+
+  it "should accept :invoking as a synonym for :methods and :method." do
+    pc = Pointcut.new :types => "ClassWithAttribs", :invoking => [/^attr/]
+    pc.join_points_matched.should == @expected_for_types
+  end
+
+  it "should accept :calls_to as a synonym for :methods and :method." do
+    pc = Pointcut.new :types => "ClassWithAttribs", :calls_to => [/^attr/]
+    pc.join_points_matched.should == @expected_for_types
+  end
+
+  it "should accept :sending_message_to as a synonym for :methods and :method." do
+    pc = Pointcut.new :types => "ClassWithAttribs", :sending_message_to => [/^attr/]
+    pc.join_points_matched.should == @expected_for_types
   end
 end
 
@@ -1317,6 +1398,16 @@ describe Pointcut, " (:accessing => :all option not yet supported)" do
   
   it "should raise if :all is used for objects (not yet supported)." do
     lambda { Pointcut.new :object => ClassWithAttribs.new, :accessing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+end
+
+describe Pointcut, " (:changing => :all option not yet supported)" do
+  it "should raise if :all is used for types (not yet supported)." do
+    lambda { Pointcut.new :types => "ClassWithAttribs", :changing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+  
+  it "should raise if :all is used for objects (not yet supported)." do
+    lambda { Pointcut.new :object => ClassWithAttribs.new, :changing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
 

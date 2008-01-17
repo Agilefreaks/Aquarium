@@ -163,8 +163,8 @@ module Aquarium
         "attributes"            => %w[attribute accessing],
         "method_options"        => %w[method_option], 
         "attribute_options"     => %w[attribute_option],
-        "types_and_descendents" => %w[type_and_descendents],
-        "types_and_ancestors"   => %w[type_and_ancestors],
+        "types_and_descendents" => %w[type_and_descendents on_type_and_descendents on_types_and_descendents],
+        "types_and_ancestors"   => %w[type_and_ancestors on_type_and_ancestors on_types_and_ancestors],
         "default_objects"       => %w[default_object]
       }
       %w[types objects join_points methods types_and_descendents types_and_ancestors].each do |key|
