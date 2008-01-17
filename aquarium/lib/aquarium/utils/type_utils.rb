@@ -6,25 +6,43 @@ module Aquarium
       end
 
       def self.descendents clazz
-        visited_types = ["Class", "Module", "Object", clazz]
-        do_descendents clazz, Class, visited_types
+        visited_types = [Class, Object, Module, clazz]
+        Module.constants.inject([clazz]) do |result, const|
+          mod = Module.class_eval(const)
+          if mod.respond_to?(:ancestors)
+            result << mod if mod.ancestors.include?(clazz)
+            do_descendents clazz, mod, visited_types, result
+          end
+          result
+        end.uniq
+      end
+      
+      def self.descendents2 clazz
+        visited_types = [Class, Object, clazz]
+        result = [clazz]
+        p "Module.constants: #{Module.constants.sort.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")}<br/><br/>"
+        do_descendents clazz, Module, visited_types, result
+        result.flatten.uniq
       end
       
       protected
       
-      def self.do_descendents clazz, class_with_consts, visited
-        result = [clazz]
-        visited << class_with_consts
-          # p "#{clazz}, #{class_with_consts}: #{class_with_consts.constants.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")}<br/>"
-        class_with_consts.constants.each do |const| 
-          next if const == clazz.name 
-          clazz2 = class_with_consts.class_eval "#{const}"
+      def self.do_descendents clazz, visiting_module, visited, result
+        # p "#{clazz}, #{visiting_module}<br/>"
+        visited << visiting_module
+        # TODO Odd ruby behavior; a class is constant on the class, yet if it is nested in a module
+        # it comes up undefined! However, doing class_eval works around it. Is there a better way??
+        visiting_module.constants.each do |const| 
+          next unless visiting_module.const_defined?(const)
+          clazz2 = visiting_module.const_get(const)
+          # clazz2 = visiting_module.const_defined?(const) ? 
+            # visiting_module.const_get(const) :
+            # visiting_module.class_eval(const) 
           next if visited.include?(clazz2) or not clazz2.respond_to?(:ancestors)
           visited << clazz2
-          result += [clazz2] if clazz2.ancestors.include? clazz
-          result += do_descendents(clazz, clazz2, visited) 
+          result << clazz2 if clazz2.ancestors.include?(clazz)
+          do_descendents clazz, clazz2, visited, result 
         end
-        result.flatten.uniq
       end
     end
   end
