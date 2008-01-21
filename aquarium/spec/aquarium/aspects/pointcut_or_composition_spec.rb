@@ -1,12 +1,14 @@
-require File.dirname(__FILE__) + '/../spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../spec_example_classes'
 require 'aquarium/utils'
 require 'aquarium/extensions'
 require 'aquarium/aspects/pointcut'
 require 'aquarium/aspects/pointcut_composition'
 
+include Aquarium::Utils::HashUtils
+include Aquarium::Aspects
+
 describe "Union of Pointcuts", :shared => true do
-  include Aquarium::Utils::HashUtils
   
   before(:each) do
     classes = [
@@ -22,26 +24,26 @@ describe "Union of Pointcuts", :shared => true do
     @not_matched_jps = Set.new(jps_array)
   end
 
-  it "should return a Aquarium::Aspects::Pointcut equal to the second, appended, non-empty Aquarium::Aspects::Pointcut if self is empty (has no join points)." do
-    pc1 = Aquarium::Aspects::Pointcut.new
-    pc2 = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/
+  it "should return a Pointcut equal to the second, appended, non-empty Pointcut if self is empty (has no join points)." do
+    pc1 = Pointcut.new
+    pc2 = Pointcut.new :types => /Class.*Method/
     pc1.or(pc2).should eql(pc2)
-    pc3 = Aquarium::Aspects::Pointcut.new :object => ClassWithPublicInstanceMethod.new
+    pc3 = Pointcut.new :object => ClassWithPublicInstanceMethod.new
     pc1.or(pc3).should eql(pc3)
   end
    
-  it "should return a Aquarium::Aspects::Pointcut equal to self if the second pointcut is empty." do
-    pc1 = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/
-    pc2 = Aquarium::Aspects::Pointcut.new
+  it "should return a Pointcut equal to self if the second pointcut is empty." do
+    pc1 = Pointcut.new :types => /Class.*Method/
+    pc2 = Pointcut.new
     pc1.or(pc2).should eql(pc1)
-    pc3 = Aquarium::Aspects::Pointcut.new :object => ClassWithPublicInstanceMethod.new
+    pc3 = Pointcut.new :object => ClassWithPublicInstanceMethod.new
     pc3.or(pc2).should eql(pc3)
   end
    
-  it "should return a new Aquarium::Aspects::Pointcut whose join points are the union of the left- and right-hand side Aquarium::Aspects::Pointcuts for type-based Aquarium::Aspects::Pointcuts." do
-    pc1 = Aquarium::Aspects::Pointcut.new :types => ClassWithAttribs, :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
+  it "should return a new Pointcut whose join points are the union of the left- and right-hand side Pointcuts for type-based Pointcuts." do
+    pc1 = Pointcut.new :types => ClassWithAttribs, :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
     # "[^F]" excludes the ClassWithFunkyMethodNames ...
-    pc2 = Aquarium::Aspects::Pointcut.new :types => /Class[^F]+Method/, :method_options => :exclude_ancestor_methods
+    pc2 = Pointcut.new :types => [/ClassWith[^F]+Method/, /ClassDerived/, /ClassIncludingMod/], :method_options => :exclude_ancestor_methods
     pc = pc1.or pc2
     jp1 = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method => :attrRW_ClassWithAttribs=
     jp2 = Aquarium::Aspects::JoinPoint.new :type => ClassWithAttribs, :method => :attrW_ClassWithAttribs=
@@ -53,11 +55,11 @@ describe "Union of Pointcuts", :shared => true do
     pc.join_points_not_matched.should == @not_matched_jps
   end
    
-  it "should return a new Aquarium::Aspects::Pointcut whose join points are the union of the left- and right-hand side Aquarium::Aspects::Pointcuts for object-based Aquarium::Aspects::Pointcuts." do
+  it "should return a new Pointcut whose join points are the union of the left- and right-hand side Pointcuts for object-based Pointcuts." do
     cwa = ClassWithAttribs.new
     pub = ClassWithPublicInstanceMethod.new
-    pc1 = Aquarium::Aspects::Pointcut.new :objects => [cwa], :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
-    pc2 = Aquarium::Aspects::Pointcut.new :object  => pub, :method_options => :exclude_ancestor_methods
+    pc1 = Pointcut.new :objects => [cwa], :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
+    pc2 = Pointcut.new :object  => pub, :method_options => :exclude_ancestor_methods
     pc = pc1.or pc2
     jp1 = Aquarium::Aspects::JoinPoint.new :object => cwa, :method => :attrRW_ClassWithAttribs=
     jp2 = Aquarium::Aspects::JoinPoint.new :object => cwa, :method => :attrW_ClassWithAttribs=
@@ -66,56 +68,56 @@ describe "Union of Pointcuts", :shared => true do
     pc.join_points_not_matched.sort.should == []
   end
    
-  it "should be unitary for type-based Aquarium::Aspects::Pointcuts." do 
-    pc1 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
-    pc2 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
+  it "should be unitary for type-based Pointcuts." do 
+    pc1 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
     pc = pc1.or pc2
     pc.should eql(pc1)
     pc.should eql(pc2)
   end
    
-  it "should be unitary for object-based Aquarium::Aspects::Pointcuts." do 
+  it "should be unitary for object-based Pointcuts." do 
     cwa = ClassWithAttribs.new
-    pc1 = Aquarium::Aspects::Pointcut.new :object => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
-    pc2 = Aquarium::Aspects::Pointcut.new :object => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
+    pc1 = Pointcut.new :object => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Pointcut.new :object => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
     pc = pc1.or pc2
     pc.should eql(pc1)
     pc.should eql(pc2)
   end
    
-  it "should be commutative for type-based Aquarium::Aspects::Pointcuts." do 
-    pc1 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
-    pc2 = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/
+  it "should be commutative for type-based Pointcuts." do 
+    pc1 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Pointcut.new :types => /Class.*Method/
     pc12 = pc1.or pc2
     pc21 = pc2.or pc1
     pc12.should eql(pc21)
   end
    
-  it "should be commutative for object-based Aquarium::Aspects::Pointcuts." do 
+  it "should be commutative for object-based Pointcuts." do 
     cwa = ClassWithAttribs.new
     pub = ClassWithPublicInstanceMethod.new 
-    pc1 = Aquarium::Aspects::Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
-    pc2 = Aquarium::Aspects::Pointcut.new :objects => pub, :attributes => [/^attr/], :attribute_options => [:writers]
+    pc1 = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Pointcut.new :objects => pub, :attributes => [/^attr/], :attribute_options => [:writers]
     pc12 = pc1.or pc2
     pc21 = pc2.or pc1
     pc12.should eql(pc21)
   end
    
-  it "should be associativity for type-based Aquarium::Aspects::Pointcuts." do 
-    pc1 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
-    pc2 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers]
-    pc3 = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/
+  it "should be associativity for type-based Pointcuts." do 
+    pc1 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers]
+    pc3 = Pointcut.new :types => /Class.*Method/
     pc123a = (pc1.or(pc2)).or(pc3)
     pc123b = pc1.or(pc2.or(pc3))
     pc123a.should eql(pc123b)
   end
    
-  it "should be associativity for object-based Aquarium::Aspects::Pointcuts." do 
+  it "should be associativity for object-based Pointcuts." do 
     cwa = ClassWithAttribs.new
     pub = ClassWithPublicInstanceMethod.new 
-    pc1 = Aquarium::Aspects::Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
-    pc2 = Aquarium::Aspects::Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:readers]
-    pc3 = Aquarium::Aspects::Pointcut.new :objects => pub
+    pc1 = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:readers]
+    pc3 = Pointcut.new :objects => pub
     pc123a = (pc1.or(pc2)).or(pc3)
     pc123b = pc1.or(pc2.or(pc3))
     pc123a.should eql(pc123b)
@@ -123,30 +125,29 @@ describe "Union of Pointcuts", :shared => true do
 
 end
 
-describe Aquarium::Aspects::Pointcut, "#or" do
+describe Pointcut, "#or" do
   it_should_behave_like "Union of Pointcuts"
 end
 
-describe Aquarium::Aspects::Pointcut, "#|" do
-  include Aquarium::Utils::HashUtils
+describe Pointcut, "#|" do
  
   it_should_behave_like "Union of Pointcuts"
 
-  it "should be associativity for type-based Aquarium::Aspects::Pointcuts." do 
-    pc1 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
-    pc2 = Aquarium::Aspects::Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers]
-    pc3 = Aquarium::Aspects::Pointcut.new :types => /Class.*Method/
+  it "should be associativity for type-based Pointcuts." do 
+    pc1 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers]
+    pc3 = Pointcut.new :types => /Class.*Method/
     pc123a = (pc1 | pc2) | pc3
     pc123b = pc1 | (pc2 | pc3)
     pc123a.should eql(pc123b)
   end
    
-  it "should be associativity for object-based Aquarium::Aspects::Pointcuts." do 
+  it "should be associativity for object-based Pointcuts." do 
     cwa = ClassWithAttribs.new
     pub = ClassWithPublicInstanceMethod.new 
-    pc1 = Aquarium::Aspects::Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
-    pc2 = Aquarium::Aspects::Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:readers]
-    pc3 = Aquarium::Aspects::Pointcut.new :objects => pub
+    pc1 = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
+    pc2 = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:readers]
+    pc3 = Pointcut.new :objects => pub
     pc123a = (pc1 | pc2) | pc3
     pc123b = pc1 | (pc2 | pc3)
     pc123a.should eql(pc123b)

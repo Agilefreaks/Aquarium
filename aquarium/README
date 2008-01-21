@@ -56,12 +56,12 @@ Many of AspectJ's behaviors that aren't currently supported are planned for futu
 
 Several complete examples are provided in the "examples" directory.
 
-In most cases, you can either declare the appropriate classes or use the optional DSL, which adds convenience methods to classes, objects, or even Object itself.
+In most cases, you can either declare the appropriate classes or use the optional DSL, which adds convenience methods to classes, objects, or even Object itself. The API also supports many synonyms for things like types, objects, and methods. The best place to see the full list of synonyms is the output of "pointcut_spec.rb".
 
 Here is an example that traces invocations of all public instance methods (included inherited ones) of the classes or modules Foo and Bar.
 
 	require 'aquarium'
-	Aspect.new :around, :types => [Foo, Bar], :methods => :all do |join_point, object, *args|
+	Aspect.new :around, :calls_to => :all_methods, :on_types => [Foo, Bar] do |join_point, object, *args|
 		p "Entering: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
 		result = join_point.proceed
 		p "Leaving: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
@@ -71,7 +71,7 @@ Here is an example that traces invocations of all public instance methods (inclu
 The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, excluding inherited (ancestor) methods, etc.) Here is the same example using the convenience DSL that adds aspect methods to Object (available only if you require aquarium/aspects/dsl/object_dsl', since other toolkits, like Rails, define similar methods on Object!).
 
 	require 'aquarium/aspects/dsl/object_dsl'
-	around :types => [Foo, Bar], :methods => :all do |join_point, object, *args|
+	around :calls_to => :all_methods, :on_types => [Foo, Bar] do |join_point, object, *args|
 		p "Entering: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
 		result = join_point.proceed
 		p "Leaving: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
@@ -118,11 +118,11 @@ It is important to note that aspect "instances" usually behave like class (stati
 
 A common mistake is to create an aspect in an initialize method and assign it to an attribute. This usually means that you are creating long-lived, redundant aspects every time an instance of your class is created. The aspect modifications remain in effect even when the instances themselves are garbage collected!
  
-Here are some more succinct examples, illustrating the API (using the DSL methods).
+Here are some more succinct examples, illustrating the API (using the DSL methods) and some of the various synonyms for methods, types, etc.
 
 You can pass in pointcuts defined elsewhere:
 
-	my_pointcut = Pointcut.new :types => /Foo::Bar::/, :methods => /^do_/
+	my_pointcut = Pointcut.new :invocations_of => /^do_/, :within_types => /Foo::Bar::/
 	around :pointcuts => my_pointcut do |jp, obj, *args| ...         # Pass in a pointcut
 	around :pointcuts => [my_pointcut, ...] do |jp, obj, *args| ...  # Pass in a pointcut array
 
@@ -133,7 +133,7 @@ my_join_point2 = JoinPoint.new :type => Foo::Bar, :method => do_that
 around :pointcuts => my_join_point1 do |jp, obj, *args| ...         
 around :pointcuts => [my_join_point1, my_join_point2, ...] do |jp, obj, *args| ...  
 
-You can specify a single type, a type name, a type regular expression, or an array of the same. Note that :type and :types are synonymous "sugar".
+You can specify a single type, a type name, a type regular expression, or an array of the same. Note that :type and :types are synonymous. Use the singular form for better readability when you are specifying just one type. Other synonyms include :on_types, :within_types, and :in_types, plus the singular forms.
 
 	around :type = A, ...
 	around :type = "A", ...
@@ -141,22 +141,41 @@ You can specify a single type, a type name, a type regular expression, or an arr
 	around :types => %w[A, B, ...], ...
 	around :types => /A::.*Helper$/, ...
 	around :types => [/A::.*Helper$/, /B::Foo.*/], ...
-	
-You can specify types and their descendents (subclasses or included modules) or ancestors.
+
+Using the plural versions of the synonyms, with method specifications so they read better:
+
+	around :calls_to => :all_methods, :on_types => [A, B, ...], ...
+	around :calls_to => :all_methods, :in_types => [A, B, ...], ...
+	around :calls_to => :all_methods, :within_types => [A, B, ...], ...
+
+You can specify types and their descendents (subclasses or included modules) or ancestors. The same synonym prefixes for :types and :type also apply.
 
 	around :type_and_ancestors = A, ...
 	around :types_and_ancestors = A, ...
 	around :type_and_descendents = A, ...
 	around :types_and_descendents = A, ...
+
+Some of the synonyms:
+
+	around :calls_to => :all_methods, :on_types_and_ancestors = A, ...
+	around :calls_to => :all_methods, :in_types_and_ancestors = A, ...
+	around :calls_to => :all_methods, :within_types_and_ancestors = A, ...
+	and similarly for descendents
 	
-You can specify a single object or an array of objects. Note that :object and :objects are synonymous. 
+You can specify a single object or an array of objects. As for :types, you can use :object, :objects, :on_objects, :within_object, :in_objects, and the singular forms synonymously. 
 
 	a1 = A.new
 	a2 = A.new
 	around :object = a1, ...
 	around :objects => [a1, a2], ...
 
-If no types or objects are specified, the object defaults to "self". However, this default is only supported when using the DSL to create an aspect!
+Some of the synonyms:
+
+	around :calls_to => :all_methods, :on_objects = [a1, a2], ...
+	around :calls_to => :all_methods, :in_objects = [a1, a2], ...
+	around :calls_to => :all_methods, :within_objects = [a1, a2], ...
+
+If no types or objects are specified, the object defaults to "self". However, this default is only supported when using the DSL to create an aspect, e.g.,
 
 	class MyClass
 		include Aquarium::Aspects::DSL::AspectDSL
@@ -165,15 +184,23 @@ If no types or objects are specified, the object defaults to "self". However, th
 		around :method => doit, ...   # Implicit :object => self, i.e., MyClass
 	end
 
-You can specify a single method symbol (name), a regular expression, or an array of the same. Note that :method and :methods are synonymous. The special keyword :all means match all methods, subject to the :method_options discussed next.
+You can specify a single method symbol (name), a regular expression, or an array of the same. The synonyms for :methods include :method, :calls_to, :invoking, :invocations_of, and :sending_messages_to. The special keywords :all and :all_methods mean match all methods, subject to the :method_options discussed next.
 
-	around :method = :all, ...
+	around :method = :all_methods, ...
 	around :method = :foo, ...
 	around :methods = [:foo, :bar, :baz], ...
 	around :methods = /^foo/, ...
 	around :methods = [/^foo/, /bar$/], ...
 
-You can specify method options. By default, public instance methods only are matched. Note that :methods => :all with no method options matches all public instance methods, including ancestor (inherited and included module) methods.
+Using the synonyms:
+
+	around :calls_to = :all_methods, ...
+	after  :invoking = :all_methods, ...
+	after  :invocations_of = :all_methods, ...
+	after  :sending_messages_to = :all_methods, ...
+	after  :within_methods = :all_methods, ...
+
+You can specify method options. By default, public instance methods only are matched. Note that :methods => :all or :all_methods with no method options matches all public instance methods, including ancestor (inherited and included module) methods. For all the method options (except for :exclude_ancestor_methods), you can append the suffix "_methods". You can also use the :restrict_methods_to synonym for :method_options.
 
 	around :methods = /foo/, :method_options => [:instance], ...  # match instance methods (default)
 	around :methods = /foo/, :method_options => [:class], ...     # match class methods
@@ -183,12 +210,23 @@ You can specify method options. By default, public instance methods only are mat
 	around :methods = /foo/, :method_options => [:exclude_ancestor_methods], ... 
 		# ignore methods defined in ancestors, inherited classes and included modules 
 
-You can specify attributes, which are actually convenience methods for the attribute accessors. They work
-very much like the :method options. Note that :all is NOT supported in this case and :attribute and :attributes are synonymous.
+With synonyms:
 
-	around :attribute = :foo, ...                                  # defaults to methods #foo and #foo=
+	around :calls_to = /foo/, :restricting_methods_to => [:singleton_methods], ... 
+
+You can specify attributes, which are actually convenience methods for the attribute accessors. They work very much like the :method options. Note that :all is NOT supported in this case. The available synonyms are slightly more complicated, as shown in these examples.
+
+	around :attribute  = :foo, ...                                 # defaults to methods #foo and #foo=
+	around :attributes = :foo, ...                                 # the same
+	around :accessing  = :foo, ...                                 # the same
+
 	around :attribute = :foo, :attribute_options => [:readers]...  # only matches #foo 
+	around :reading   = :foo                                       # the same
+	
+	
 	around :attribute = :foo, :attribute_options => [:writers]...  # only matches #foo= 
+	around :writing   = :foo                                       # the same
+
 	around :attributes = [:foo, :bar, :baz], ...
 	around :attributes = /^foo/, ...
 	around :attributes = [/^foo/, /bar$/], ...
@@ -201,9 +239,14 @@ You can specify a "Pointcut" that encapsulates one or more pre-defined Pointcuts
 	around :pointcuts = [jp, ...], ...                             # for pre-defined join point list
 	around :pointcut = {:type => T, :method => :m}, ...            # same as around :type => T, :method => :m, ..
 
-With release V0.1.8, you can specifically exclude particular pointcuts, join points, types, objects, methods, or attributes. This is useful when you specify a list or regular expression of "items" to match and you want to exclude some of the items.
-Note that there is an open bug (#15202) that appears to affect advising types, unadvising the types, then advising objects
-of the same types. (This is not likely to happen a lot in real applications, but it shows up when running specs.)
+Using the plural versions of the synonyms, with method specifications so they read better:
+
+	around :on_pointcuts => [pc1, pc2, ...], ...
+	around :in_pointcuts => [pc1, pc2, ...], ...
+	around :within_pointcuts => [pc1, pc2, ...], ...
+
+You can specifically exclude particular pointcuts, join points, types, objects, methods, or attributes. This is useful when you specify a list or regular expression of "items" to match and you want to exclude some of the items.
+Note that there is an open bug (#15202) that appears to affect advising types, unadvising the types, then advising objects of the same types. (This is not likely to happen a lot in real applications, but it shows up when running Aquarium's specs.)
 
 	around ..., :exclude_pointcut = pc, ...
 	around ..., :exclude_pointcuts = [pc, ...]
@@ -221,6 +264,8 @@ of the same types. (This is not likely to happen a lot in real applications, but
 	around ..., :exclude_methods = [m, ...]
 	around ..., :exclude_attribute = a, ...
 	around ..., :exclude_attributes = [a, ...]
+
+All the same synonyms for :types, :objects, and :methods apply here as well (after the "exclude_" prefix).
 
 You can advice methods before execution:
 
@@ -258,7 +303,7 @@ If you pass a block to Aspect.new, it will be the advice. When invoked, the advi
 	1) the JoinPoint, which will contain a JoinPoint::Context object with useful context information, 
 	2) the object being sent the current message, and 
 	3) the parameters passed with the original message. 
-Recall that Proc don't check the number of arguments (while lambdas do), so if you don't care about any trailing parameters, you can leave them out of the parameter list. Recall that the other difference between the two is that a return statement in a Proc returns from the method that contains it. As rule, do NOT use return statements in advices!
+Recall that a Proc doesn't check the number of arguments (while lambdas do), so if you don't care about any of the trailing parameters, you can leave them out of the parameter list. Recall that the other difference between the two is that a return statement in a Proc returns from the method that contains it. As rule, do NOT use return statements in advices!
 
 	around :type => [...], :methods => :all do |join_point, object, *args|
 	  advice_to_execute_before_the_jp
@@ -278,6 +323,7 @@ Rather than passing a block as the advice, you can pass a previously-created Pro
 	around :type => [...], :methods => :all, :advise_with => advice  # synonym for advice. Note the "s"!
 	around :type => [...], :methods => :all, :call => advice         # synonym for advice.
 	around :type => [...], :methods => :all, :invoke => advice       # synonym for advice.
+
 
 === Packages
 

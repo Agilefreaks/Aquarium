@@ -1,3 +1,38 @@
+== Version 0.3.0
+
+V0.3.0 adds numerous improvements to the DSL, making aspect specification more intuitive and 
+English-like. For example, where you previously wrote, e.g.,
+
+	around :methods => :all, :types => [Foo, Bar], :advice => advice_proc
+	after  :attribute => name, :attribute_options => [:readers], :objects => [foo, bar] ...
+	
+Now you can write the same aspects as follows:
+
+	around :calls_to => :all_methods, :within_types => [Foo, Bar], :use_advice => advice_proc
+	after  :reading => name, :on_objects => [foo, bar] ...
+
+Other improvements include performance and robustness enhancements and miscellaneous internal 
+refactoring and DRY improvements.
+
+Bug fixes:
+16267	gem not updating
+
+Enhancements:
+17154	More intuitive synonyms for specifying types, methods and attributes
+
+For #17154, the following changes were made:
+Added :all_methods as a synonym for the :all special value.
+Added :reading as a synonym for :attributes => ..., :attribute_options => [:readers]
+Added :writing and :changing as synonyms for :attributes => ..., :attribute_options => [:writers]
+Added :accessing as a synonym for :attributes => ...
+Added :calls_to, :calling, :invoking, :sending_message_to  as synonyms for :methods.
+Added :on_types, :in_types, :within_types and :for_types as synonyms for :types. The same
+set of prefixes is supported for :type, :objects, :object, and the various :exclude_*, 
+:*_and_ancestors, and :*_and_descendents.
+
+The full list of possible synonyms are shown in the spec examples. In particular, see "pointcut_spec.rb".
+
+
 == Version 0.2.0
 
 V0.2.0 changes the parameter list used for advice blocks and adds numerous enhancements, robustness

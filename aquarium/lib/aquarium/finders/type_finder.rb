@@ -148,7 +148,7 @@ module Aquarium
       def find_namespace_matched expression, option
         expr = expression.kind_of?(Regexp) ? expression.source : expression.to_s
         return nil if expr.empty?
-        found_types = [Module]
+        found_types = [Object]
         split_expr = expr.split("::")
         split_expr.each_with_index do |subexp, index|
           next if subexp.size == 0
@@ -186,10 +186,7 @@ module Aquarium
         enclosing_types.each do |parent|
           next unless parent.respond_to?(:constants)
           parent.constants.grep(regexp) do |name| 
-            begin
-              found_types << parent.const_get(name)
-            rescue NameError    # ignore
-            end
+            found_types << parent.const_get(name)
           end
         end
         found_types

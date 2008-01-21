@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../spec_example_classes'
 require 'aquarium/finders/method_finder'
 
@@ -82,24 +82,39 @@ describe Aquarium::Finders::MethodFinder, "#find (synonymous input parameters)" 
     before_method_finder_spec
   end
   
-  it "should accept options :types and :type, which are synonymous." do
-    expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mbase/, /^mmodule/]
-    actual   = Aquarium::Finders::MethodFinder.new.find :type  => Derived, :methods => [/^mbase/, /^mmodule/]
-    actual.should == expected
+  Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["types"].each do |key|
+    it "should accept :#{key} as a synonym for :types." do
+      expected = Aquarium::Finders::MethodFinder.new.find :types     => Derived, :methods => [/^mbase/, /^mmodule/]
+      actual   = Aquarium::Finders::MethodFinder.new.find key.intern => Derived, :methods => [/^mbase/, /^mmodule/]
+      actual.should == expected
+    end
   end
-
-  it "should accept options :objects and :object, which are synonymous." do
-    child = Derived.new
-    expected = Aquarium::Finders::MethodFinder.new.find :objects => child, :methods => [/^mbase/, /^mmodule/]
-    actual   = Aquarium::Finders::MethodFinder.new.find :object  => child, :methods => [/^mbase/, /^mmodule/]
-    actual.should == expected
+  
+  Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["objects"].each do |key|
+    it "should accept :#{key} as a synonym for :objects." do
+      child = Derived.new
+      expected = Aquarium::Finders::MethodFinder.new.find :objects   => child, :methods => [/^mbase/, /^mmodule/]
+      actual   = Aquarium::Finders::MethodFinder.new.find key.intern => child, :methods => [/^mbase/, /^mmodule/]
+      actual.should == expected
+    end
   end
-
-  it "should accept options :methods and :method, which are synonymous." do
-    expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mbase/, /^mmodule/]
-    actual   = Aquarium::Finders::MethodFinder.new.find :types => Derived, :method  => [/^mbase/, /^mmodule/]
-    actual.should == expected
+  
+  Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["methods"].each do |key|
+    it "should accept :#{key} as a synonym for :methods." do
+      expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods   => [/^mbase/, /^mmodule/]
+      actual   = Aquarium::Finders::MethodFinder.new.find :types => Derived, key.intern => [/^mbase/, /^mmodule/]
+      actual.should == expected
+    end
   end
+  
+  Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["options"].each do |key|
+    it "should accept :#{key} as a synonym for :options." do
+      expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :options   => [:exclude_ancestor_methods]
+      actual   = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], key.intern => [:exclude_ancestor_methods]
+      actual.should == expected
+    end
+  end
+  
 end
   
 describe Aquarium::Finders::MethodFinder, "#find (invalid input parameters)" do
@@ -324,6 +339,14 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
   
   it "should find all public class methods in types when searching with the :all method specification and the :class option." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all, :options => :class
+    actual.matched.size.should == 2
+    actual.not_matched.size.should == 0
+    actual.matched[ClassWithPublicClassMethod].should == Set.new(ClassWithPublicClassMethod.public_methods.sort.map{|m| m.intern})
+    actual.matched[ClassWithPrivateClassMethod].should == Set.new(ClassWithPrivateClassMethod.public_methods.sort.map{|m| m.intern})
+  end
+  
+  it "should accept :all_methods as a synonym for :all." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all_methods, :options => :class
     actual.matched.size.should == 2
     actual.not_matched.size.should == 0
     actual.matched[ClassWithPublicClassMethod].should == Set.new(ClassWithPublicClassMethod.public_methods.sort.map{|m| m.intern})
@@ -561,6 +584,16 @@ describe Aquarium::Finders::MethodFinder, "#find (using :methods => :all)" do
   
   it "should ignore other method arguments if :all is present." do
     actual = Aquarium::Finders::MethodFinder.new.find :type => ClassWithPublicInstanceMethod, :method => [:all, :none, /.*foo.*/], :methods =>[/.*bar.*/, /^baz/], :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
+    pub = ClassWithPublicInstanceMethod.new
+    actual = Aquarium::Finders::MethodFinder.new.find :object => pub, :method => [:all, :none, /.*foo.*/], :methods =>[/.*bar.*/, /^baz/], :options => :exclude_ancestor_methods
+    actual.matched.size.should == 1
+    actual.matched[pub].should == Set.new([:public_instance_test_method])
+  end
+  
+  it "should ignore other method arguments if :all_methods is present." do
+    actual = Aquarium::Finders::MethodFinder.new.find :type => ClassWithPublicInstanceMethod, :method => [:all_methods, :none, /.*foo.*/], :methods =>[/.*bar.*/, /^baz/], :options => :exclude_ancestor_methods
     actual.matched.size.should == 1
     actual.matched[ClassWithPublicInstanceMethod].should == Set.new([:public_instance_test_method])
     pub = ClassWithPublicInstanceMethod.new

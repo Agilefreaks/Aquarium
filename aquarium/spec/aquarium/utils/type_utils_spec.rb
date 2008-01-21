@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/utils/type_utils'
 require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
 

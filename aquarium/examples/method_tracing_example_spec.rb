@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec/aquarium/spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec/aquarium/spec_helper'
 require 'aquarium'
 
 # Example demonstrating "around" advice that traces calls to all methods in
@@ -57,7 +57,7 @@ describe "An example with advice on the public instance methods (excluding ances
     # The "begin/ensure/end" idiom shown causes the advice to return the correct value; the result
     # of the "proceed", rather than the value returned by "p"!
     aspect = Aquarium::Aspects::Aspect.new :around, 
-      :type => Aquarium::Foo, :methods => :all, :method_options => :exclude_ancestor_methods do |execution_point, obj, *args|
+      :invocations_of => :all_methods, :for_type => Aquarium::Foo, :restricting_methods_to => :exclude_ancestor_methods do |execution_point, obj, *args|
       begin
         obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed
@@ -80,7 +80,7 @@ end
 describe "An example with advice on the public instance methods (excluding ancestor methods) of Bar" do
   it "should not trace any calls to the public methods defined by the included BarModule" do
     aspect = Aquarium::Aspects::Aspect.new :around, 
-      :type => Aquarium::Bar, :methods => :all, :method_options => :exclude_ancestor_methods do |execution_point, obj, *args|
+      :invocations_of => :all_methods, :for_type => Aquarium::Bar, :restricting_methods_to => :exclude_ancestor_methods do |execution_point, obj, *args|
       begin
         obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed
@@ -99,7 +99,7 @@ end
 describe "An example with advice on the public instance methods (including ancestor methods) of Bar" do
   it "should trace all calls to the public methods defined by the included BarModule" do
     aspect = Aquarium::Aspects::Aspect.new :around, 
-      :type => Aquarium::Bar, :methods => /^do_/ do |execution_point, obj, *args|
+      :calls_to_methods_matching => /^do_/, :for_type => Aquarium::Bar do |execution_point, obj, *args|
       begin
         obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed
@@ -123,8 +123,8 @@ end
 describe "An example with advice on the private initialize method of Foo and Bar" do
   it "should trace all calls to initialize" do
     before_methods = Aquarium::Foo.private_instance_methods.sort #- Object.private_methods.sort
-    aspect = Aquarium::Aspects::Aspect.new :around, 
-      :types => [Aquarium::Foo, Aquarium::Bar], :methods => :initialize, :method_options => :private do |execution_point, obj, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :calls_to => :initialize, :for_types => [Aquarium::Foo, Aquarium::Bar],  
+        :restricting_methods_to => :private_methods do |execution_point, obj, *args|
       begin
         obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed

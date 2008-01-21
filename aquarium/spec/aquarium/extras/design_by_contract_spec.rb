@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/extras/design_by_contract'
 
 describe Aquarium::Extras::DesignByContract, "precondition" do

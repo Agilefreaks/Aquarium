@@ -10,16 +10,24 @@ module Aquarium
       # flattened version of the input and any nil elements are removed by #strip_nils.
       # Note that this behavior effectively converts +nil+ to +[]+.
       def make_array *value_or_enum
-        strip_nils do_make_array(value_or_enum)
+        ArrayUtils.make_array value_or_enum
       end
 
+      def self.make_array *value_or_enum
+        strip_nils do_make_array(value_or_enum)
+      end
+      
       # Return a copy of the input array with all nils removed.
       def strip_nils array
-        array.compact
+        ArrayUtils.strip_nils array
+      end
+  
+      def self.strip_nils array
+        array.to_a.compact
       end
   
       private
-      def do_make_array value_or_enum
+      def self.do_make_array value_or_enum
         v = value_or_enum.flatten 
         v = v[0].to_a if (v.empty? == false && v[0].kind_of?(Set))
         v

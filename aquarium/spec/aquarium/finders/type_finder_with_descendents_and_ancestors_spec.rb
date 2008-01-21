@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
 require 'aquarium/finders/type_finder'
 
@@ -151,6 +151,21 @@ end
   EOF
 end
 
+describe "#find with regular expressions, including descendents and ancestors" do
+  it "should find the matching types, including their descendents and ancestors, even in different nested modules." do
+    doption = "types_and_descendents".intern
+    aoption = "types_and_ancestors".intern
+    regexs = [/ForDescendents$/, /Aquarium::ForDescendents::.*ForDescendents/]
+    actual = Aquarium::Finders::TypeFinder.new.find aoption => regexs, doption => regexs
+    actual_keys = purge_actuals actual
+    expected = Aquarium::Utils::TypeUtils.sample_types_descendents_and_ancestors.keys + [Kernel, Object]
+    actual_keys.size.should == expected.size
+    expected.each do |t|
+      actual_keys.should include(t)
+    end
+    actual.not_matched_keys.should == []
+  end
+end
 
 describe "#find with regular expressions, including descendents and ancestors", :shared => true do
   it "should find the matching types, including their descendents and ancestors, even in different nested modules." do

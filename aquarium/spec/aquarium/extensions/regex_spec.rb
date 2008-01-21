@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/extensions/regexp'
 
 describe Regexp, "#empty?" do

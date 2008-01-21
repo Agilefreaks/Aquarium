@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/utils/method_utils'
 
 describe Aquarium::Utils::MethodUtils, ".method_args_to_hash" do

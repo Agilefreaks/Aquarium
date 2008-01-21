@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../spec_helper.rb'
+require File.dirname(__FILE__) + '/../../spec_helper'
 require File.dirname(__FILE__) + '/../../spec_example_classes'
 require 'aquarium/aspects/dsl/aspect_dsl'
 
@@ -16,8 +16,8 @@ describe "DSL method #before" do
   end
   
   it "should be equivalent to advise :before." do
-    @aspects << DSLClass.advise(:before, :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.before(         :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:before, :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.before(         :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -32,8 +32,8 @@ describe "DSL method #after" do
   end
 
   it "should be equivalent to advise :after." do
-    @aspects << DSLClass.advise(:after, :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.after(         :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:after, :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.after(         :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -49,8 +49,8 @@ describe "DSL method #after_raising_within_or_returning_from" do
   end
 
   it "should be equivalent to advise :after." do
-    @aspects << DSLClass.after(                                 :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.after_raising_within_or_returning_from(:noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.after(                                 :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.after_raising_within_or_returning_from(:noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -66,8 +66,8 @@ describe "DSL method #after_returning" do
   end
 
   it "should be equivalent to advise :after_returning." do
-    @aspects << DSLClass.advise(:after_returning, :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.after_returning(         :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:after_returning, :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.after_returning(         :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -83,8 +83,8 @@ describe "DSL method #after_returning_from" do
   end
 
   it "should be equivalent to advise :after_returning." do
-    @aspects << DSLClass.advise(:after_returning, :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.after_returning_from(    :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:after_returning, :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.after_returning_from(    :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -103,8 +103,8 @@ describe "DSL method #after_raising" do
     class ThrowsUp
       def tosses_cookies *args; raise Exception.new(args.inspect); end
     end
-    @aspects << DSLClass.advise(:after_raising, :noop, :pointcut => {:type => ThrowsUp, :methods => :tosses_cookies}, &@advice)
-    @aspects << DSLClass.after_raising(         :noop, :pointcut => {:type => ThrowsUp, :methods => :tosses_cookies}, &@advice)
+    @aspects << DSLClass.advise(:after_raising, :noop, :pointcut => {:sending_messages_to => :tosses_cookies, :in_type => ThrowsUp}, &@advice)
+    @aspects << DSLClass.after_raising(         :noop, :pointcut => {:sending_messages_to => :tosses_cookies, :in_type => ThrowsUp}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -123,8 +123,8 @@ describe "DSL method #after_raising_within" do
     class ThrowsUp
       def tosses_cookies *args; raise Exception.new(args.inspect); end
     end
-    @aspects << DSLClass.advise(:after_raising, :noop, :pointcut => {:type => ThrowsUp, :methods => :tosses_cookies}, &@advice)
-    @aspects << DSLClass.after_raising_within(  :noop, :pointcut => {:type => ThrowsUp, :methods => :tosses_cookies}, &@advice)
+    @aspects << DSLClass.advise(:after_raising, :noop, :pointcut => {:sending_messages_to => :tosses_cookies, :in_type => ThrowsUp}, &@advice)
+    @aspects << DSLClass.after_raising_within(  :noop, :pointcut => {:sending_messages_to => :tosses_cookies, :in_type => ThrowsUp}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -140,8 +140,8 @@ describe "DSL method #before_and_after" do
   end
 
   it "should be equivalent to advise :before, :after." do
-    @aspects << DSLClass.advise(:before, :after,  :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.before_and_after(:noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:before, :after,  :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.before_and_after(        :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -157,8 +157,8 @@ describe "DSL method #before_and_after_raising_within_or_returning_from" do
   end
 
   it "should be equivalent to advise :before and advise :after." do
-    @aspects << DSLClass.advise(:before, :after,  :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.before_and_after_raising_within_or_returning_from(:noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:before, :after,                           :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.before_and_after_raising_within_or_returning_from(:noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -174,8 +174,8 @@ describe "DSL method #before_and_after_returning" do
   end
 
   it "should be equivalent to advise :before and advise :after_returning." do
-    @aspects << DSLClass.advise(:before, :after_returning, :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.before_and_after_returning(       :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:before, :after_returning, :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.before_and_after_returning(       :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -191,8 +191,8 @@ describe "DSL method #before_and_after_returning_from" do
   end
 
   it "should be equivalent to advise :before and advise :after_returning." do
-    @aspects << DSLClass.advise(:before, :after_returning, :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.before_and_after_returning_from(:noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:before, :after_returning, :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.before_and_after_returning_from(  :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -208,8 +208,8 @@ describe "DSL method #before_and_after_raising" do
   end
 
   it "should be equivalent to advise :before and advise :after_raising." do
-    @aspects << DSLClass.advise(:before, :after_raising, :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.before_and_after_raising(:noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:before, :after_raising, :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.before_and_after_raising(       :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -225,8 +225,8 @@ describe "DSL method #around" do
   end
 
   it "should be equivalent to advise :around." do
-    @aspects << DSLClass.advise(:around, :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects << DSLClass.around(         :noop, :pointcut => {:type => Watchful, :methods => :public_watchful_method}, &@advice)
+    @aspects << DSLClass.advise(:around, :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
+    @aspects << DSLClass.around(         :noop, :pointcut => {:calls_to => :public_watchful_method, :in_type => Watchful}, &@advice)
     @aspects[1].should == @aspects[0]
   end
 end
@@ -243,11 +243,11 @@ describe "DSL method #advise, when determining the \"self\" to advise," do
     class Watchful1
       include Aquarium::Aspects::DSL::AspectDSL
       @@watchful = Watchful1.new
-      @@aspect = after(:object => @@watchful, :method => :public_watchful_method) {|jp, obj, *args|}
+      @@aspect = after(:invoking => :public_watchful_method, :on_object => @@watchful) {|jp, obj, *args|}
       def self.watchful; @@watchful; end
       def self.aspect; @@aspect; end
     end
-    @aspects << DSLClass.after(:object => Watchful1.watchful, :method => :public_watchful_method) {|jp, obj, *args|}
+    @aspects << Watchful1.after(:invoking => :public_watchful_method, :on_object => Watchful1.watchful) {|jp, obj, *args|}
     @aspects << Watchful1.aspect
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
     @aspects[1].pointcuts.should == @aspects[0].pointcuts
@@ -256,10 +256,10 @@ describe "DSL method #advise, when determining the \"self\" to advise," do
   it "should ignore the default object \"self\" when a :type is specified." do
     class Watchful2
       include Aquarium::Aspects::DSL::AspectDSL
-      @@aspect = after(:type => Watchful2, :method => :public_watchful_method) {|jp, obj, *args|}
+      @@aspect = after(:calls_to => :public_watchful_method, :in_type => Watchful2) {|jp, obj, *args|}
       def self.aspect; @@aspect; end
     end
-    @aspects << DSLClass.after(:type => Watchful2, :method => :public_watchful_method) {|jp, obj, *args|}
+    @aspects << Watchful2.after(:calls_to => :public_watchful_method, :in_type => Watchful2) {|jp, obj, *args|}
     @aspects << Watchful2.aspect
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
     @aspects[1].pointcuts.should == @aspects[0].pointcuts
@@ -282,7 +282,7 @@ describe "DSL method #advise, when determining the type or object to advise," do
   end
 
   it "should infer the type as \"self\" when no :object, :type, or :pointcut is specified." do
-    @aspects << DSLClass.after(:type => WatchfulSelf, :method => :public_watchful_method) {|jp, obj, *args|}
+    @aspects << WatchfulSelf.after(:calls_to => :public_watchful_method, :in_type => WatchfulSelf) {|jp, obj, *args|}
     class WatchfulSelf
       @@aspect = after(:method => :public_watchful_method) {|jp, obj, *args|}
     end
@@ -294,10 +294,9 @@ describe "DSL method #advise, when determining the type or object to advise," do
   it "should infer the object as \"self\" when no :object, :type, or :pointcut is specified." do
     watchful_self = WatchfulSelf.new
     watchful_self.extend Aquarium::Aspects::DSL::AspectDSL
-    @aspects << DSLClass.advise(:after, :pointcut => {:object => watchful_self, :method => :public_watchful_method}) {|jp, obj, *args|}
+    @aspects << WatchfulSelf.advise(:after, :pointcut => {:invoking => :public_watchful_method, :on_object => watchful_self}) {|jp, obj, *args|}
     @aspects << watchful_self.after(:method => :public_watchful_method)  {|jp, obj, *args|}
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
-    @aspects[1].pointcuts.should == @aspects[0].pointcuts
   end
 
   it "should infer no types or objects if a :pointcut => {...} parameter is used and it does not specify a type or object." do
@@ -357,7 +356,7 @@ describe "DSL method #advise, when determining instance or class methods to advi
       def public_watchful_method *args; end
     end
     advice_called = 0
-    WatchfulExampleWithSeparateAdviseCall2.advise :before, :type => WatchfulExampleWithSeparateAdviseCall2, :methods => /public_watchful_method/, :method_options =>[:instance] do |jp, obj, *args|
+    WatchfulExampleWithSeparateAdviseCall2.advise :before, :sending_messages_to => /public_watchful_method/, :on_types => WatchfulExampleWithSeparateAdviseCall2, :restricting_methods_to =>[:instance_methods] do |jp, obj, *args|
       advice_called += 1
     end
     WatchfulExampleWithSeparateAdviseCall2.class_public_watchful_method :a1, :a2
@@ -375,7 +374,7 @@ describe "DSL method #advise, when determining instance or class methods to advi
       def public_watchful_method *args; end
     end
     advice_called = 0
-    WatchfulExampleWithSeparateAdviseCall3.advise :before, :methods => /public_watchful_method/, :method_options =>[:class] do |jp, obj, *args|
+    WatchfulExampleWithSeparateAdviseCall3.advise :before, :calling => /public_watchful_method/, :restricting_methods_to =>[:class_methods] do |jp, obj, *args|
       advice_called += 1
     end
     WatchfulExampleWithSeparateAdviseCall3.class_public_watchful_method :a1, :a2
@@ -428,102 +427,54 @@ describe "DSL methods for the advice kind, when determining instance or class me
 end
 
 describe "Synonyms for :types" do
-  before :each do
-    @advice = proc {|jp, obj, *args| "advice"}
-    @aspects = [DSLClass.after(:noop, :types => Watchful, :methods => :public_watchful_method, &@advice)]
-  end
-  after :each do
-    @aspects.each {|a| a.unadvise}
-  end
-
-  it ":type is a synonym for :types" do
-    @aspects << DSLClass.after(:noop, :type => Watchful, :methods => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
-  end
-
-  it ":within_types is a synonym for :types" do
-    @aspects << DSLClass.after(:noop, :within_type => Watchful, :methods => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
-  end
-
-  it ":within_types is a synonym for :types" do
-    @aspects << DSLClass.after(:noop, :within_types => Watchful, :methods => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
+  Aquarium::Aspects::Aspect::CANONICAL_OPTIONS["types"].each do |key|
+    it "should accept :#{key} as a synonym for :types." do
+      advice = proc {|jp, obj, *args| "advice"}
+      aspect1 = DSLClass.after :noop, :calls_to => :public_watchful_method, :types     => Watchful, &advice
+      aspect2 = DSLClass.after :noop, :calls_to => :public_watchful_method, key.intern => Watchful, &advice
+      aspect2.should == aspect1
+      aspect1.unadvise
+      aspect2.unadvise
+    end
   end
 end
 
 describe "Synonyms for :objects" do
-  before :each do
-    @advice = proc {|jp, obj, *args| "advice"}
-    @aspects = [DSLClass.after(:noop, :objects => @watchful, :methods => :public_watchful_method, &@advice)]
-  end
-  after :each do
-    @aspects.each {|a| a.unadvise}
-  end
-
-  it ":object is a synonym for :objects" do
-    @aspects << DSLClass.after(:noop, :object => @watchful, :methods => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
-  end
-
-  it ":within_objects is a synonym for :objects" do
-    @aspects << DSLClass.after(:noop, :within_object => @watchful, :methods => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
-  end
-
-  it ":within_objects is a synonym for :objects" do
-    @aspects << DSLClass.after(:noop, :within_objects => @watchful, :methods => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
+  Aquarium::Aspects::Aspect::CANONICAL_OPTIONS["objects"].each do |key|
+    it "should accept :#{key} as a synonym for :objects." do
+      advice = proc {|jp, obj, *args| "advice"}
+      aspect1 = DSLClass.after :noop, :calls_to => :public_watchful_method, :objects   => @watchful, &advice
+      aspect2 = DSLClass.after :noop, :calls_to => :public_watchful_method, key.intern => @watchful, &advice
+      aspect2.should == aspect1
+      aspect1.unadvise
+      aspect2.unadvise
+    end
   end
 end
 
 describe "Synonyms for :methods" do
-  before :each do
-    @advice = proc {|jp, obj, *args| "advice"}
-    @aspects = [DSLClass.after(:noop, :objects => @watchful, :methods => :public_watchful_method, &@advice)]
-  end
-  after :each do
-    @aspects.each {|a| a.unadvise}
-  end
-
-  it ":method is a synonym for :methods" do
-    @aspects << DSLClass.after(:noop, :object => @watchful, :method => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
-  end
-
-  it ":within_methods is a synonym for :methods" do
-    @aspects << DSLClass.after(:noop, :within_object => @watchful, :within_methods => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
-  end
-
-  it ":within_methods is a synonym for :methods" do
-    @aspects << DSLClass.after(:noop, :within_objects => @watchful, :within_method => :public_watchful_method, &@advice)
-    @aspects[1].should == @aspects[0]
+  Aquarium::Aspects::Aspect::CANONICAL_OPTIONS["methods"].each do |key|
+    it "should accept :#{key} as a synonym for :methods." do
+      advice = proc {|jp, obj, *args| "advice"}
+      aspect1 = DSLClass.after :noop, :methods   => :public_watchful_method, :in_types => Watchful, &advice
+      aspect2 = DSLClass.after :noop, key.intern => :public_watchful_method, :in_types => Watchful, &advice
+      aspect2.should == aspect1
+      aspect1.unadvise
+      aspect2.unadvise
+    end
   end
 end
 
-describe "Synonyms for :pointcut" do
-  before :each do
-    @advice = proc {|jp, obj, *args| "advice"}
-    @aspects = [DSLClass.after(:noop, :pointcut => {:objects => @watchful, :methods => :public_watchful_method}, &@advice)]
-  end
-  after :each do
-    @aspects.each {|a| a.unadvise}
-  end
-
-  it ":pointcuts is a synonym for :pointcut" do
-    @aspects << DSLClass.after(:noop, :pointcuts => {:objects => @watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects[1].should == @aspects[0]
-  end
-  
-  it "should accept :within_pointcuts as a synonym for :pointcut." do
-    @aspects << DSLClass.after(:noop, :within_pointcuts => {:objects => @watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects[1].should == @aspects[0]
-  end
-
-  it "should accept :within_pointcut as a synonym for :pointcut." do
-    @aspects << DSLClass.after(:noop, :within_pointcut => {:objects => @watchful, :methods => :public_watchful_method}, &@advice)
-    @aspects[1].should == @aspects[0]
+describe "Synonyms for :pointcuts" do
+  Aquarium::Aspects::Aspect::CANONICAL_OPTIONS["pointcuts"].each do |key|
+    it "should accept :#{key} as a synonym for :pointcuts." do
+      advice = proc {|jp, obj, *args| "advice"}
+      aspect1 = DSLClass.after :noop, :pointcuts => {:calls_to => :public_watchful_method, :within_objects => @watchful}, &advice
+      aspect2 = DSLClass.after :noop, key.intern => {:calls_to => :public_watchful_method, :within_objects => @watchful}, &advice
+      aspect2.should == aspect1
+      aspect1.unadvise
+      aspect2.unadvise
+    end
   end
 end
 

@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec/aquarium/spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec/aquarium/spec_helper'
 require 'aquarium'
 
 # Example demonstrating "around" advice for method_missing. This is a technique for
@@ -42,7 +42,7 @@ end
 describe "An example of a class' method_missing with around advice" do
   it "should only handle invocations not processed by the around advice." do
     @intercepted_message = nil
-    aspect = Aquarium::Aspects::Aspect.new :around, :type => Aquarium::Echo, :method => :method_missing do |join_point, obj, sym, *args|
+    aspect = Aquarium::Aspects::Aspect.new :around, :calls_to => :method_missing, :for_type => Aquarium::Echo do |join_point, obj, sym, *args|
       if sym == :log 
         @intercepted_message = "log: #{args.join(" ")}" 
       else

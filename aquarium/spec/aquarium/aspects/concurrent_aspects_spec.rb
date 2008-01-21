@@ -1,6 +1,6 @@
 # Specifically tests behavior when two or more advices apply to the same join point(s).
 
-require File.dirname(__FILE__) + '/../spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../spec_example_classes'
 require File.dirname(__FILE__) + '/concurrently_accessed'
 require 'aquarium/aspects'

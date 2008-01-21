@@ -2,6 +2,7 @@ require 'set'
 require File.dirname(__FILE__) + '/../utils/array_utils'
 require File.dirname(__FILE__) + '/../utils/invalid_options'
 require File.dirname(__FILE__) + '/../utils/type_utils'
+require File.dirname(__FILE__) + '/../utils/options_utils'
 require File.dirname(__FILE__) + '/finder_result'
 
 # Find methods and types and objects.
@@ -9,6 +10,7 @@ module Aquarium
   module Finders
     class MethodFinder
       include Aquarium::Utils::ArrayUtils
+      include Aquarium::Utils::OptionsUtils
   
       # Returns a Aquarium::Finders::FinderResult for the hash of types, type names, and/or regular expressions
       # and the corresponding method name <b>symbols</b> found.
@@ -21,37 +23,66 @@ module Aquarium
       #
       # <tt>:types => types_and_type_names_and_regexps</tt>::
       # <tt>:type  => types_and_type_names_and_regexps</tt>::
+      # <tt>:for_types => types_and_type_names_and_regexps</tt>::
+      # <tt>:for_type  => types_and_type_names_and_regexps</tt>::
+      # <tt>:on_types => types_and_type_names_and_regexps</tt>::
+      # <tt>:on_type  => types_and_type_names_and_regexps</tt>::
+      # <tt>:in_types => types_and_type_names_and_regexps</tt>::
+      # <tt>:in_type  => types_and_type_names_and_regexps</tt>::
+      # <tt>:within_types => types_and_type_names_and_regexps</tt>::
+      # <tt>:within_type  => types_and_type_names_and_regexps</tt>::
       #   One or more types, type names and/or regular expessions to match. 
       #   Specify one or an array of values.
       #
       # <tt>:objects => objects</tt>::
       # <tt>:object  => objects</tt>::
+      # <tt>:for_objects => objects</tt>::
+      # <tt>:for_object  => objects</tt>::
+      # <tt>:on_objects => objects</tt>::
+      # <tt>:on_object  => objects</tt>::
+      # <tt>:in_objects => objects</tt>::
+      # <tt>:in_object  => objects</tt>::
+      # <tt>:within_objects => objects</tt>::
+      # <tt>:within_object  => objects</tt>::
       #   One or more objects to match. 
       #   Specify one or an array of values.
       #   Note: Currently, string or symbol objects will be misinterpreted as type names!
       #
       # <tt>:methods => method_names_and_regexps</tt>::
       # <tt>:method  => method_names_and_regexps</tt>::
+      # <tt>:within_methods => method_names_and_regexps</tt>::
+      # <tt>:within_method  => method_names_and_regexps</tt>::
+      # <tt>:calling   => method_names_and_regexps</tt>::
+      # <tt>:invoking  => method_names_and_regexps</tt>::
+      # <tt>:calls_to  => method_names_and_regexps</tt>::
+      # <tt>:sending_message_to  => method_names_and_regexps</tt>::
+      # <tt>:sending_messages_to => method_names_and_regexps</tt>::
       #   One or more method names and regular expressions to match.
-      #   Specify one or an array of values.
+      #   Specify one or an array of values. If :all or :all_methods is specified, all
+      #   methods will be matched. That is, these special values are equivalent to the
+      #   the regular expression /.+/. 
       #
       # <tt>:exclude_methods => method_names_and_regexps</tt>::
       # <tt>:exclude_method  => method_names_and_regexps</tt>::
+      # <tt>:exclude_&lt;other_method_synonyms&gt; => method_names_and_regexps</tt>::
       #   One or more method names and regular expressions to exclude from the match.
       #   Specify one or an array of values.
       #
       # <tt>:options => method_options</tt>::
+      # <tt>:method_options => method_options</tt>::
+      # <tt>:method_option  => method_options</tt>::
+      # <tt>:restricting_methods_to => method_options</tt>::
       #   By default, searches for public instance methods. Specify one or more
       #   of the following options for alternatives. You can combine any of the
       #   <tt>:public</tt>, <tt>:protected</tt>, and <tt>:private</tt>, as well as
       #   <tt>:instance</tt> and <tt>:class</tt>.
       #     
-      # <tt>:public</tt>::    Search for public methods (default).
-      # <tt>:private</tt>::   Search for private methods. 
-      # <tt>:protected</tt>:: Search for protected methods.
-      # <tt>:instance</tt>::  Search for instance methods.
-      # <tt>:class</tt>::     Search for class methods.
-      # <tt>:singleton</tt>:: Search for singleton methods. (Using :class for objects 
+      # <tt>:public</tt> or <tt>:public_methods</tt>::    Search for public methods (default).
+      # <tt>:private</tt> or <tt>:private_methods</tt>::   Search for private methods. 
+      # <tt>:protected</tt> or <tt>:protected_methods</tt>:: Search for protected methods.
+      # <tt>:instance</tt> or <tt>:instance_methods</tt>::  Search for instance methods.
+      # <tt>:class</tt> or <tt>:class_methods</tt>::     Search for class methods.
+      # <tt>:singleton</tt> or <tt>:singleton_methods</tt>:: Search for singleton methods. (Using :class for objects 
       # won't work and :class, :public, :protected, and :private are ignored when 
       # looking for singleton methods.)
       # <tt>:exclude_ancestor_methods</tt>:: Suppress "ancestor" methods. This
@@ -59,7 +90,7 @@ module Aquarium
       # +Derived+ class that is defined in the +Base+ class, you won't find it!
       #
       def find options = {}
-        init_specification options
+        init_specification options, canonical_options
         return Aquarium::Finders::FinderResult.new if nothing_to_find?
         types_and_objects = input_types + input_objects
         method_names_or_regexps = input_methods
@@ -77,11 +108,69 @@ module Aquarium
   
       NIL_OBJECT = MethodFinder.new unless const_defined?(:NIL_OBJECT)
 
-      RECOGNIZED_METHOD_OPTIONS = %w[public private protected 
-                instance class exclude_ancestor_methods exclude_ancestor_methods]
+      CANONICAL_OPTIONS = {
+        "types"   => %w[type for_type for_types on_type on_types in_type in_types within_type within_types],
+        "objects" => %w[object for_object for_objects on_object on_objects in_object in_objects within_object within_objects],
+        "methods" => %w[method within_method within_methods calling invoking invocations_of calls_to sending_message_to sending_messages_to],
+        "options" => %w[method_options method_option restricting_methods_to] 
+      }
+      
+      %w[types objects methods].each do |key|
+        CANONICAL_OPTIONS["exclude_#{key}"] = CANONICAL_OPTIONS[key].map {|x| "exclude_#{x}"}
+      end
+      CANONICAL_OPTIONS["methods"].dup.each do |synonym|
+        CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
+      end
+      
+      ALL_ALLOWED_OPTIONS = CANONICAL_OPTIONS.keys.inject([]) {|ary,i| ary << i << CANONICAL_OPTIONS[i]}.flatten
+
+      ALL_ALLOWED_OPTION_SYMBOLS = ALL_ALLOWED_OPTIONS.map {|o| o.intern}
+         
+      def canonical_options
+        CANONICAL_OPTIONS
+      end
+      def all_allowed_option_symbols
+        ALL_ALLOWED_OPTION_SYMBOLS
+      end
+
+      RECOGNIZED_METHOD_OPTIONS = {
+        "all"       => %w[all_methods],
+        "public"    => %w[public_methods],
+        "private"   => %w[private_methods],
+        "protected" => %w[protected_methods],
+        "instance"  => %w[instance_methods],
+        "class"     => %w[class_methods],
+        "singleton" => %w[singleton_methods],
+        "exclude_ancestor_methods" => %w[exclude_ancestors exclude_ancestors_methods suppress_ancestors suppress_ancestor_methods suppress_ancestors_methods]
+      }
+        
+      def self.init_method_options scope_options_set
+        return Set.new([]) if scope_options_set.nil?
+        options = []
+        scope_options_set.each do |opt|
+          if RECOGNIZED_METHOD_OPTIONS.keys.include?(opt.to_s)
+            options << opt
+          else
+            RECOGNIZED_METHOD_OPTIONS.keys.each do |key|
+              options << key.intern if RECOGNIZED_METHOD_OPTIONS[key].include?(opt.to_s)
+            end
+          end
+        end
+        options << :instance unless (options.include?(:class) or options.include?(:singleton))
+        Set.new(options.sort.uniq)
+      end
   
+      def self.all_recognized_method_option_symbols
+        all = RECOGNIZED_METHOD_OPTIONS.keys.map {|key| key.intern}
+        RECOGNIZED_METHOD_OPTIONS.keys.inject(all) do |all, key|
+          all += RECOGNIZED_METHOD_OPTIONS[key].map {|value| value.intern}
+          all
+        end
+      end
+      
       def self.is_recognized_method_option string_or_symbol
-        RECOGNIZED_METHOD_OPTIONS.include? string_or_symbol.to_s 
+        sym = string_or_symbol.respond_to?(:intern) ? string_or_symbol.intern : string_or_symbol
+        all_recognized_method_option_symbols.include? sym
       end
   
       protected
@@ -113,43 +202,50 @@ module Aquarium
         Aquarium::Finders::FinderResult.new types_and_objects_to_matched_methods.merge(:not_matched => types_and_objects_not_matched)
       end
   
-      def init_specification options
-        options[:options] = init_method_options(options[:options])
-        validate options
-        @specification = options
+      def init_type_specific_specification original_options, options_hash
+        @specification[:options] = MethodFinder.init_method_options(@specification[:options]) if @specification[:options]
+        extra_validation
       end
       
       def nothing_to_find? 
         types_and_objects = input_types + input_objects
-        types_and_objects.nil? or types_and_objects.empty? or input_exclude_methods.include?(:all)
+        types_and_objects.nil? or types_and_objects.empty? or all_exclude_all_methods?
       end
       
       def input_types
-        make_array @specification[:types], @specification[:type]
+        @specification[:types]
       end
   
       def input_objects
-        make_array @specification[:objects], @specification[:object]
+        @specification[:objects]
       end
   
       def input_methods
-        make_array @specification[:methods], @specification[:method]
+        @specification[:methods]
       end
   
       def input_exclude_methods
-        make_array @specification[:exclude_methods], @specification[:exclude_method]
+        @specification[:exclude_methods]
+      end
+  
+      def all_exclude_all_methods?
+        input_exclude_methods.include?(:all) or input_exclude_methods.include?(:all_methods)
       end
   
       def exclude_ancestor_methods?
-        @specification[:options].include?(:exclude_ancestor_methods) or @specification[:options].include?(:suppress_ancestor_methods)
+        @specification[:options].include?(:exclude_ancestor_methods)
       end
       
       private
   
       def make_methods_array *array_or_single_item
         ary = make_array(*array_or_single_item).reject {|m| m.to_s.strip.empty?}
-        ary = [/^.+$/] if ary.include?(:all) 
+        ary = [/^.+$/] if include_all_methods?(ary) 
         ary
+      end
+      
+      def include_all_methods? array
+        array.include?(:all) or array.include?(:all_methods)
       end
   
       def make_regexp name_or_regexp
@@ -173,13 +269,6 @@ module Aquarium
           end
         end
         method_array
-      end
-  
-      def init_method_options *scope_options
-        return [] if scope_options.nil?
-        options = scope_options.flatten
-        options << :instance unless options.include?(:class) or options.include?(:instance) or options.include?(:singleton)
-        options
       end
   
       def make_methods_reflection_method_names type_or_object, root_method_name
@@ -226,11 +315,8 @@ module Aquarium
         end
       end
   
-      def validate options
-        allowed = (%w[type types object objects method methods exclude_method exclude_methods options] + RECOGNIZED_METHOD_OPTIONS).map {|x| x.intern}
-        okay, bad = options.keys.partition {|x| allowed.include?(x)}
-        raise Aquarium::Utils::InvalidOptions.new("Unrecognized option(s): #{bad.inspect}") unless bad.empty?
-        method_options = options[:options]
+      def extra_validation 
+        method_options = @specification[:options]
         return if method_options.nil?
         if method_options.include?(:singleton) && 
           (method_options.include?(:class) || method_options.include?(:public) ||

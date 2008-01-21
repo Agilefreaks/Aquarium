@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec/aquarium/spec_helper.rb'
+require File.dirname(__FILE__) + '/../spec/aquarium/spec_helper'
 require 'aquarium'
 
 # Example demonstrating emerging ideas about good aspect-oriented design. Specifically, this 
@@ -17,14 +17,15 @@ module Aquarium
     end
     attr_accessor :state
 
-    # A simpler version of the following pointcut would be 
+    # Two alternative versions of the following pointcut would be 
     # STATE_CHANGE = pointcut :method => :state=
-    # Note that the :attribute_options => :writer option is important, especially
+    # STATE_CHANGE = pointcut :attribute => :state, :attribute_options => [:writers]
+    # Note that only matching on the attribute writers is important, especially
     # given the advice block below, because if the reader is allowed to be advised,
     # we get an infinite recursion of advice invocation! The correct solution is
     # the planned extension of the pointcut language to support condition tests for
-    # context. I.e., we don't want the advice applied when it's already inside advice!
-    STATE_CHANGE = pointcut :attribute => :state, :attribute_options => :writer
+    # context. I.e., we don't want the advice applied when it's already inside advice.
+    STATE_CHANGE = pointcut :writing => :state
   end
 end
 

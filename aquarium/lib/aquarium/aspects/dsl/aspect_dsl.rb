@@ -52,9 +52,9 @@ module Aquarium
         def append_implicit_self options
           opts = options.dup
           if (!opts.empty?) && opts.last.kind_of?(Hash)
-            opts.last[:default_object] = self
+            opts.last[:default_objects] = self
           else
-            opts << {:default_object => self}
+            opts << {:default_objects => self}
           end
           opts
         end

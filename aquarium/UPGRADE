@@ -1,3 +1,8 @@
+== Upgrading to Aquarium-0.3.0
+
+There are no known upgrade issues with this release. Although many new synonyms were added for API method
+parameters, all changes are backwards compatible.
+
 == Upgrading to Aquarium-0.2.0
 
 This release changes the expected advice parameter list from |join_point, *method_args| to

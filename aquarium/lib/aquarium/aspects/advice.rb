@@ -72,8 +72,7 @@ module Aquarium
       
       def last
         last_node = nil
-        each { |node| last_node = node unless node.nil? } #; p "<br/>last_node: #{last_node.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")}"}
-        # p "<br/><br/>returning last_node: #{last_node.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")}"
+        each { |node| last_node = node unless node.nil? } 
         last_node
       end
       
@@ -166,7 +165,7 @@ module Aquarium
       end
   
       def after_raising_exceptions_list 
-        list = make_array(@after_raising)
+        list = @after_raising.kind_of?(Set) ? @after_raising.to_a : @after_raising
         (list.nil? || list.empty? || (list.size == 1 && list[0] == "")) ? [Object] : list
       end    
     end

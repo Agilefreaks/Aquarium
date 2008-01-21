@@ -7,22 +7,15 @@ module Aquarium
 
       def self.descendents clazz
         visited_types = [Class, Object, Module, clazz]
-        Module.constants.inject([clazz]) do |result, const|
+        result = Module.constants.inject([clazz]) do |result, const|
           mod = Module.class_eval(const)
           if mod.respond_to?(:ancestors)
             result << mod if mod.ancestors.include?(clazz)
             do_descendents clazz, mod, visited_types, result
           end
           result
-        end.uniq
-      end
-      
-      def self.descendents2 clazz
-        visited_types = [Class, Object, clazz]
-        result = [clazz]
-        p "Module.constants: #{Module.constants.sort.inspect .gsub(/\</,"&lt;").gsub(/\>/,"&gt;")}<br/><br/>"
-        do_descendents clazz, Module, visited_types, result
-        result.flatten.uniq
+        end
+        result.uniq
       end
       
       protected

@@ -8,7 +8,7 @@ module Aquarium
 
     unless defined? MAJOR
       MAJOR  = 0
-      MINOR  = 2
+      MINOR  = 3
       TINY   = 0
       RELEASE_CANDIDATE = nil
       
