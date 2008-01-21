@@ -20,8 +20,8 @@ gem update -y aquarium
 or if you want an older version:
 
 <pre>
-gem install aquarium -v 0.2.0
-gem update aquarium -v 0.2.0
+gem install aquarium -v 0.3.0
+gem update aquarium -v 0.3.0
 </pre>  
 
 h4. Notes on Updating
