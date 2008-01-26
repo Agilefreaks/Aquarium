@@ -17,6 +17,13 @@ describe "Aspects that specify the private implementation methods inserted by ot
   end
 end
 
+describe "When no join points are matched" do
+  it "should warn if the :verbose setting is greater than 0." do
+    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => :nonexistent_method}, :verbose => 1 do; end
+    @aspect.unadvise
+  end
+end
+
 describe "When an aspect advises a type" do  
   before(:all) do
     @advice = Proc.new {}

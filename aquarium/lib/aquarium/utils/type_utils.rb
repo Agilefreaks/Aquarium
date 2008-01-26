@@ -21,16 +21,10 @@ module Aquarium
       protected
       
       def self.do_descendents clazz, visiting_module, visited, result
-        # p "#{clazz}, #{visiting_module}<br/>"
         visited << visiting_module
-        # TODO Odd ruby behavior; a class is constant on the class, yet if it is nested in a module
-        # it comes up undefined! However, doing class_eval works around it. Is there a better way??
-        visiting_module.constants.each do |const| 
+        visiting_module.constants.each do |const|
           next unless visiting_module.const_defined?(const)
           clazz2 = visiting_module.const_get(const)
-          # clazz2 = visiting_module.const_defined?(const) ? 
-            # visiting_module.const_get(const) :
-            # visiting_module.class_eval(const) 
           next if visited.include?(clazz2) or not clazz2.respond_to?(:ancestors)
           visited << clazz2
           result << clazz2 if clazz2.ancestors.include?(clazz)

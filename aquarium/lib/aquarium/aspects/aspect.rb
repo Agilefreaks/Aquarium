@@ -213,8 +213,19 @@ module Aquarium
           pointcuts << Pointcut.new(pc_options)
         end
         @pointcuts = Set.new(remove_excluded_join_points_and_empty_pointcuts(pointcuts))
+        warn_if_no_join_points_matched
       end
 
+      def warn_if_no_join_points_matched
+        return unless verbose > 0
+        @pointcuts.each do |pc|
+          if pc.join_points_matched.size > 0
+            return
+          end
+        end
+        print "Warning: No join points were matched. The options specified were #{@original_options.inspect}"
+      end
+      
       def remove_excluded_join_points_and_empty_pointcuts pointcuts
         pointcuts.reject do |pc|
           pc.join_points_matched.delete_if do |jp|
@@ -328,7 +339,6 @@ module Aquarium
         Aspect.is_type_join_point?(join_point) ? "" : "remove_method :#{join_point.method_name}"
       end
 
-      # TODO Move to JoinPoint
       def self.is_type_join_point? join_point
         Aquarium::Utils::TypeUtils.is_type? join_point.type_or_object
       end
