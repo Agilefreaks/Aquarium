@@ -242,6 +242,7 @@ describe "DSL method #advise, when determining the \"self\" to advise," do
   it "should ignore the default object \"self\" when an :object is specified." do
     class Watchful1
       include Aquarium::Aspects::DSL::AspectDSL
+      def public_watchful_method; end
       @@watchful = Watchful1.new
       @@aspect = after(:invoking => :public_watchful_method, :on_object => @@watchful) {|jp, obj, *args|}
       def self.watchful; @@watchful; end
@@ -249,6 +250,7 @@ describe "DSL method #advise, when determining the \"self\" to advise," do
     end
     @aspects << Watchful1.after(:invoking => :public_watchful_method, :on_object => Watchful1.watchful) {|jp, obj, *args|}
     @aspects << Watchful1.aspect
+    @aspects[0].join_points_matched.should_not be_empty
     @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
     @aspects[1].pointcuts.should == @aspects[0].pointcuts
   end
@@ -256,6 +258,7 @@ describe "DSL method #advise, when determining the \"self\" to advise," do
   it "should ignore the default object \"self\" when a :type is specified." do
     class Watchful2
       include Aquarium::Aspects::DSL::AspectDSL
+      def public_watchful_method; end
       @@aspect = after(:calls_to => :public_watchful_method, :in_type => Watchful2) {|jp, obj, *args|}
       def self.aspect; @@aspect; end
     end
@@ -300,7 +303,7 @@ describe "DSL method #advise, when determining the type or object to advise," do
   end
 
   it "should infer no types or objects if a :pointcut => {...} parameter is used and it does not specify a type or object." do
-    @aspects << DSLClass.after(:pointcut => {:method => /method/}) {|jp, obj, *args|}
+    @aspects << DSLClass.after(:pointcut => {:method => /method/}, :ignore_no_matching_join_points=>true) {|jp, obj, *args|}
     @aspects[0].join_points_matched.size.should == 0 
   end
 end
@@ -442,9 +445,10 @@ end
 describe "Synonyms for :objects" do
   Aquarium::Aspects::Aspect::CANONICAL_OPTIONS["objects"].each do |key|
     it "should accept :#{key} as a synonym for :objects." do
+      watchful = Watchful.new
       advice = proc {|jp, obj, *args| "advice"}
-      aspect1 = DSLClass.after :noop, :calls_to => :public_watchful_method, :objects   => @watchful, &advice
-      aspect2 = DSLClass.after :noop, :calls_to => :public_watchful_method, key.intern => @watchful, &advice
+      aspect1 = DSLClass.after :noop, :calls_to => :public_watchful_method, :objects   => watchful, &advice
+      aspect2 = DSLClass.after :noop, :calls_to => :public_watchful_method, key.intern => watchful, &advice
       aspect2.should == aspect1
       aspect1.unadvise
       aspect2.unadvise
@@ -468,9 +472,10 @@ end
 describe "Synonyms for :pointcuts" do
   Aquarium::Aspects::Aspect::CANONICAL_OPTIONS["pointcuts"].each do |key|
     it "should accept :#{key} as a synonym for :pointcuts." do
+      watchful = Watchful.new
       advice = proc {|jp, obj, *args| "advice"}
-      aspect1 = DSLClass.after :noop, :pointcuts => {:calls_to => :public_watchful_method, :within_objects => @watchful}, &advice
-      aspect2 = DSLClass.after :noop, key.intern => {:calls_to => :public_watchful_method, :within_objects => @watchful}, &advice
+      aspect1 = DSLClass.after :noop, :pointcuts => {:calls_to => :public_watchful_method, :within_objects => watchful}, &advice
+      aspect2 = DSLClass.after :noop, key.intern => {:calls_to => :public_watchful_method, :within_objects => watchful}, &advice
       aspect2.should == aspect1
       aspect1.unadvise
       aspect2.unadvise
@@ -495,7 +500,7 @@ describe "DSL method #advise (or synonyms) called within a type body" do
     class WatchfulWithMethodNotYetDefined
       include Aquarium::Aspects::DSL::AspectDSL
       @@advice_called = 0
-      before(:public_watchful_method) {|jp, obj, *args| @@advice_called += 1}
+      before(:public_watchful_method, :ignore_no_matching_join_points=>true) {|jp, obj, *args| @@advice_called += 1}
       def public_watchful_method *args; end
       def self.advice_called; @@advice_called; end
     end

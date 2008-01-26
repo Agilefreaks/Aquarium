@@ -44,6 +44,25 @@ module Aquarium
   end
 end
 
+describe Aspect, ".new (the :ignore_no_matching_join_points parameter that specifies whether or not to warn about no join point matches)" do
+  before :each do
+    @log_stream = StringIO.new
+  end
+  
+  it "should warn about no join point matches if the :ignore_no_matching_join_points is not specified." do
+    lambda {Aspect.new(:after, :logger_stream => @log_stream) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    @log_stream.string.should_not be_empty
+  end
+  it "should warn about no join point matches if :ignore_no_matching_join_points => false is specified." do
+    lambda {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => false) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    @log_stream.string.should_not be_empty
+  end
+  it "should not warn about no join point matches if :ignore_no_matching_join_points => true is specified." do
+    lambda {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => true) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    @log_stream.string.should be_empty
+  end
+end
+
 describe Aspect, ".new (parameters that specify the kind of advice)" do
   it "should require the kind of advice as the first parameter." do
     lambda { Aspect.new :pointcut => {:type => Aquarium::AspectInvocationTestClass} }.should raise_error(Aquarium::Utils::InvalidOptions)
@@ -85,7 +104,7 @@ end
 
 describe Aspect, ".new (parameters that specify pointcuts)" do
   it "should contain at least one of :method(s), :pointcut(s), :type(s), or :object(s)." do
-    lambda {Aspect.new(:after) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda {Aspect.new(:after, :ignore_no_matching_join_points => true) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should contain at least one of :pointcut(s), :type(s), or :object(s) unless :default_objects => object is given." do
@@ -1470,7 +1489,8 @@ describe Aspect, ".new (with a :pointcut(s), :type(s), :type(s)_with_ancestors, 
     excluded_join_points = [excluded_join_point1, excluded_join_point2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types_and_ancestors => included_types, :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|; advice_called = true; end 
+    aspect = Aspect.new :before, :types_and_ancestors => included_types, :methods => :doit, 
+      :exclude_join_points => excluded_join_points, :ignore_no_matching_join_points => true do |jp, obj, *args|; advice_called = true; end 
 
     advice_called = false
     ClassWithPublicInstanceMethod.new.public_instance_test_method
@@ -1488,7 +1508,8 @@ describe Aspect, ".new (with a :pointcut(s), :type(s), :type(s)_with_ancestors, 
     excluded_join_points = [excluded_join_point1, excluded_join_point2]
     aspect = nil
     advice_called = false
-    aspect = Aspect.new :before, :types_and_descendents => included_types, :exclude_join_points => excluded_join_points, :methods => :doit do |jp, obj, *args|; advice_called = true; end
+    aspect = Aspect.new :before, :types_and_descendents => included_types, :methods => :doit, 
+      :exclude_join_points => excluded_join_points, :ignore_no_matching_join_points => true do |jp, obj, *args|; advice_called = true; end
 
     advice_called = false
     ClassWithPublicInstanceMethod.new.public_instance_test_method
@@ -1671,7 +1692,7 @@ describe Aspect, ".new (with type-based :pointcut(s) and :exclude_type(s)_and_de
     types = excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
     pointcut1 = Pointcut.new :types => types, :method => :all, :method_options => [:exclude_ancestor_methods]
     advice_called = false
-    aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_descendents => excluded_types do |jp, obj, *args|; end
+    aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_descendents => excluded_types, :ignore_no_matching_join_points => true do |jp, obj, *args|; end
     aspect.pointcuts.size.should == 0
     aspect.unadvise
   end

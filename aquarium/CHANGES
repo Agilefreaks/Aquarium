@@ -1,3 +1,34 @@
+== Version 0.3.1
+
+V0.3.1 adds some minor API additions and internal improvements 
+
+Bug fixes:
+N.A.
+
+Enhancements:
+14447	Unify internal handling of reporting errors to the user
+17514	Provide an Aquarium library-wide logger with configuration parameters and instance overrides
+17515	Add an optional warning if an aspect doesn't match any join points
+
+These first two enhancements are related. There is a now an Aquarium::Utils::DefaultLogger
+module with static accessors for getting and setting the "system-wide" logger. 
+
+When instance-level overrides are necessary, the Aquarium::Utils::OptionsUtils provides 
+"universal" options (but currently used only by Aspect and Pointcut) for specifying a logger 
+(with the new :logger parameter), or alternatively, specifying just the output stream 
+(:logger_stream) and/or the severity (:severity, one of the standard library's 
+Logger::Severity-defined constants). If either of the latter two options is specified, a 
+separate logger instance is created, rather than changing parameters for the global logger.
+
+OptionsUtils also supports a :noop parameter, which classes interpret to mean do none (or
+perhaps only some) of the processing. Useful for debugging.
+
+#17515 adds a helpful warning to the system (or aspect-instance's) logger if an aspect 
+matches no join points. This warning will be suppressed if (i) the severity level for the 
+logger is above WARN or (ii) the aspect was created with the option 
+	:ignore_no_matching_join_points => true.
+
+
 == Version 0.3.0
 
 V0.3.0 adds numerous improvements to the DSL, making aspect specification more intuitive and 

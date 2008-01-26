@@ -90,7 +90,7 @@ module Aquarium
       # +Derived+ class that is defined in the +Base+ class, you won't find it!
       #
       def find options = {}
-        init_specification options, canonical_options
+        init_specification options, CANONICAL_OPTIONS
         return Aquarium::Finders::FinderResult.new if nothing_to_find?
         types_and_objects = input_types + input_objects
         method_names_or_regexps = input_methods
@@ -126,9 +126,6 @@ module Aquarium
 
       ALL_ALLOWED_OPTION_SYMBOLS = ALL_ALLOWED_OPTIONS.map {|o| o.intern}
          
-      def canonical_options
-        CANONICAL_OPTIONS
-      end
       def all_allowed_option_symbols
         ALL_ALLOWED_OPTION_SYMBOLS
       end

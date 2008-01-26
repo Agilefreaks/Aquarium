@@ -79,8 +79,11 @@ end
 
 describe "An example with advice on the public instance methods (excluding ancestor methods) of Bar" do
   it "should not trace any calls to the public methods defined by the included BarModule" do
+    # Suppress warnings about no join points matched with :ignore_no_matching_join_points => true 
     aspect = Aquarium::Aspects::Aspect.new :around, 
-      :invocations_of => :all_methods, :for_type => Aquarium::Bar, :restricting_methods_to => :exclude_ancestor_methods do |execution_point, obj, *args|
+      :invocations_of => :all_methods, :for_type => Aquarium::Bar, 
+      :restricting_methods_to => :exclude_ancestor_methods,
+      :ignore_no_matching_join_points => true do |execution_point, obj, *args|
       begin
         obj.log "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
         execution_point.proceed

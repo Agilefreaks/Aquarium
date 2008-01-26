@@ -158,8 +158,9 @@ module Aquarium
       #   Exclude the specified types and their descendents, ancestors.
       #   If you want to exclude both the descendents _and_ ancestors, use both options.
       #
+      # Pointcut.new also accepts all the "universal" options documented in OptionsUtils.
       def initialize options = {} 
-        init_specification options, canonical_options
+        init_specification options, CANONICAL_OPTIONS
         init_candidate_types 
         init_candidate_objects
         init_candidate_join_points
@@ -220,9 +221,6 @@ module Aquarium
 
       ALL_ALLOWED_OPTION_SYMBOLS = ALL_ALLOWED_OPTIONS.map {|o| o.intern}
          
-      def canonical_options
-        CANONICAL_OPTIONS
-      end
       def all_allowed_option_symbols
         ALL_ALLOWED_OPTION_SYMBOLS
       end

@@ -2,11 +2,12 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../spec_example_classes'
 require 'aquarium/aspects'
+require 'logger'
 
 include Aquarium::Aspects
 
 
-describe "Aspects that specify the private implementation methods inserted by other aspects" do  
+describe Aspect, " cannot advise the private implementation methods inserted by other aspects" do  
   it "should have no affect." do
     class WithAspectLikeMethod
       def _aspect_foo; end
@@ -17,14 +18,7 @@ describe "Aspects that specify the private implementation methods inserted by ot
   end
 end
 
-describe "When no join points are matched" do
-  it "should warn if the :verbose setting is greater than 0." do
-    @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => :nonexistent_method}, :verbose => 1 do; end
-    @aspect.unadvise
-  end
-end
-
-describe "When an aspect advises a type" do  
+describe Aspect, " when advising a type" do  
   before(:all) do
     @advice = Proc.new {}
   end
@@ -45,7 +39,7 @@ describe "When an aspect advises a type" do
   end
 end
 
-describe "When an aspect advises an object" do  
+describe Aspect, " when advising an object" do  
   before(:all) do
     @advice = Proc.new {}
   end
@@ -68,7 +62,7 @@ describe "When an aspect advises an object" do
   end
 end
 
-describe "Aspects with :before advice" do
+describe Aspect, " with :before advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -97,7 +91,7 @@ describe "Aspects with :before advice" do
   end
 end
 
-describe "Aspects with :after advice" do
+describe Aspect, " with :after advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -169,7 +163,7 @@ describe "Aspects with :after advice" do
   end
 end
 
-describe "Aspects with :after_returning advice" do
+describe Aspect, " with :after_returning advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -226,7 +220,7 @@ describe "Aspects with :after_returning advice" do
   end
 end
 
-describe "Aspects with :after_raising advice" do
+describe Aspect, " with :after_raising advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -295,7 +289,7 @@ describe "Aspects with :after_raising advice" do
   end
 end
 
-describe "Aspects with :before and :after advice" do
+describe Aspect, " with :before and :after advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -336,7 +330,7 @@ describe "Aspects with :before and :after advice" do
   end
 end
 
-describe "Aspects with :before and :after_returning advice" do
+describe Aspect, " with :before and :after_returning advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -370,7 +364,7 @@ describe "Aspects with :before and :after_returning advice" do
   end
 end
 
-describe "Aspects with :before and :after_raising advice" do
+describe Aspect, " with :before and :after_raising advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -404,7 +398,7 @@ describe "Aspects with :before and :after_raising advice" do
   end
 end
 
-describe "Aspects with :around advice" do
+describe Aspect, " with :around advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
   end
@@ -631,7 +625,7 @@ describe Aspect, "#unadvise for 'empty' aspects" do
   
   it "should do nothing for unadvised types." do
     expected_methods = (Watchful.private_methods + Watchful.private_instance_methods).sort
-    aspect = Aspect.new :around, :type => Watchful, :method => /does_not_exist/, :advice => @advice
+    aspect = Aspect.new :around, :type => Watchful, :method => /does_not_exist/, :advice => @advice, :severity => Logger::Severity::ERROR
     ((Watchful.private_methods + Watchful.private_instance_methods).sort - expected_methods).should == []
     aspect.unadvise
     ((Watchful.private_methods + Watchful.private_instance_methods).sort - expected_methods).should == []
@@ -642,7 +636,7 @@ describe Aspect, "#unadvise for 'empty' aspects" do
   it "should do nothing for unadvised objects." do
     @watchful = Watchful.new
     expected_methods = @watchful.private_methods.sort
-    aspect = Aspect.new :around, :object => @watchful, :method => /does_not_exist/, :advice => @advice
+    aspect = Aspect.new :around, :object => @watchful, :method => /does_not_exist/, :advice => @advice, :severity => Logger::Severity::ERROR
     (@watchful.private_methods.sort - expected_methods).should == []
     aspect.unadvise
     (@watchful.private_methods.sort - expected_methods).should == []
@@ -764,13 +758,13 @@ describe Aspect, "#unadvise for removes all traces of the aspect" do
   end
 end
 
-describe "invariant protection level of methods under advising and unadvising", :shared => true do
-  it "should keep the protection level of an advised methods unchanged." do
-    %w[public protected private].each do |protection|
+%w[public protected private].each do |protection|
+  describe Aspect, " when advising and unadvising #{protection} methods" do
+    it "should keep the protection level of the advised methods unchanged." do
       meta   = "#{protection}_instance_methods"
       method = "#{protection}_watchful_method"
       Watchful.send(meta).should include(method)
-      aspect = Aspect.new(:after, :type => Watchful, :method => method.intern) {|jp, obj, *args| true }
+      aspect = Aspect.new(:after, :type => Watchful, :method => method.intern, :method_options => [protection.intern]) {|jp, obj, *args| true }
       Watchful.send(meta).should include(method)
       aspect.unadvise
       Watchful.send(meta).should include(method)
@@ -778,14 +772,8 @@ describe "invariant protection level of methods under advising and unadvising", 
   end  
 end
 
-describe "Aspects advising methods should keep the protection level of an advised methods unchanged." do
-  it_should_behave_like("invariant protection level of methods under advising and unadvising")
-end
-describe "Aspects unadvising methods should restore the original protection level of the methods." do
-  it_should_behave_like("invariant protection level of methods under advising and unadvising")
-end
 
-describe "Aspects unadvising methods for instance-type pointcuts for type-defined methods" do
+describe Aspect, " when unadvising methods for instance-type pointcuts for type-defined methods" do
   class TypeDefinedMethodClass
     def inititalize; @called = false; end
     def m; @called = true; end
@@ -801,7 +789,7 @@ describe "Aspects unadvising methods for instance-type pointcuts for type-define
   end
 end
 
-describe "Aspects unadvising methods for instance-type pointcuts for instance-defined methods" do
+describe Aspect, " when unadvising methods for instance-type pointcuts for instance-defined methods" do
   class InstanceDefinedMethodClass
     def inititalize; @called = false; end
     attr_reader :called
@@ -817,7 +805,7 @@ describe "Aspects unadvising methods for instance-type pointcuts for instance-de
   end
 end
 
-describe "Aspects advising methods with non-alphanumeric characters" do
+describe Aspect, " when advising methods with non-alphanumeric characters" do
   module Aquarium::Aspects
     class ClassWithMethodNamesContainingOddChars
       @@method_names = []

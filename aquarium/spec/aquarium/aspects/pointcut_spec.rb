@@ -1705,67 +1705,44 @@ end
 describe Pointcut, "#specification" do
   before(:each) do
     before_pointcut_class_spec
-    @empty_set = Set.new
-    @default_specification = {
-      :types => @empty_set, :objects => @empty_set, :join_points => @empty_set,
-      :types_and_ancestors => @empty_set,
-      :types_and_descendents => @empty_set,
-      :methods => @empty_set, :method_options => Set.new([:instance]),
-      :attributes => @empty_set, :attribute_options => @empty_set, 
-      :exclude_types => @empty_set,
-      :exclude_types_calculated => @empty_set,
-      :exclude_types_and_ancestors => @empty_set,
-      :exclude_types_and_descendents => @empty_set,
-      :exclude_objects => @empty_set,
-      :exclude_join_points => @empty_set,
-      :exclude_pointcuts => @empty_set,
-      :exclude_methods => @empty_set,
-      :default_objects => @empty_set,
-      :log => Set.new([""]),
-      :verbose => Set.new([0]),
-      :noop => Set.new([false])
-    } 
-    @default_specification_all_methods = { :methods => Set.new([:all]) } | @default_specification
   end
 
   it "should return ':attribute_options => []', by default, if no arguments are given." do
     pc = Pointcut.new
-    pc.specification.should == @default_specification_all_methods
+    pc.specification[:attribute_options].should eql(Set.new)
   end
 
   it "should return the input :types and :type arguments combined into an array keyed by :types." do
     pc = Pointcut.new :types => @example_classes, :type => String
-    pc.specification.should == { :types => Set.new(@example_classes + [String]) } | @default_specification_all_methods
+    pc.specification[:types].should eql(Set.new(@example_classes + [String]))
   end
   
   it "should return the input :objects and :object arguments combined into an array keyed by :objects." do
     example_objs = @example_classes.map {|t| t.new}
     s1234 = "1234"
     pc = Pointcut.new :objects => example_objs, :object => s1234
-    pc.specification.should == { :objects => Set.new(example_objs + [s1234]) } | @default_specification_all_methods
+    pc.specification[:objects].should eql(Set.new(example_objs + [s1234]))
   end
 
   it "should return the input :methods and :method arguments combined into an array keyed by :methods." do
     pc = Pointcut.new :types => @example_classes, :methods => /^get/, :method => "dup"
-    pc.specification.should == { :types => Set.new(@example_classes), :methods => Set.new([/^get/, "dup"]) } | @default_specification
+    pc.specification[:types].should eql(Set.new(@example_classes))
+    pc.specification[:methods].should eql(Set.new([/^get/, "dup"]))
   end
   
   it "should return the input :method_options verbatim." do
     pc = Pointcut.new :types => @example_classes, :methods => /^get/, :method => "dup", :method_options => [:instance, :public]
-    pc.specification.should == { :types => Set.new(@example_classes), :methods => Set.new([/^get/, "dup"]), 
-        :method_options => Set.new([:instance, :public]), :default_objects => @empty_set } | @default_specification
+    pc.specification[:method_options].should eql(Set.new([:instance, :public]))
   end
   
-  it "should return the input :methods and :method arguments combined into an array keyed by :methods." do
+  it "should return the input :attributes and :attribute arguments combined into an array keyed by :attributes." do
     pc = Pointcut.new :types => @example_classes, :attributes => /^state/, :attribute => "name"
-    pc.specification.should == { :types => Set.new(@example_classes), :objects => @empty_set, :join_points => @empty_set,
-      :methods => @empty_set, :method_options => Set.new([]), :default_objects => @empty_set,
-      :attributes => Set.new([/^state/, "name"]), :attribute_options => @empty_set } | @default_specification
+    pc.specification[:attributes].should eql(Set.new([/^state/, "name"]))
   end
   
   it "should return the input :attributes, :attribute and :attribute_options arguments, verbatim." do
     pc = Pointcut.new :types => @example_classes, :attributes => /^state/, :attribute => "name", :attribute_options => :reader
-    pc.specification.should == { :types => Set.new(@example_classes), :attributes => Set.new([/^state/, "name"]), 
-      :attribute_options => Set.new([:reader]) } | @default_specification
+    pc.specification[:attributes].should eql(Set.new([/^state/, "name"]))
+    pc.specification[:attribute_options].should eql(Set.new([:reader]))
   end
 end

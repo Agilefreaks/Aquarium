@@ -18,7 +18,7 @@ module Aquarium
         end
       end
 
-      # Using @specification[:exclude_join_points].include?(jp) doesn't always work correctly (it probably uses equal())!
+      # Using @specification[:exclude_join_points].include?(jp) doesn't always work correctly (it probably uses equal?())!
       def is_excluded_join_point? jp
         return false if @specification[:exclude_join_points].nil?
         @specification[:exclude_join_points].find {|jp2| jp2 == jp || jp2.eql?(jp)}

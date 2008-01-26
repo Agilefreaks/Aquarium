@@ -35,7 +35,8 @@ module Aquarium
       CANONICAL_OPTIONS = Pointcut::CANONICAL_OPTIONS.merge({
         "advice"            => %w[action do_action use_advice advise_with invoke call],
         "pointcuts"         => %w[pointcut within_pointcuts within_pointcut on_pointcuts on_pointcut],
-        "exclude_pointcuts" => %w[exclude_pointcut exclude_on_pointcut exclude_on_pointcuts exclude_within_pointcut exclude_within_pointcuts]
+        "exclude_pointcuts" => %w[exclude_pointcut exclude_on_pointcut exclude_on_pointcuts exclude_within_pointcut exclude_within_pointcuts],
+        "ignore_no_matching_join_points" => %[ignore_no_jps]
       })
          
       ALL_ALLOWED_OPTIONS = CANONICAL_OPTIONS.keys.inject([]) {|ary,i| ary << i << CANONICAL_OPTIONS[i]}.flatten +
@@ -103,15 +104,18 @@ module Aquarium
       #   One or an array of Pointcut or JoinPoint objects. Mutually-exclusive with the :types, :objects,
       #   :methods, :attributes, :method_options, and :attribute_options parameters.
       #
-      # <tt>:noop</tt>::
-      #   Does not actually advise any join points. Useful for testing.
+      # <tt>:ignore_no_matching_join_points => true | false</tt>
+      # <tt>ignore_no_jps => true | false</tt>::
+      #   Do not issue a warning if no join points are actually matched by the aspect. By default, the value
+      #   is false, meaning that a WARN-level message will be written to the log. It is usually very helpful
+      #   to be warned when no matches occurred, for diagnostic purposes!
       #
-      # It also accepts all the same options that Pointcut accepts, including the synonyms for :types,
-      # :methods, etc.
+      # Aspect.new also accepts all the same options that Pointcut accepts, including the synonyms for :types,
+      # :methods, etc. It also accepts the "universal" options documented in OptionsUtils.
       def initialize *options, &block
         @first_option_that_was_method = []
         opts = rationalize options
-        init_specification opts, canonical_options, &block
+        init_specification opts, CANONICAL_OPTIONS, &block
         init_pointcuts
         validate_specification
         return if noop
@@ -126,9 +130,6 @@ module Aquarium
         get_jps :join_points_not_matched
       end
       
-      def canonical_options
-        CANONICAL_OPTIONS
-      end
       def all_allowed_option_symbols
         ALL_ALLOWED_OPTION_SYMBOLS + @first_option_that_was_method
       end
@@ -217,13 +218,19 @@ module Aquarium
       end
 
       def warn_if_no_join_points_matched
-        return unless verbose > 0
+        return unless should_warn_if_no_matching_join_points
         @pointcuts.each do |pc|
           if pc.join_points_matched.size > 0
             return
           end
         end
-        print "Warning: No join points were matched. The options specified were #{@original_options.inspect}"
+        logger.warn "Warning: No join points were matched. The options specified were #{@original_options.inspect}"
+      end
+      
+      def should_warn_if_no_matching_join_points
+        @specification[:ignore_no_matching_join_points].nil? or 
+        @specification[:ignore_no_matching_join_points].empty? or 
+        @specification[:ignore_no_matching_join_points].to_a.first == false
       end
       
       def remove_excluded_join_points_and_empty_pointcuts pointcuts
