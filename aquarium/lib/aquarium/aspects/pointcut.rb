@@ -161,6 +161,7 @@ module Aquarium
       # Pointcut.new also accepts all the "universal" options documented in OptionsUtils.
       def initialize options = {} 
         init_specification options, CANONICAL_OPTIONS
+        return if noop
         init_candidate_types 
         init_candidate_objects
         init_candidate_join_points

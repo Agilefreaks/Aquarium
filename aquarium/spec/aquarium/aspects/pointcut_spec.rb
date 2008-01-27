@@ -266,7 +266,7 @@ describe Pointcut, ".new (modules specified using names)" do
   end
 end
 
-describe Pointcut, ".new (types and their descendents and ancestors)" do
+describe Pointcut, ".new (types and their ancestors and descendents)" do
   before(:each) do
     before_pointcut_module_spec
   end
@@ -293,17 +293,13 @@ describe Pointcut, ".new (types and their descendents and ancestors)" do
     
   Aspect::CANONICAL_OPTIONS["types_and_ancestors"].each do |key|
     it "should accept :#{key} as a synonym for :types_and_ancestors." do
-      pc = Pointcut.new key.intern => /^Module.*Method/, :types_and_descendents => /^Module.*Method/, :methods => :all, :method_options => :exclude_ancestor_methods
-      pc.join_points_matched.should == (@expected_modules_matched_jps + [@mimpub_jp])
-      pc.join_points_not_matched.should == @expected_modules_not_matched_jps
+      lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
   
   Aspect::CANONICAL_OPTIONS["types_and_descendents"].each do |key|
     it "should accept :#{key} as a synonym for :types_and_descendents." do
-      pc = Pointcut.new :types_and_ancestors => /^Module.*Method/, key.intern => /^Module.*Method/, :methods => :all, :method_options => :exclude_ancestor_methods
-      pc.join_points_matched.should == (@expected_modules_matched_jps + [@mimpub_jp])
-      pc.join_points_not_matched.should == @expected_modules_not_matched_jps
+      lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 end

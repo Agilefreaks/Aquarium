@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
 require 'aquarium/finders/type_finder'
 
-# TODO Mock out type_utils to speed it up!
+include Aquarium::Utils
   
 def purge_actuals actuals
   # Remove extra stuff inserted by RSpec, Aquarium, and "pretty printer" (rake?), possibly in other specs! (TODO undo those when finished...)
@@ -11,154 +11,109 @@ def purge_actuals actuals
   end
 end
 
-variant = ''
-describe "#find with types, including descendents", :shared => true do
+describe "#find types and their descendents, using :types_and_descendents" do
   it "should find the matching types and their descendent subclasses, even in different nested modules." do
-    option = "#{variant}_and_descendents".intern
-    Aquarium::Utils::TypeUtils.sample_types.each do |t|
-      actual = Aquarium::Finders::TypeFinder.new.find option => (t.name)
+    TypeUtils.sample_types.each do |t|
+      actual = Aquarium::Finders::TypeFinder.new.find :types_and_descendents => (t.name)
       actual_keys = purge_actuals actual
-      actual_keys.sort{|x,y| x.name <=> y.name}.should == Aquarium::Utils::TypeUtils.sample_types_descendents[t].sort{|x,y| x.name <=> y.name}
+      actual_keys.sort{|x,y| x.name <=> y.name}.should == TypeUtils.sample_types_descendents[t].sort{|x,y| x.name <=> y.name}
       actual.not_matched_keys.should == []
+    end
+  end
+
+  Aquarium::Finders::TypeFinder::TYPES_SYNONYMS.reject{|t| t == :types}.each do |n|
+    it "should accept :#{n}_and_descendents as a synonym for :types_and_descendents" do
+      lambda {Aquarium::Finders::TypeFinder.new.find "#{n}_and_descendents".intern => TypeUtils.sample_types, :noop => true}.should_not raise_error(InvalidOptions)
     end
   end
 end
 
-%w[type types name names].each do |n|
-  instance_eval <<-EOF
-    describe Aquarium::Finders::TypeFinder, "#find with :#{n}_and_descendents used to specify one or more names" do
-      variant = "#{n}"
-      it_should_behave_like "#find with types, including descendents"
-    end
-  EOF
-end
-
-describe "#find with excluded types, including descendents", :shared => true do
+describe "#find types subtracting out excluded types and descendents, using :exclude_types_and_descendents" do
   it "should find the matching types and their descendent subclasses, minus the excluded type hierarchies." do
-    option = "#{variant}_and_descendents".intern
-    exclude_option = "exclude_#{variant}_and_descendents".intern
-    actual = Aquarium::Finders::TypeFinder.new.find option => ModuleForDescendents, exclude_option => D1ForDescendents
+    actual = Aquarium::Finders::TypeFinder.new.find :types_and_descendents => ModuleForDescendents, :exclude_types_and_descendents => D1ForDescendents
     actual_keys = purge_actuals actual
-    expected = Aquarium::Utils::TypeUtils.sample_types_descendents[ModuleForDescendents].reject do |c|
-      Aquarium::Utils::TypeUtils.sample_types_descendents[D1ForDescendents].include? c
+    expected = TypeUtils.sample_types_descendents[ModuleForDescendents].reject do |c|
+      TypeUtils.sample_types_descendents[D1ForDescendents].include? c
     end
     actual.not_matched_keys.should == []
   end
-end
 
-%w[type types name names].each do |n|
-  instance_eval <<-EOF
-    describe Aquarium::Finders::TypeFinder, "#find with :exclude_#{n}_and_descendents used to specify one or more names" do
-      variant = "#{n}"
-      it_should_behave_like "#find with excluded types, including descendents"
+  Aquarium::Finders::TypeFinder::TYPES_SYNONYMS.reject{|t| t == :types}.each do |n|
+    it "should accept :exclude_#{n}_and_descendents as a synonym for :exclude_types_and_descendents" do
+      lambda {Aquarium::Finders::TypeFinder.new.find :types_and_descendents => ModuleForDescendents, "exclude_#{n}_and_descendents".intern => D1ForDescendents, :noop => true}.should_not raise_error(InvalidOptions)
     end
-  EOF
+  end
 end
 
 
-describe "#find with types, including ancestors", :shared => true do
+describe "#find types and their ancestors, using :types_and_ancestors" do
   it "should find the matching types and their ancestors, even in different nested modules." do
-    option = "#{variant}_and_ancestors".intern
-    Aquarium::Utils::TypeUtils.sample_types.each do |t|
-      actual = Aquarium::Finders::TypeFinder.new.find option => (t.name)
+    TypeUtils.sample_types.each do |t|
+      actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => (t.name)
       actual_keys = purge_actuals actual
-      actual_keys.sort{|x,y| x.name <=> y.name}.should == Aquarium::Utils::TypeUtils.sample_types_ancestors[t].sort{|x,y| x.name <=> y.name}
+      actual_keys.sort{|x,y| x.name <=> y.name}.should == TypeUtils.sample_types_ancestors[t].sort{|x,y| x.name <=> y.name}
       actual.not_matched_keys.should == []
     end
   end
-end
 
-%w[type types name names].each do |n|
-  instance_eval <<-EOF
-    describe Aquarium::Finders::TypeFinder, "#find with :#{n}_and_ancestors used to specify one or more names" do
-      variant = "#{n}"
-      it_should_behave_like "#find with types, including ancestors"
+  Aquarium::Finders::TypeFinder::TYPES_SYNONYMS.reject{|t| t == :types}.each do |n|
+    it "should accept :#{n}_and_ancestors as a synonym for :types_and_ancestors" do
+      lambda {Aquarium::Finders::TypeFinder.new.find "#{n}_and_ancestors".intern => TypeUtils.sample_types, :noop => true}.should_not raise_error(InvalidOptions)
     end
-  EOF
-end
-
-
-describe "#find with excluded types, including ancestors", :shared => true do
-  it "should find the matching types and their ancestors, minus the excluded types and ancestors." do
-    option = "#{variant}_and_ancestors".intern
-    exclude_option = "exclude_#{variant}_and_ancestors".intern
-    actual = Aquarium::Finders::TypeFinder.new.find option => D1ForDescendents, exclude_option => ModuleForDescendents
-    actual_keys = purge_actuals actual
-    expected = Aquarium::Utils::TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
-      Aquarium::Utils::TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
-    end
-    actual.not_matched_keys.should == []
   end
 end
 
-%w[type types name names].each do |n|
-  instance_eval <<-EOF
-    describe Aquarium::Finders::TypeFinder, "#find with :exclude_#{n}_and_ancestors used to specify one or more names" do
-      variant = "#{n}"
-      it_should_behave_like "#find with excluded types, including ancestors"
+
+describe "#find types subtracting out excluded types and ancestors, using :exclude_types_and_ancestors" do
+  it "should find the matching types and their ancestors, minus the excluded types and ancestors." do
+    actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => D1ForDescendents, :exclude_types_and_ancestors => ModuleForDescendents
+    actual_keys = purge_actuals actual
+    expected = TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
+      TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
     end
-  EOF
+    actual.not_matched_keys.should == []
+  end
+
+  Aquarium::Finders::TypeFinder::TYPES_SYNONYMS.reject{|t| t == :types}.each do |n|
+    it "should accept :exclude_#{n}_and_ancestors as a synonym for :exclude_types_and_ancestors" do
+      lambda {Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => D1ForDescendents, "exclude_#{n}_and_ancestors".intern => ModuleForDescendents, :noop => true}.should_not raise_error(InvalidOptions)
+    end
+  end
 end
 
 
-describe "#find with types, including descendents and ancestors", :shared => true do
-  it "should find the matching types, including their descendents and ancestors, even in different nested modules." do
-    doption = "#{variant}_and_descendents".intern
-    aoption = "#{variant}_and_ancestors".intern
-    Aquarium::Utils::TypeUtils.sample_types.each do |t|
-      actual = Aquarium::Finders::TypeFinder.new.find aoption => (t.name), doption => (t.name)
+describe "#find types and their descendents and ancestors" do
+  it "should find the matching types and their descendents and ancestors, even in different nested modules." do
+    TypeUtils.sample_types.each do |t|
+      actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => (t.name), :types_and_descendents => (t.name)
       actual_keys = purge_actuals actual
-      expected = Aquarium::Utils::TypeUtils.sample_types_ancestors[t] + Aquarium::Utils::TypeUtils.sample_types_descendents[t]
+      expected = TypeUtils.sample_types_ancestors[t] + TypeUtils.sample_types_descendents[t]
       actual_keys.sort{|x,y| x.name <=> y.name}.should == expected.sort{|x,y| x.name <=> y.name}.uniq
       actual.not_matched_keys.should == []
     end
   end
 end
 
-%w[type types name names].each do |n|
-  instance_eval <<-EOF
-    describe Aquarium::Finders::TypeFinder, "#find with :#{n}_and_ancestors and :#{n}_and_descendents used to specify one or more names" do
-      variant = "#{n}"
-      it_should_behave_like "#find with types, including descendents and ancestors"
-    end
-  EOF
-end
-
-describe "#find with excluded types, including descendents and ancestors", :shared => true do
-  it "should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors." do
-    doption = "#{variant}_and_descendents".intern
-    aoption = "#{variant}_and_ancestors".intern
-    exclude_doption = "exclude_#{variant}_and_descendents".intern
-    exclude_aoption = "exclude_#{variant}_and_ancestors".intern
-    actual = Aquarium::Finders::TypeFinder.new.find aoption => Aquarium::ForDescendents::NestedD1ForDescendents, 
-      doption => Aquarium::ForDescendents::NestedD1ForDescendents, 
-      exclude_aoption => Aquarium::ForDescendents::NestedD2ForDescendents, 
-      exclude_doption => Aquarium::ForDescendents::NestedD2ForDescendents
+describe "#find types subtracting out excluded types and their descendents and ancestors" do
+  it "should find the matching types and their descendents and ancestors, minus the excluded types and their descendents and ancestors." do
+    actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => Aquarium::ForDescendents::NestedD1ForDescendents, 
+      :types_and_descendents => Aquarium::ForDescendents::NestedD1ForDescendents, 
+      :exclude_types_and_ancestors => Aquarium::ForDescendents::NestedD2ForDescendents, 
+      :exclude_types_and_descendents => Aquarium::ForDescendents::NestedD2ForDescendents
     actual_keys = purge_actuals actual
-    expected = Aquarium::Utils::TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
-      Aquarium::Utils::TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
+    expected = TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
+      TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
     end
     actual.not_matched_keys.should == []
   end
 end
 
-%w[type types name names].each do |n|
-  instance_eval <<-EOF
-    describe Aquarium::Finders::TypeFinder, "#find with :exclude_#{n}_and_ancestors and :exclude_#{n}_and_descendents used to specify one or more names" do
-      variant = "#{n}"
-      it_should_behave_like "#find with excluded types, including descendents and ancestors"
-    end
-  EOF
-end
-
-describe "#find with regular expressions, including descendents and ancestors" do
-  it "should find the matching types, including their descendents and ancestors, even in different nested modules." do
-    doption = "types_and_descendents".intern
-    aoption = "types_and_ancestors".intern
+describe "#find types and their descendents and ancestors, specified with regular expressions" do
+  it "should find the matching types and their descendents and ancestors, even in different nested modules." do
     regexs = [/ForDescendents$/, /Aquarium::ForDescendents::.*ForDescendents/]
-    actual = Aquarium::Finders::TypeFinder.new.find aoption => regexs, doption => regexs
+    actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => regexs, :types_and_descendents => regexs
     actual_keys = purge_actuals actual
-    expected = Aquarium::Utils::TypeUtils.sample_types_descendents_and_ancestors.keys + [Kernel, Object]
+    expected = TypeUtils.sample_types_descendents_and_ancestors.keys + [Kernel, Object]
     actual_keys.size.should == expected.size
     expected.each do |t|
       actual_keys.should include(t)
@@ -167,55 +122,16 @@ describe "#find with regular expressions, including descendents and ancestors" d
   end
 end
 
-describe "#find with regular expressions, including descendents and ancestors", :shared => true do
-  it "should find the matching types, including their descendents and ancestors, even in different nested modules." do
-    doption = "#{variant}_and_descendents".intern
-    aoption = "#{variant}_and_ancestors".intern
-    regexs = [/ForDescendents$/, /Aquarium::ForDescendents::.*ForDescendents/]
-    actual = Aquarium::Finders::TypeFinder.new.find aoption => regexs, doption => regexs
+describe "#find types and their descendents and ancestors, subtracting out excluded types and their descendents and ancestors, specified using regular expressions" do
+  it "should find the matching types and their descendents and ancestors, minus the excluded types and their descendents and ancestors." do
+    actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => /Aquarium::ForDescendents::.*D1ForDescendents/, 
+      :types_and_descendents => /Aquarium::ForDescendents::.*D1ForDescendents/, 
+      :exclude_types_and_ancestors => /Aquarium::ForDescendents::.*D2ForDescendents/, 
+      :exclude_types_and_descendents => /Aquarium::ForDescendents::.*D2ForDescendents/
     actual_keys = purge_actuals actual
-    expected = Aquarium::Utils::TypeUtils.sample_types_descendents_and_ancestors.keys + [Kernel, Object]
-    actual_keys.size.should == expected.size
-    expected.each do |t|
-      actual_keys.should include(t)
+    expected = TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
+      TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
     end
     actual.not_matched_keys.should == []
   end
-end
-
-%w[type types name names].each do |n|
-  instance_eval <<-EOF
-    describe Aquarium::Finders::TypeFinder, "#find regexps with :#{n}_and_ancestors and :#{n}_and_descendents used to specify one or more names" do
-      variant = "#{n}"
-      it_should_behave_like "#find with regular expressions, including descendents and ancestors"
-    end
-  EOF
-end
-
-
-describe "#find with excluded regular expressions, including descendents and ancestors", :shared => true do
-  it "should find the matching types, their descendents and ancestors, minus the excluded types, descendents and ancestors." do
-    doption = "#{variant}_and_descendents".intern
-    aoption = "#{variant}_and_ancestors".intern
-    exclude_doption = "exclude_#{variant}_and_descendents".intern
-    exclude_aoption = "exclude_#{variant}_and_ancestors".intern
-    actual = Aquarium::Finders::TypeFinder.new.find aoption => /Aquarium::ForDescendents::.*D1ForDescendents/, 
-      doption => /Aquarium::ForDescendents::.*D1ForDescendents/, 
-      exclude_aoption => /Aquarium::ForDescendents::.*D2ForDescendents/, 
-      exclude_doption => /Aquarium::ForDescendents::.*D2ForDescendents/
-    actual_keys = purge_actuals actual
-    expected = Aquarium::Utils::TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
-      Aquarium::Utils::TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
-    end
-    actual.not_matched_keys.should == []
-  end
-end
-
-%w[type types name names].each do |n|
-  instance_eval <<-EOF
-    describe Aquarium::Finders::TypeFinder, "#find regexps with :exclude_#{n}_and_ancestors and :exclude_#{n}_and_descendents used to specify one or more names" do
-      variant = "#{n}"
-      it_should_behave_like "#find with excluded regular expressions, including descendents and ancestors"
-    end
-  EOF
 end

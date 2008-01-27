@@ -253,8 +253,63 @@ describe Aspect, ".new (with a :type(s) parameter and a :method(s) parameter)" d
     aspect.unadvise
   end
 
+  it "should accept :type(s) => T1, :methods => m" do  
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @method_spec = :public_test_method
+    do_type_spec
+  end
+
+  it "should accept :type(s) => T1, :methods => [m, ...]" do  
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s) => T1, :methods => /m/" do  
+    @type_spec = Aquarium::AspectInvocationTestClass
+    @method_spec = /test_method/
+    do_type_spec
+  end
+
+  it "should accept :type(s) => [T1, ...], :methods => m" do  
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @method_spec = :public_test_method
+    do_type_spec
+  end
+
   it "should accept :type(s) => [T1, ...], :methods => [m, ...]" do  
     @type_spec = [Aquarium::AspectInvocationTestClass]
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s) => [T1, ...], :methods => /m/" do  
+    @type_spec = [Aquarium::AspectInvocationTestClass]
+    @method_spec = /test_method/
+    do_type_spec
+  end
+
+  it "should accept :type(s) => /T1/, :methods => m" do  
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = :public_test_method
+    do_type_spec
+  end
+
+  it "should accept :type(s) => /T1/, :methods => [m, ...]" do  
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = [:public_test_method]
+    do_type_spec
+  end
+
+  it "should accept :type(s) => /T1/, :methods => /m/" do  
+    @type_spec = /Aquarium::AspectInvocationTestClass/
+    @method_spec = /test_method/
+    do_type_spec
+  end
+
+  it "should accept :type(s)_and_ancestors => T1, :methods => [m, ...]" do  
+    @types_option = :types_and_ancestors
+    @type_spec = Aquarium::AspectInvocationTestClass
     @method_spec = [:public_test_method]
     do_type_spec
   end
@@ -266,34 +321,9 @@ describe Aspect, ".new (with a :type(s) parameter and a :method(s) parameter)" d
     do_type_spec
   end
 
-  it "should accept :type(s)_and_descendents => [T1, ...], :methods => [m, ...]" do  
-    @types_option = :types_and_descendents
-    @type_spec = [Aquarium::AspectInvocationTestClass]
-    @method_spec = [:public_test_method]
-    do_type_spec
-  end
-
-  it "should accept :type(s) => [T1, ...], :methods => m" do  
-    @type_spec = [Aquarium::AspectInvocationTestClass]
-    @method_spec = :public_test_method
-    do_type_spec
-  end
-
-  it "should accept :type(s) => [T1, ...], :methods => /m/" do  
-    @type_spec = [Aquarium::AspectInvocationTestClass]
-    @method_spec = /test_method/
-    do_type_spec
-  end
-
-  it "should accept :type(s) => T1, :methods => [m, ...]" do  
-    @type_spec = Aquarium::AspectInvocationTestClass
-    @method_spec = [:public_test_method]
-    do_type_spec
-  end
-
-  it "should accept :type(s)_and_ancestors => T1, :methods => [m, ...]" do  
+  it "should accept :type(s)_and_ancestors => /T1/, :methods => [m, ...]" do  
     @types_option = :types_and_ancestors
-    @type_spec = Aquarium::AspectInvocationTestClass
+    @type_spec = /Aquarium::AspectInvocationTestClass/
     @method_spec = [:public_test_method]
     do_type_spec
   end
@@ -305,27 +335,9 @@ describe Aspect, ".new (with a :type(s) parameter and a :method(s) parameter)" d
     do_type_spec
   end
 
-  it "should accept :type(s) => T1, :methods => m" do  
-    @type_spec = Aquarium::AspectInvocationTestClass
-    @method_spec = :public_test_method
-    do_type_spec
-  end
-
-  it "should accept :type(s) => T1, :methods => /m/" do  
-    @type_spec = Aquarium::AspectInvocationTestClass
-    @method_spec = /test_method/
-    do_type_spec
-  end
-
-  it "should accept :type(s) => /T1/, :methods => [m, ...]" do  
-    @type_spec = /Aquarium::AspectInvocationTestClass/
-    @method_spec = [:public_test_method]
-    do_type_spec
-  end
-
-  it "should accept :type(s)_and_ancestors => /T1/, :methods => [m, ...]" do  
-    @types_option = :types_and_ancestors
-    @type_spec = /Aquarium::AspectInvocationTestClass/
+  it "should accept :type(s)_and_descendents => [T1, ...], :methods => [m, ...]" do  
+    @types_option = :types_and_descendents
+    @type_spec = [Aquarium::AspectInvocationTestClass]
     @method_spec = [:public_test_method]
     do_type_spec
   end
@@ -334,18 +346,6 @@ describe Aspect, ".new (with a :type(s) parameter and a :method(s) parameter)" d
     @types_option = :types_and_descendents
     @type_spec = /Aquarium::AspectInvocationTestClass/
     @method_spec = [:public_test_method]
-    do_type_spec
-  end
-
-  it "should accept :type(s) => /T1/, :methods => m" do  
-    @type_spec = /Aquarium::AspectInvocationTestClass/
-    @method_spec = :public_test_method
-    do_type_spec
-  end
-
-  it "should accept :type(s) => /T1/, :methods => /m/" do  
-    @type_spec = /Aquarium::AspectInvocationTestClass/
-    @method_spec = /test_method/
     do_type_spec
   end
 
@@ -1359,7 +1359,9 @@ describe Aspect, ".new (with a :type(s) parameter and an :exclude_type(s), and :
   
   Aspect::CANONICAL_OPTIONS["exclude_types_and_ancestors"].each do |key|
     it "should accept :#{key} as a synonym for :exclude_types_and_ancestors." do
-      do_exclude_types key.intern
+      included_types = [DontExclude1, DontExclude2]
+      excluded_types = [Exclude1, Exclude2]
+      lambda {Aspect.new :before, :types => (included_types + excluded_types), key.intern => excluded_types, :methods => :doit, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
@@ -1369,7 +1371,9 @@ describe Aspect, ".new (with a :type(s) parameter and an :exclude_type(s), and :
   
   Aspect::CANONICAL_OPTIONS["exclude_types_and_descendents"].each do |key|
     it "should accept :#{key} as a synonym for :exclude_types_and_descendents." do
-      do_exclude_types key.intern
+      included_types = [DontExclude1, DontExclude2]
+      excluded_types = [Exclude1, Exclude2]
+      lambda {Aspect.new :before, :types => (included_types + excluded_types), key.intern => excluded_types, :methods => :doit, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
@@ -1415,7 +1419,7 @@ describe Aspect, ".new (with a :object(s) parameter and an :exclude_object(s) pa
 end
 
 
-describe Aspect, ".new (with a :pointcut(s), :type(s), :type(s)_with_ancestors, :type(s)_with_descendents, :object(s), and :method(s) parameter and an :exclude_join_point(s) parameter)" do  
+describe Aspect, ".new (with a :pointcut(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, :object(s), and :method(s) parameter and an :exclude_join_point(s) parameter)" do  
   def do_exclude_join_points exclude_join_points_sym
     dontExclude1 = DontExclude1.new(1)
     dontExclude2 = DontExclude1.new(2)
@@ -1482,7 +1486,7 @@ describe Aspect, ".new (with a :pointcut(s), :type(s), :type(s)_with_ancestors, 
     aspect.unadvise
   end
 
-  it "should accept :type(s)_with_ancestors => [T1, ...], :exclude_join_point(s) => [jps], where [jps] are the list of join points for the types and methods to exclude" do  
+  it "should accept :type(s)_and_ancestors => [T1, ...], :exclude_join_point(s) => [jps], where [jps] are the list of join points for the types and methods to exclude" do  
     included_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
     excluded_join_point1 = JoinPoint.new :type => ClassWithPublicInstanceMethod, :method => :public_instance_test_method
     excluded_join_point2 = JoinPoint.new :type => ModuleWithPublicInstanceMethod, :method => :public_instance_module_test_method
@@ -1501,7 +1505,7 @@ describe Aspect, ".new (with a :pointcut(s), :type(s), :type(s)_with_ancestors, 
     aspect.unadvise
   end
 
-  it "should accept :type(s)_with_descendents => [T1, ...], :exclude_join_point(s) => [jps], where [jps] are the list of join points for the types and methods to exclude" do  
+  it "should accept :type(s)_and_descendents => [T1, ...], :exclude_join_point(s) => [jps], where [jps] are the list of join points for the types and methods to exclude" do  
     included_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
     excluded_join_point1 = JoinPoint.new :type => ClassWithPublicInstanceMethod, :method => :public_instance_test_method
     excluded_join_point2 = JoinPoint.new :type => ModuleWithPublicInstanceMethod, :method => :public_instance_module_test_method

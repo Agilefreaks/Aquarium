@@ -1,3 +1,5 @@
+require 'logger'
+
 module Aquarium
   module Utils
     # DefaultLogger holds the Aquarium-wide "default" Ruby standard library logger.

@@ -490,7 +490,7 @@ module Aquarium
         bad_options(":after can't be used with :after_raising.")     if after_given_with? :after_raising
         bad_options(":after_returning can't be used with :after_raising.") if after_returning_given_with? :after_raising
         unless some_type_or_pc_option_given?
-          bad_options("At least one of :pointcut(s), :type(s), :type(s)_with_ancestors, :type(s)_with_descendents, :object(s) is required.") 
+          bad_options("At least one of :pointcut(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, :object(s) is required.") 
         end
         if pointcuts_given? and (some_type_option_given? or objects_given?)
           bad_options("Can't specify both :pointcut(s) and one or more of :type(s), and/or :object(s).") 

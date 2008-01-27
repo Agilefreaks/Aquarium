@@ -14,6 +14,8 @@ module Aquarium
       include Aquarium::Utils::ArrayUtils
       include Aquarium::Utils::TypeUtils
 
+      TYPES_SYNONYMS = %w[name names type types]
+      
       # Usage:
       #  finder_result = TypeFinder.new.find [options => [...] ]
       # where
@@ -88,11 +90,13 @@ module Aquarium
       # Note: a common idiom in aspects is to include descendents of a type, but not the type
       # itself. You can do as in the following example:
       #   <tt>... :type_and_descendents => "Foo", :exclude_type => "Foo" 
+      # TODO: Use the new OptionsUtils.
       def find options = {}
         result   = Aquarium::Finders::FinderResult.new
         excluded = Aquarium::Finders::FinderResult.new
         unknown_options = []
         input_type_nil = false
+        noop = false
         options.each do |option, value|
           unless TypeFinder.is_recognized_option option
             unknown_options << option
@@ -102,6 +106,8 @@ module Aquarium
             input_type_nil = true
             next
           end
+          noop = value if option == :noop
+          next if noop
           if option.to_s =~ /^exclude_/
             excluded << find_matching(value, option)
           else
@@ -122,11 +128,12 @@ module Aquarium
       end
 
       def self.is_recognized_option option_or_symbol
-        %w[name names type types].each do |t|
+        TYPES_SYNONYMS.each do |t|
           ['', "exclude_"].each do |excl| 
             return true if ["#{excl}#{t}", "#{excl}#{t}_and_descendents", "#{excl}#{t}_and_ancestors"].include?(option_or_symbol.to_s)
           end
         end
+        return true if option_or_symbol.to_s.eql?("noop")
         false
       end
   
