@@ -22,17 +22,40 @@ end
 
 describe Aquarium::Aspects::JoinPoint, "#initialize with invalid parameters" do
   
-  it "should require either a :type or an :object parameter when creating." do
+  it "should require either a :type or an :object parameter, but not both." do
     lambda { Aquarium::Aspects::JoinPoint.new :method_name => :count }.should raise_error(Aquarium::Utils::InvalidOptions)
     lambda { Aquarium::Aspects::JoinPoint.new :type => String, :object => "", :method_name => :count }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
   
-  it "should require a :method_name parameter when creating." do
+  it "should require a :method_name." do
     lambda { Aquarium::Aspects::JoinPoint.new :type => String }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
-  it "should except :method as a synonym for the :method_name parameter." do
+  it "should except :method as a synonym for :method_name." do
     lambda { Aquarium::Aspects::JoinPoint.new :type => String, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+  end
+
+  it "should require a valid type name if a name is specified." do
+    lambda { Aquarium::Aspects::JoinPoint.new :type => "String", :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aquarium::Aspects::JoinPoint.new :type => "Stringgy", :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+
+  it "should require a valid type name symbol if a name is specified." do
+    lambda { Aquarium::Aspects::JoinPoint.new :type => :String, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aquarium::Aspects::JoinPoint.new :type => :Stringgy, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+
+  it "should require a valid type name regular expression if one is specified." do
+    lambda { Aquarium::Aspects::JoinPoint.new :type => /^String$/, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { Aquarium::Aspects::JoinPoint.new :type => /^Stringgy$/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+
+  it "should reject a regular expression that matches no types." do
+    lambda { Aquarium::Aspects::JoinPoint.new :type => /^Stringgy$/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+
+  it "should reject a regular expression that matches more than one type." do
+    lambda { Aquarium::Aspects::JoinPoint.new :type => /^M/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
   

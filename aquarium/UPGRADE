@@ -1,9 +1,15 @@
-== Upgrading to Aquarium-0.3.0
+== Updating to Aquarium-0.3.1
+
+There should be no upgrade issues with this release. However, the enhancement #17565 now ensures that a
+JoinPoint is only specified with one type and a type that actually exists, when a string, symbol, or
+regex is used to specify the type. 
+
+== Updating to Aquarium-0.3.0
 
 There are no known upgrade issues with this release. Although many new synonyms were added for API method
 parameters, all changes are backwards compatible.
 
-== Upgrading to Aquarium-0.2.0
+== Updating to Aquarium-0.2.0
 
 This release changes the expected advice parameter list from |join_point, *method_args| to
 |join_point, object, *method_args|, where "object" is the current object receiving the message
@@ -14,22 +20,22 @@ Aquarium will raise an exception if the advice block or proc has this obsolete s
 
 Note that "JoinPoint#Context.advised_object" is still supported, even if it is now less useful.
 
-== Upgrading to Aquarium-0.1.8
+== Updating to Aquarium-0.1.8
 
 V0.1.7 did not successfully "register" at rubyforge. This releases fixes that problem and also adds
 several feature enhancements and refactorings. There are no known upgrade issues.
 
-== Upgrading to Aquarium-0.1.7
+== Updating to Aquarium-0.1.7
 
 This is primarily a bug-fix release, so there should be no upgrading or incompatibility issues.
 
-== Upgrading to Aquarium-0.1.6
+== Updating to Aquarium-0.1.6
 
 As described in the CHANGES, the JoinPoint#type, JoinPoint#type=, JoinPoint#object, and JoinPoint#object=
 are now deprecated. Client code that uses these methods will still work, but warning messages will be 
 written to STDOUT. See CHANGES for more details. 
 
-== Upgrading to Aquarium-0.1.5
+== Updating to Aquarium-0.1.5
 
 This is mostly a bug-fix release, but it did have to introduce one API change, as described in the 
 CHANGES. In particular, the aspect "DSL" methods are no longer automatically to Object, as some of 
@@ -69,6 +75,6 @@ object.extend(Aquarium::Aspects::DSL::AspectDSL)
 
 See the CHANGES for more details.
 
-== Upgrading existing code to Aquarium-0.1.0
+== Updating existing code to Aquarium-0.1.0
 
 This is the first release of Aquarium.

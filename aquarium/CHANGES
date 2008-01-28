@@ -10,6 +10,7 @@ Enhancements:
 17514	Provide an Aquarium library-wide logger with configuration parameters and instance overrides
 17515	Add an optional warning if an aspect doesn't match any join points
 17516	Remove unnecessary examples that use :types_and_descendents to shorten time to run the RSpec suite
+17565	JoinPoint.new should convert a type name, symbol, or regex to the type and only allow one type
 
 These first two enhancements are related. There is a now an Aquarium::Utils::DefaultLogger
 module with static accessors for getting and setting the "system-wide" logger. 
@@ -31,8 +32,12 @@ logger is above WARN or (ii) the aspect was created with the option
 
 #17516 fixes halved the long execution times for the whole RSpec suite by refactoring some examples
 that used type finders with the :types_and_descendents option unnecessarily. It is a very intensive
-computation! The time to run the suite is now less than half (under 2 minutes) what it was before.
+computation! The time to run the suite is now less than 20% (under 1 minute!) what it was before.
  
+#17565 fixes a "hole" in JoinPoint, where it doesn't confirm that a specified type string, symbol
+or regex matches a class that exists and only one class. Now it does and it stores the type, rather
+than the original "specification" for it.
+
 == Version 0.3.0
 
 V0.3.0 adds numerous improvements to the DSL, making aspect specification more intuitive and 

@@ -17,6 +17,20 @@ module Aquarium
         alias :target_object  :advised_object
         alias :target_object= :advised_object=
         
+        # Create a join point object. It must have one and only type _or_ object and one method or the special keywords <tt>:all</tt>.
+        # Usage:
+        #  join_point = JoinPoint.new.find :type => ..., :method_name => ... [, (:class_method | :instance_method) => (true | false) ]
+        # where
+        # <tt>:type => type_or_type_name_or_regexp</tt>::
+        #   A single type, type name or regular expression matching only one type. One and only one
+        #   type _or_ object is required. An error is raised otherwise.
+        #
+        # <tt>:method_name => method_name_or_sym</tt>::
+        # <tt>:method => method_name_or_sym</tt>::
+        #   A single method name or symbol. Only one is allowed, although the special flag <tt>:all</tt> is allowed.
+        #
+        # <tt>(:class_method | :instance_method) => (true | false)</tt>::
+        #   Is the method a class or instance method? Defaults to <tt>:instance_method => true</tt>.
         def initialize options
           update options
           assert_valid options
@@ -91,7 +105,7 @@ module Aquarium
       end
       
       def initialize options = {}
-        @target_type     = options[:type]
+        @target_type     = resolve_type options
         @target_object   = options[:object]
         @method_name     = options[:method_name] || options[:method]
         class_method     = options[:class_method].nil? ? false : options[:class_method]
@@ -143,24 +157,26 @@ module Aquarium
         new_jp
       end
 
+      # Needed for comparing this field in #compare_field
+      def instance_method
+        @instance_method
+      end
+      
       # We require the same object id, not just equal objects.
       def <=> other
         return 0  if object_id == other.object_id 
         return 1  if other.nil?
-        result = self.class <=> other.class 
+        result = self.class <=> other.class
         return result unless result == 0
-        result = (self.target_type.nil? and other.target_type.nil?) ? 0 : self.target_type.to_s <=> other.target_type.to_s 
+        result = compare_field(:target_object, other) {|f1,f2| f1.object_id <=> f2.object_id}
         return result unless result == 0
-        result = (self.target_object.nil? and other.target_object.nil?) ? 0 : self.target_object.object_id <=> other.target_object.object_id 
+        result = compare_field(:instance_method, other) {|f1,f2| boolean_compare(f1,f2)}
         return result unless result == 0
-        result = (self.method_name.nil? and other.method_name.nil?) ? 0 : self.method_name.to_s <=> other.method_name.to_s 
-        return result unless result == 0
-        result = self.instance_method? == other.instance_method?
-        return 1 unless result == true
-        return  0 if  self.context.nil? and  other.context.nil?
-        return -1 if  self.context.nil? and !other.context.nil?
-        return  1 if !self.context.nil? and other.context.nil?
-        return self.context <=> other.context 
+        [:target_type, :method_name, :context].each do |field|
+          result = compare_field field, other
+          return result unless result == 0
+        end
+        0
       end
 
       def eql? other
@@ -179,9 +195,37 @@ module Aquarium
   
       protected
   
+      def compare_field field_reader, other
+        field1 = self.method(field_reader).call
+        field2 = other.method(field_reader).call
+        if field1.nil? 
+          return field2.nil? ? 0 : -1
+        else
+          return 1 if field2.nil?
+        end
+        block_given? ? (yield field1, field2) : (field1 <=> field2)
+      end
+      
+      def boolean_compare b1, b2
+        return 0 if b1 == b2
+        return b1 == true ? 1 : -1
+      end
+      
+      def resolve_type options
+        type = options[:type]
+        return type if type.nil?  # okay, if they specified an object!
+        return type if type.kind_of? Module
+        found = Aquarium::Finders::TypeFinder.new.find :type => type
+        if found.matched.empty?
+          bad_attributes("No type matched the string or regular expression: #{type}", options)
+        elsif found.matched.size > 1
+          bad_attributes("More than one type matched the string or regular expression: #{type}", options)
+        end
+        found.matched.keys.first
+      end
+
       # Since JoinPoints can be declared for non-existent methods, tolerate "nil" for the visibility.
-      def assert_valid options
-        error_message = ""
+      def assert_valid options, error_message = ""
         error_message << "Must specify a :method_name. "            unless method_name
         error_message << "Must specify either a :type or :object. " unless (target_type or  target_object)
         error_message << "Can't specify both a :type or :object. "  if     (target_type and target_object)

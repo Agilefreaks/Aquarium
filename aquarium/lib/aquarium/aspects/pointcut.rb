@@ -179,8 +179,8 @@ module Aquarium
          candidate_types == other.candidate_types && 
          candidate_types_excluded == other.candidate_types_excluded && 
          candidate_objects == other.candidate_objects && 
-         join_points_matched == other.join_points_matched &&
-         join_points_not_matched == other.join_points_not_matched) 
+         join_points_not_matched == other.join_points_not_matched &&
+         join_points_matched == other.join_points_matched)  # not_matched is probably smaller, so do first.
       end
   
       alias :== :eql?
