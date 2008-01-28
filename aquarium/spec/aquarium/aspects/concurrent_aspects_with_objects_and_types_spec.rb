@@ -2,7 +2,7 @@
 # where one advice is for the type and the other is for an object of the type.
 
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_classes'
+require File.dirname(__FILE__) + '/../spec_example_types'
 require File.dirname(__FILE__) + '/concurrently_accessed'
 require 'aquarium/aspects'
 

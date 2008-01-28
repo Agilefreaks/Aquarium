@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_classes'
+require File.dirname(__FILE__) + '/../spec_example_types'
 require 'aquarium/utils/set_utils'
 
 describe Aquarium::Utils::SetUtils, "make_set" do

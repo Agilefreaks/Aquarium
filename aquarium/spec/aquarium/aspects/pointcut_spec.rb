@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_classes'
+require File.dirname(__FILE__) + '/../spec_example_types'
 require 'aquarium/utils/invalid_options'
 require 'aquarium/extensions/hash'
 require 'aquarium/aspects/join_point'
@@ -99,13 +99,13 @@ def ignored_join_point jp
 end
 
 describe Pointcut, "methods" do
+  include Aquarium::TypeUtilsStub
+  
   before :all do
-    @mocked_type_utils_descendents = Aspect.new :around, :calls_to => :descendents, :on_type => Aquarium::Utils::TypeUtils, :restricting_methods_to => :class_methods do |jp, object, *args|
-      SpecExampleTypes::DESCENDENTS[args[0]]
-    end
+    stub_type_utils_descendents
   end
   after :all do
-    @mocked_type_utils_descendents.unadvise
+    unstub_type_utils_descendents
   end
     
   describe Pointcut, ".new (invalid arguments)" do

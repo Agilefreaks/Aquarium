@@ -1,6 +1,6 @@
 
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_classes'
+require File.dirname(__FILE__) + '/../spec_example_types'
 require 'aquarium/aspects'
 
 include Aquarium::Aspects

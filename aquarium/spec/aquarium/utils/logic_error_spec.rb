@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_classes'
+require File.dirname(__FILE__) + '/../spec_example_types'
 require 'aquarium/utils/logic_error'
 
 # This doesn't do much..., except make rcov happy, since this exception is essentially for catching bugs.

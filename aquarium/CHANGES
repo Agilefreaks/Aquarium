@@ -31,7 +31,7 @@ logger is above WARN or (ii) the aspect was created with the option
 
 #17516 fixes halved the long execution times for the whole RSpec suite by refactoring some examples
 that used type finders with the :types_and_descendents option unnecessarily. It is a very intensive
-computation! The time to run the suite is now roughly half (about 2.5 minutes) what it was before.
+computation! The time to run the suite is now less than half (under 2 minutes) what it was before.
  
 == Version 0.3.0
 

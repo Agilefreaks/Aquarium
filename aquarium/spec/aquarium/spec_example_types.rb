@@ -201,20 +201,36 @@ class TestableClassIncludingTestableModule1
 end
 
 # Used to mock the expensive computation of descendents in some examples.
-module SpecExampleTypes
-  DESCENDENTS = {
-    Watchful => [Watchful, WatchfulChild],
-    TestableModule2 => [TestableModule2, TestableModule1],
-    ExampleParentClass => [ExampleParentClass, ClassWithAttribs,
-                           ClassWithPublicInstanceMethod, ClassWithPublicInstanceMethod2, ClassWithProtectedInstanceMethod, 
-                           ClassWithPrivateInstanceMethod, ClassWithPublicClassMethod, ClassWithPrivateClassMethod],
-    ModuleWithPublicInstanceMethod => [ModuleWithPublicInstanceMethod, ModuleIncludingModuleWithPublicInstanceMethod,
-                           ClassIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod],
-    ModuleWithProtectedInstanceMethod => [ModuleWithProtectedInstanceMethod, ClassIncludingModuleWithProtectedInstanceMethod],
-    ModuleWithPrivateInstanceMethod => [ModuleWithPrivateInstanceMethod, ClassIncludingModuleWithPrivateInstanceMethod],
-    ModuleWithPublicClassMethod => [ModuleWithPublicClassMethod, ClassIncludingModuleWithPublicClassMethod],
-    ModuleWithPrivateClassMethod => [ModuleWithPrivateClassMethod, ClassIncludingModuleWithPrivateClassMethod],
-    ClassIncludingModuleWithPublicInstanceMethod => [ClassIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod],
-    ModuleIncludingModuleWithPublicInstanceMethod => [ModuleIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
-  }
+module Aquarium
+  module SpecExampleTypes
+    def descendents
+      {Watchful => [Watchful, WatchfulChild],
+       TestableModule2 => [TestableModule2, TestableModule1],
+       ExampleParentClass => [ExampleParentClass, ClassWithAttribs,
+                             ClassWithPublicInstanceMethod, ClassWithPublicInstanceMethod2, ClassWithProtectedInstanceMethod, 
+                             ClassWithPrivateInstanceMethod, ClassWithPublicClassMethod, ClassWithPrivateClassMethod],
+       ModuleWithPublicInstanceMethod => [ModuleWithPublicInstanceMethod, ModuleIncludingModuleWithPublicInstanceMethod,
+                             ClassIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod],
+       ModuleWithProtectedInstanceMethod => [ModuleWithProtectedInstanceMethod, ClassIncludingModuleWithProtectedInstanceMethod],
+       ModuleWithPrivateInstanceMethod => [ModuleWithPrivateInstanceMethod, ClassIncludingModuleWithPrivateInstanceMethod],
+       ModuleWithPublicClassMethod => [ModuleWithPublicClassMethod, ClassIncludingModuleWithPublicClassMethod],
+       ModuleWithPrivateClassMethod => [ModuleWithPrivateClassMethod, ClassIncludingModuleWithPrivateClassMethod],
+       ClassIncludingModuleWithPublicInstanceMethod => [ClassIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod],
+       ModuleIncludingModuleWithPublicInstanceMethod => [ModuleIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
+      }
+    end
+  end
+
+  module TypeUtilsStub
+    include SpecExampleTypes
+    
+    def stub_type_utils_descendents
+  	  @stubbed_type_utils_descendents = Aspect.new :around, :calls_to => :descendents, :on_type => Aquarium::Utils::TypeUtils, :restricting_methods_to => :class_methods do |jp, object, *args|
+        descendents[args[0]]
+      end
+    end
+    def unstub_type_utils_descendents
+      @stubbed_type_utils_descendents.unadvise
+    end
+  end
 end
