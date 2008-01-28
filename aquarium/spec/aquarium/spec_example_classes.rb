@@ -199,3 +199,22 @@ class TestableClassIncludingTestableModule1
   include TestableModule1
   def instance_method1; end
 end
+
+# Used to mock the expensive computation of descendents in some examples.
+module SpecExampleTypes
+  DESCENDENTS = {
+    Watchful => [Watchful, WatchfulChild],
+    TestableModule2 => [TestableModule2, TestableModule1],
+    ExampleParentClass => [ExampleParentClass, ClassWithAttribs,
+                           ClassWithPublicInstanceMethod, ClassWithPublicInstanceMethod2, ClassWithProtectedInstanceMethod, 
+                           ClassWithPrivateInstanceMethod, ClassWithPublicClassMethod, ClassWithPrivateClassMethod],
+    ModuleWithPublicInstanceMethod => [ModuleWithPublicInstanceMethod, ModuleIncludingModuleWithPublicInstanceMethod,
+                           ClassIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod],
+    ModuleWithProtectedInstanceMethod => [ModuleWithProtectedInstanceMethod, ClassIncludingModuleWithProtectedInstanceMethod],
+    ModuleWithPrivateInstanceMethod => [ModuleWithPrivateInstanceMethod, ClassIncludingModuleWithPrivateInstanceMethod],
+    ModuleWithPublicClassMethod => [ModuleWithPublicClassMethod, ClassIncludingModuleWithPublicClassMethod],
+    ModuleWithPrivateClassMethod => [ModuleWithPrivateClassMethod, ClassIncludingModuleWithPrivateClassMethod],
+    ClassIncludingModuleWithPublicInstanceMethod => [ClassIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod],
+    ModuleIncludingModuleWithPublicInstanceMethod => [ModuleIncludingModuleWithPublicInstanceMethod, ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
+  }
+end
