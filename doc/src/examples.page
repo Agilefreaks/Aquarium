@@ -45,3 +45,10 @@ the "extras":rdoc/files/lib/aquarium/extras_rb.html, which this example uses:
 <ruby file="../aquarium/examples/design_by_contract_example.rb" />
 
 Other examples can be found in the "README":rdoc/files/README.html.
+
+h3. Testing Uses of Aspects
+
+Aspects are sometimes used for "fault injection", to enable easier testing of error handling logic, and for stubbing
+expensive methods, using around advice. The latter technique complements mocking frameworks. You can see an example
+of stubbing the expensive <code>TypeUtils#descendents</code> in <code>Aquarium::TypeUtilsStub</code> (in 
+<code>spec_example_types.rb</code>) and the use of it in <code>spec/aquarium/aspects/pointcut_spec.rb</code>.

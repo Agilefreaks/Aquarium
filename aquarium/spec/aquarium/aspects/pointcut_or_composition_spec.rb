@@ -10,23 +10,12 @@ include Aquarium::Aspects
 
 describe Pointcut, "#or" do
   
-  it "should return a new Pointcut." do
+  before :all do
     @pc1 = Pointcut.new
     @pc2 = Pointcut.new :types => /Class.*Public.*Method/, :method_options => [:exclude_ancestor_methods]
     @pc3 = Pointcut.new :object => ClassWithProtectedInstanceMethod.new, :method_options => [:protected, :exclude_ancestor_methods]
-    pc12 = @pc1.or(@pc2)
-    pc12.should_not equal(@pc1)
-    pc12.should_not equal(@pc2)
   end
-end
    
-describe Pointcut, "#or (when one pointcut is empty)" do
-  before(:all) do
-    @pc1 = Pointcut.new
-    @pc2 = Pointcut.new :types => /Class.*Public.*Method/, :method_options => [:exclude_ancestor_methods]
-    @pc3 = Pointcut.new :object => ClassWithProtectedInstanceMethod.new, :method_options => [:protected, :exclude_ancestor_methods]
-  end
-
   it "should return a new Pointcut equal to the second, appended, non-empty Pointcut if self is empty (has no join points)." do
     @pc1.or(@pc2).should eql(@pc2)
     @pc1.or(@pc3).should eql(@pc3)
@@ -89,9 +78,6 @@ describe Pointcut, "#or (algebraic properties for type-based pointcuts)" do
   end
    
   it "should be associativity for type-based Pointcuts." do 
-    @pc1 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
-    @pc2 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers, :exclude_ancestor_methods]
-    @pc3 = Pointcut.new :object => ClassWithPublicInstanceMethod.new, :method_options => [:exclude_ancestor_methods]
     pc123a = (@pc1.or(@pc2)).or(@pc3)
     pc123b = @pc1.or(@pc2.or(@pc3))
     pc123a.should eql(pc123b)
@@ -139,17 +125,17 @@ describe Pointcut, "#|" do
     pc12.should_not equal(pc2)
     pc12.should eql(pc2)
     pc32.should eql(pc23)
-    pca = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers]
-    pcb = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers]
-    pcc = Pointcut.new :types => /Class.*Method/
+    pca = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
+    pcb = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers, :exclude_ancestor_methods]
+    pcc = Pointcut.new :types => /Class.*Method/, :method_options => [:exclude_ancestor_methods]
     pcabc1 = (pca | pcb) | pcc
     pcabc2 = pca | (pcb | pcc)
     pcabc1.should eql(pcabc2)
     cwa = ClassWithAttribs.new
     pub = ClassWithPublicInstanceMethod.new 
-    pcd = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers]
-    pce = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:readers]
-    pcf = Pointcut.new :objects => pub
+    pcd = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:writers, :exclude_ancestor_methods]
+    pce = Pointcut.new :objects => cwa, :attributes => [/^attr/], :attribute_options => [:readers, :exclude_ancestor_methods]
+    pcf = Pointcut.new :objects => pub, :method_options => [:exclude_ancestor_methods]
     pcdef1 = (pcd | pce) | pcf
     pcdef2 = pcd | (pce | pcf)
     pcdef1.should eql(pcdef2)

@@ -35,6 +35,7 @@ describe "#find types subtracting out excluded types and descendents, using :exc
     expected = TypeUtils.sample_types_descendents[ModuleForDescendents].reject do |c|
       TypeUtils.sample_types_descendents[D1ForDescendents].include? c
     end
+    actual_keys.sort{|x,y| x.name <=> y.name}.should == expected.sort{|x,y| x.name <=> y.name}
     actual.not_matched_keys.should == []
   end
 
@@ -71,6 +72,7 @@ describe "#find types subtracting out excluded types and ancestors, using :exclu
     expected = TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
       TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
     end
+    actual_keys.sort{|x,y| x.name <=> y.name}.should == expected.sort{|x,y| x.name <=> y.name}
     actual.not_matched_keys.should == []
   end
 
@@ -96,14 +98,14 @@ end
 
 describe "#find types subtracting out excluded types and their descendents and ancestors" do
   it "should find the matching types and their descendents and ancestors, minus the excluded types and their descendents and ancestors." do
-    actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => Aquarium::ForDescendents::NestedD1ForDescendents, 
+    actual = Aquarium::Finders::TypeFinder.new.find \
+      :types_and_ancestors => Aquarium::ForDescendents::NestedD1ForDescendents, 
       :types_and_descendents => Aquarium::ForDescendents::NestedD1ForDescendents, 
       :exclude_types_and_ancestors => Aquarium::ForDescendents::NestedD2ForDescendents, 
       :exclude_types_and_descendents => Aquarium::ForDescendents::NestedD2ForDescendents
     actual_keys = purge_actuals actual
-    expected = TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
-      TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
-    end
+    expected = [Aquarium::ForDescendents::NestedD1ForDescendents, Aquarium::ForDescendents::NestedD11ForDescendents, Aquarium::ForDescendents::NestedModuleForDescendents]
+    actual_keys.sort{|x,y| x.name <=> y.name}.should == expected.sort{|x,y| x.name <=> y.name}.uniq
     actual.not_matched_keys.should == []
   end
 end
@@ -118,6 +120,7 @@ describe "#find types and their descendents and ancestors, specified with regula
     expected.each do |t|
       actual_keys.should include(t)
     end
+    actual_keys.sort{|x,y| x.name <=> y.name}.should == expected.sort{|x,y| x.name <=> y.name}
     actual.not_matched_keys.should == []
   end
 end
@@ -129,9 +132,8 @@ describe "#find types and their descendents and ancestors, subtracting out exclu
       :exclude_types_and_ancestors => /Aquarium::ForDescendents::.*D2ForDescendents/, 
       :exclude_types_and_descendents => /Aquarium::ForDescendents::.*D2ForDescendents/
     actual_keys = purge_actuals actual
-    expected = TypeUtils.sample_types_ancestors[D1ForDescendents].reject do |c|
-      TypeUtils.sample_types_ancestors[ModuleForDescendents].include? c
-    end
+    expected = [Aquarium::ForDescendents::NestedD1ForDescendents, Aquarium::ForDescendents::NestedD11ForDescendents, Aquarium::ForDescendents::NestedModuleForDescendents]
+    actual_keys.sort{|x,y| x.name <=> y.name}.should == expected.sort{|x,y| x.name <=> y.name}
     actual.not_matched_keys.should == []
   end
 end
