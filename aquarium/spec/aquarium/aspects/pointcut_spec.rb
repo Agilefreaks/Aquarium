@@ -300,13 +300,13 @@ describe Pointcut, "methods" do
       pc.join_points_not_matched.should == @expected_modules_not_matched_jps
     end
     
-    Aspect::CANONICAL_OPTIONS["types_and_ancestors"].each do |key|
+    Aspect::CANONICAL_OPTIONS["types_and_ancestors"].reject{|key| key.eql?("types_and_ancestors")}.each do |key|
       it "should accept :#{key} as a synonym for :types_and_ancestors." do
         lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
       end
     end
   
-    Aspect::CANONICAL_OPTIONS["types_and_descendents"].each do |key|
+    Aspect::CANONICAL_OPTIONS["types_and_descendents"].reject{|key| key.eql?("types_and_descendents")}.each do |key|
       it "should accept :#{key} as a synonym for :types_and_descendents." do
         lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
       end
@@ -342,7 +342,7 @@ describe Pointcut, "methods" do
           JoinPoint.new(:object => pub, :method_name => :public_instance_test_method)])
     end  
   
-    Aspect::CANONICAL_OPTIONS["objects"].each do |key|
+    Aspect::CANONICAL_OPTIONS["objects"].reject{|key| key.eql?("objects")}.each do |key|
       it "should accept :#{key} as a synonym for :objects." do
         pub, pro = ClassWithPublicInstanceMethod.new, ClassWithProtectedInstanceMethod.new
         pc = Pointcut.new key.intern => [pub, pro], :methods => :all, :method_options => [:public, :protected, :exclude_ancestor_methods]
@@ -448,7 +448,7 @@ describe Pointcut, "methods" do
       pc.join_points_not_matched.size.should == 0
     end
   
-    Aspect::CANONICAL_OPTIONS["exclude_types"].each do |key|
+    Aspect::CANONICAL_OPTIONS["exclude_types"].reject{|key| key.eql?("exclude_types")}.each do |key|
       it "should accept :#{key} as a synonym for :exclude_types." do
         pc = Pointcut.new :types => /ExcludeTest/, key.intern => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods
         actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
@@ -575,6 +575,18 @@ describe Pointcut, "methods" do
       :exclude_types_and_descendents => ClassIncludingModuleWithPublicInstanceMethod, :methods => :all, :method_options => :exclude_ancestor_methods
       check_class_descendents pc
     end
+
+    Aspect::CANONICAL_OPTIONS["exclude_types_and_descendents"].reject{|key| key.eql?("exclude_types_and_descendents")}.each do |key|
+      it "should accept :#{key} as a synonym for :exclude_types_and_descendents." do
+        lambda {Pointcut.new :types => /ExcludeTest/, key.intern => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods, :noop => true}.should_not raise_error
+      end
+    end  
+
+    Aspect::CANONICAL_OPTIONS["exclude_types_and_ancestors"].reject{|key| key.eql?("exclude_types_and_ancestors")}.each do |key|
+      it "should accept :#{key} as a synonym for :exclude_types_and_ancestors." do
+        lambda {Pointcut.new :types => /ExcludeTest/, key.intern => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods, :noop => true}.should_not raise_error
+      end
+    end  
   end
   
   describe Pointcut, ".new (:exclude_objects => objects specified)" do
@@ -615,7 +627,7 @@ describe Pointcut, "methods" do
       pc.join_points_not_matched.size.should == 0
     end
   
-    Aspect::CANONICAL_OPTIONS["exclude_objects"].each do |key|
+    Aspect::CANONICAL_OPTIONS["exclude_objects"].reject{|key| key.eql?("exclude_objects")}.each do |key|
       it "should accept :#{key} as a synonym for :exclude_objects." do
         pc = Pointcut.new :objects => @objects, key.intern => @e22, :method_options => :exclude_ancestor_methods
         actual = pc.join_points_matched.collect {|jp| jp.type_or_object}.uniq
@@ -661,7 +673,7 @@ describe Pointcut, "methods" do
       pc.join_points_not_matched.size.should == 0
     end
   
-    Aspect::CANONICAL_OPTIONS["exclude_join_points"].each do |key|
+    Aspect::CANONICAL_OPTIONS["exclude_join_points"].reject{|key| key.eql?("exclude_join_points")}.each do |key|
       it "should accept :#{key} as a synonym for :exclude_join_points." do
         excluded = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
         expected = [@jp11, @jp13, @jp21, @jp22, @jp23, @jp31, @jp32, @ojp12, @ojp21, @ojp22, @ojp31, @ojp32, @ojp33]
@@ -718,7 +730,7 @@ describe Pointcut, "methods" do
       pc.join_points_not_matched.size.should == 0
     end
   
-    Aspect::CANONICAL_OPTIONS["exclude_pointcuts"].each do |key|
+    Aspect::CANONICAL_OPTIONS["exclude_pointcuts"].reject{|key| key.eql?("exclude_pointcuts")}.each do |key|
       it "should accept :#{key} as a synonym for :exclude_pointcuts." do
         excluded_jps = [@jp12, @jp33, @ojp11, @ojp13, @ojp23]
         excluded = Pointcut.new :join_points => excluded_jps
@@ -735,7 +747,7 @@ describe Pointcut, "methods" do
       before_pointcut_class_spec
     end
 
-    Aspect::CANONICAL_OPTIONS["method_options"].each do |key|
+    Aspect::CANONICAL_OPTIONS["method_options"].reject{|key| key.eql?("method_options")}.each do |key|
       it "should accept :#{key} as a synonym for :method_options." do
         pc = Pointcut.new :types => ClassWithPublicInstanceMethod, key.intern => [:public, :instance, :exclude_ancestor_methods]
         pc.join_points_matched.should be_eql(Set.new([@pub_jp]))
@@ -888,7 +900,7 @@ describe Pointcut, "methods" do
       @expected_for_objects = Set.new([@jp_rw_o, @jp_rwe_o, @jp_r_o, @jp_we_o])
     end
   
-    Aspect::CANONICAL_OPTIONS["methods"].each do |key|
+    Aspect::CANONICAL_OPTIONS["methods"].reject{|key| key.eql?("methods")}.each do |key|
       it "should accept :#{key} as a synonym for :methods." do
         pc = Pointcut.new :types => "ClassWithAttribs", key.intern => [/^attr/]
         pc.join_points_matched.should == @expected_for_types
@@ -943,7 +955,7 @@ describe Pointcut, "methods" do
       pc.join_points_not_matched.size.should == 0
     end
   
-    Aspect::CANONICAL_OPTIONS["exclude_methods"].each do |key|
+    Aspect::CANONICAL_OPTIONS["exclude_methods"].reject{|key| key.eql?("exclude_methods")}.each do |key|
       it "should accept :#{key} as a synonym for :exclude_methods." do
         pc = Pointcut.new :join_points => @all_jps, key.intern => /method[12][13]/, :method_options => :exclude_ancestor_methods
         pc.join_points_matched.size.should == 10

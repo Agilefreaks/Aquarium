@@ -196,25 +196,36 @@ module Aquarium
       alias to_s inspect
 
       CANONICAL_OPTIONS = {
-        "types"                 => %w[type for_type for_types on_type on_types in_type in_types within_type within_types],
-        "objects"               => %w[object for_object for_objects on_object on_objects in_object in_objects within_object within_objects],
-        "join_points"           => %w[join_point for_join_point for_join_points on_join_point on_join_points within_join_point within_join_points],
+        "types"                 => %w[type class classes module modules],
+        "types_and_descendents" => %w[type_and_descendents class_and_descendents classes_and_descendents module_and_descendents modules_and_descendents],
+        "types_and_ancestors"   => %w[type_and_ancestors class_and_ancestors classes_and_ancestors module_and_ancestors modules_and_ancestors],
+        "objects"               => %w[object],
+        "join_points"           => %w[join_point],
         "methods"               => %w[method within_method within_methods calling invoking calls_to invocations_of sending_message_to sending_messages_to],
         "attributes"            => %w[attribute accessing],
         "method_options"        => %w[method_option restricting_methods_to], 
         "attribute_options"     => %w[attribute_option],
-        "types_and_descendents" => %w[type_and_descendents on_type_and_descendents on_types_and_descendents within_type_and_descendents within_types_and_descendents],
-        "types_and_ancestors"   => %w[type_and_ancestors on_type_and_ancestors on_types_and_ancestors within_type_and_ancestors within_types_and_ancestors],
         "default_objects"       => %w[default_object]
       }
-      %w[types objects join_points methods types_and_descendents types_and_ancestors].each do |key|
-        CANONICAL_OPTIONS["exclude_#{key}"] = CANONICAL_OPTIONS[key].map {|x| "exclude_#{x}"}
+      %w[types types_and_descendents types_and_ancestors objects join_points ].each do |thing|
+        roots = CANONICAL_OPTIONS[thing].dup + [thing]
+        CANONICAL_OPTIONS["exclude_#{thing}"] = roots.map {|x| "exclude_#{x}"}
+        %w[for on in within].each do |prefix|
+          roots.each do |root|
+            CANONICAL_OPTIONS[thing] << "#{prefix}_#{root}" 
+          end
+        end
       end
       CANONICAL_OPTIONS["methods"].dup.each do |synonym|
         CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
       end
-      CANONICAL_OPTIONS["exclude_pointcuts"] = %w[exclude_pointcut exclude_on_pointcut exclude_on_pointcuts exclude_within_pointcut exclude_within_pointcuts]
-      
+      CANONICAL_OPTIONS["exclude_methods"] = []
+      CANONICAL_OPTIONS["methods"].each do |synonym|
+        CANONICAL_OPTIONS["exclude_methods"] << "exclude_#{synonym}"
+      end
+      CANONICAL_OPTIONS["exclude_pointcuts"] = ["exclude_pointcut"] + 
+        %w[for on in within].map {|prefix| ["exclude_#{prefix}_pointcuts", "exclude_#{prefix}_pointcut"]}.flatten
+            
       ATTRIBUTE_OPTIONS = %w[reading writing changing]
       
       ALL_ALLOWED_OPTIONS = ATTRIBUTE_OPTIONS +
