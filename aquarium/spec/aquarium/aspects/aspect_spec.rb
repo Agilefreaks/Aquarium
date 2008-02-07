@@ -645,7 +645,7 @@ describe Aspect, "#unadvise for 'empty' aspects" do
   end
 end
 
-describe Aspect, "#unadvise for removes all traces of the aspect" do
+describe Aspect, "#unadvise clean up" do
   before(:all) do
     @advice = Proc.new {}
     @watchful = Watchful.new
@@ -704,57 +704,51 @@ describe Aspect, "#unadvise for removes all traces of the aspect" do
   it "should remove all advice added by an object-based aspect." do
     do_unadvise_spec({:object => @watchful, :method_options => :exclude_ancestor_methods}, :get_object_methods)
   end
-  
-  it "should remove all advice overhead if all advices are removed for pointcut-based aspects." do
-    class Foo
-      def bar; end
-    end
-    before = Foo.private_instance_methods.sort
-    aspect1 = Aspect.new(:before, :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, obj, *args| true}
-    aspect2 = Aspect.new(:after,  :pointcut => {:type => Foo, :method_options => :exclude_ancestor_methods}) {|jp, obj, *args| true}
-    after  = Foo.private_instance_methods
-    (after - before).should_not == []
-    aspect1.unadvise
-    after  = Foo.private_instance_methods
-    (after - before).should_not == []
-    aspect2.unadvise
-    after  = Foo.private_instance_methods
-    (after - before).should == []
+end  
+
+module Aquarium
+  class FooForPrivateCheck
+    def bar; end
   end
-  
-  it "should remove all advice overhead if all advices are removed for type-based aspects." do
-    class Foo
-      def bar; end
-    end
-    before = Foo.private_instance_methods.sort
-    aspect1 = Aspect.new(:before, :type => Foo, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
-    aspect2 = Aspect.new(:after,  :type => Foo, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
-    after  = Foo.private_instance_methods
-    (after - before).should_not == []
-    aspect1.unadvise
-    after  = Foo.private_instance_methods
-    (after - before).should_not == []
-    aspect2.unadvise
-    after  = Foo.private_instance_methods
-    (after - before).should == []
+end
+
+describe Aspect, "#unadvise clean up when all advices have been removed" do
+  before(:all) do
+    @advice = Proc.new {}
+    @aspect1 = @aspect2 = nil
   end
 
-  it "should remove all advice overhead if all advices are removed for object-based aspects." do
-    class Overhead
-      def over; end
-    end
-    overhead = Overhead.new
-    before = overhead.private_methods.sort
-    aspect1 = Aspect.new(:before, :object => overhead, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
-    aspect2 = Aspect.new(:after,  :object => overhead, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
-    after  = overhead.private_methods
+  def check_cleanup before
+    after  = yield
     (after - before).should_not == []
-    aspect1.unadvise
-    after  = overhead.private_methods
+    @aspect1.unadvise
+    after  = yield
     (after - before).should_not == []
-    aspect2.unadvise
-    after  = overhead.private_methods
+    @aspect2.unadvise
+    after  = yield
     (after - before).should == []
+  end
+  
+  it "should remove all advice overhead for pointcut-based aspects." do
+    before = Aquarium::FooForPrivateCheck.private_instance_methods.sort
+    @aspect1 = Aspect.new(:before, :pointcut => {:type => Aquarium::FooForPrivateCheck, :method_options => :exclude_ancestor_methods}) {|jp, obj, *args| true}
+    @aspect2 = Aspect.new(:after,  :pointcut => {:type => Aquarium::FooForPrivateCheck, :method_options => :exclude_ancestor_methods}) {|jp, obj, *args| true}
+    check_cleanup(before) {Aquarium::FooForPrivateCheck.private_instance_methods}
+  end
+  
+  it "should remove all advice overhead for type-based aspects." do
+    before = Aquarium::FooForPrivateCheck.private_instance_methods.sort
+    @aspect1 = Aspect.new(:before, :type => Aquarium::FooForPrivateCheck, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
+    @aspect2 = Aspect.new(:after,  :type => Aquarium::FooForPrivateCheck, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
+    check_cleanup(before) {Aquarium::FooForPrivateCheck.private_instance_methods}
+  end
+
+  it "should remove all advice overhead for object-based aspects." do
+    object = Aquarium::FooForPrivateCheck.new
+    before = object.private_methods.sort
+    @aspect1 = Aspect.new(:before, :object => object, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
+    @aspect2 = Aspect.new(:after,  :object => object, :method_options => :exclude_ancestor_methods) {|jp, obj, *args| true}
+    check_cleanup(before) {object.private_methods}
   end
 end
 

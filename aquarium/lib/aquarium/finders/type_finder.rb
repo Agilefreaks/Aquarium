@@ -171,13 +171,13 @@ module Aquarium
 
       # For a name (not a regular expression), return the corresponding type.
       # (Adapted from the RubyQuiz #113 solution by James Edward Gray II)
+      # See also this blog: http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
+      # I discovered that eval works fine with JRuby wrapper classes, while the commented out
+      # split then const_get fails!
       def find_by_name type_name, option
-        name = type_name.to_s  # in case it's a symbol...
-        return nil if name.nil? || name.strip.empty?
-        name.strip!
         begin
-          found = [name.split("::").inject(Object) { |parent, const| parent.const_get(const) }]
-          finish_and_make_successful_result found, option
+          found = eval type_name.to_s, binding, __FILE__, __LINE__
+          finish_and_make_successful_result [found], option
         rescue NameError 
           make_failed_result type_name
         end

@@ -108,6 +108,7 @@ module Aquarium
   
       NIL_OBJECT = MethodFinder.new unless const_defined?(:NIL_OBJECT)
 
+      # TODO move Pointcut's options to here.
       CANONICAL_OPTIONS = {
         "types"   => %w[type for_type for_types on_type on_types in_type in_types within_type within_types],
         "objects" => %w[object for_object for_objects on_object on_objects in_object in_objects within_object within_objects],
