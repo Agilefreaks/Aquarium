@@ -54,7 +54,7 @@ describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
 
   it "should accept a hash and treat it as equivalent to an explicit list parameters." do
     expected_found_types  = [Outside::Inside1, Outside::Inside2]
-    expected_unfound_exps = %w[Foo::Bar::Baz]
+    expected_unfound_exps = %w[NonExistent::SubNonExistent::SubSubNonExistent]
     hash = {:names => (expected_found_types.map {|t| t.to_s} + expected_unfound_exps)}
     actual = Aquarium::Finders::TypeFinder.new.find hash
     actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
@@ -117,7 +117,7 @@ describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :
 
   it "should find types with :: namespace delimiters using their names." do
     expected_found_types  = [Outside::Inside1, Outside::Inside2]
-    expected_unfound_exps = %w[Foo::Bar::Baz]
+    expected_unfound_exps = %w[NonExistent::SubNonExistent::SubSubNonExistent]
     actual = Aquarium::Finders::TypeFinder.new.find :names => (expected_found_types.map {|t| t.to_s} + expected_unfound_exps)
     actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
     actual.not_matched_keys.sort.should == expected_unfound_exps.sort
