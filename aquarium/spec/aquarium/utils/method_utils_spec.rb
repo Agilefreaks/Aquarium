@@ -162,10 +162,19 @@ describe Aquarium::Utils::MethodUtils, ".visibility" do
     Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample.new, :private_instance_m, :instance_method_only).should == :private    
   end
   
-  it "should ignore whether the exclude_ancestors flag is true or false for class methods" do
-    Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should == :public
-    Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should == :private
+  it "should ignore whether the exclude_ancestors flag is true or false for class methods when running under MRI" do
+    unless Object.const_defined?('JRUBY_VERSION')
+      Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should == :public
+      Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should == :private
+    end
   end
+  it "should NOT ignore whether the exclude_ancestors flag is true or false for class methods when running under JRuby" do
+    if Object.const_defined?('JRUBY_VERSION')
+      Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should == nil
+      Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should == nil
+    end
+  end
+  
   it "should return nil for public instance methods on a subclass when the exclude_ancestors flag is false" do
     Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample2, :public_instance_m, :instance_method_only, false).should == nil
   end
@@ -288,10 +297,19 @@ describe Aquarium::Utils::MethodUtils, ".has_method" do
     Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_instance_m, :instance_method_only).should be_true    
   end
   
-  it "should ignore whether the exclude_ancestors flag is true or false for class methods" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should be_true
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should be_true
+  it "should ignore whether the exclude_ancestors flag is true or false for class methods when running under MRI" do
+    unless Object.const_defined?('JRUBY_VERSION')
+      Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should be_true
+      Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should be_true
+    end
   end
+  it "should NOT ignore whether the exclude_ancestors flag is true or false for class methods when running under JRuby" do
+    if Object.const_defined?('JRUBY_VERSION')
+      Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should be_false
+      Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should be_false
+    end
+  end
+  
   it "should return false for public instance methods on a subclass when the exclude_ancestors flag is false" do
     Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_instance_m, :instance_method_only, false).should be_false
   end

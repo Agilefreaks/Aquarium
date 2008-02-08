@@ -350,8 +350,18 @@ module Aquarium
       def init_join_points
         @join_points_matched = Set.new
         @join_points_not_matched = Set.new
-        find_join_points_for :type, (candidate_types - candidate_types_excluded), make_all_method_names
-        find_join_points_for :object, candidate_objects, make_all_method_names
+        types = candidate_types - candidate_types_excluded
+        method_names = make_method_names
+        attribute_method_names = make_attribute_method_names
+        unless types.empty?
+          find_join_points_for(:type, types, method_names) unless method_names.empty?
+          find_join_points_for(:type, types, attribute_method_names) unless attribute_method_names.empty?
+        end
+        unless candidate_objects.empty?
+          find_join_points_for(:object, candidate_objects, method_names) unless method_names.empty?
+          find_join_points_for(:object, candidate_objects, attribute_method_names) unless attribute_method_names.empty?
+        end
+        subtract_attribute_writers if attributes_read_only?
         add_join_points_for_candidate_join_points
         remove_excluded_join_points
       end
@@ -375,7 +385,7 @@ module Aquarium
       def find_methods_for type_or_object_sym, candidates, which_methods
         return Aquarium::Finders::FinderResult::NIL_OBJECT if candidates.matched.size == 0
         Aquarium::Finders::MethodFinder.new.find type_or_object_sym => candidates.matched_keys, 
-              :methods => which_methods, 
+              :methods => which_methods.to_a, 
               :exclude_methods => @specification[:exclude_methods], 
               :options => method_options
       end
@@ -396,64 +406,71 @@ module Aquarium
         end
       end
 
+      def subtract_attribute_writers
+        @join_points_matched.reject! do |jp|
+          jp.method_name.to_s[-1..-1] == '='
+        end
+      end
+      
       def is_instance_methods?
         not @specification[:method_options].include? :class
       end
       
-      def make_all_method_names
-        @specification[:methods] +
-            make_attribute_method_names(@specification[:attributes], @specification[:attribute_options]) -
-            @specification[:exclude_methods]
+      def make_method_names
+        @specification[:methods] - @specification[:exclude_methods]
       end
   
-      def make_attribute_method_names attribute_name_regexps_or_names, attribute_options = []
-        readers = make_attribute_readers attribute_name_regexps_or_names
-        return readers if read_only attribute_options 
+      def make_attribute_method_names
+        readers = make_attribute_readers 
+        return readers if attributes_read_only?
 
         writers = make_attribute_writers readers
-        return writers if write_only attribute_options
+        return writers if attributes_write_only?
         return readers + writers
       end
   
-      def make_attribute_readers attributes
-        readers = attributes.map do |regexp_or_name|
+      # Because Ruby 1.8 regexp library doesn't support negative look behinds, we really
+      # can't set the regular expression to exclude a trailing = reliably. Instead,
+      # #init_join_points above will remove any writer methods, if necessary.
+      def make_attribute_readers 
+        readers = @specification[:attributes].map do |regexp_or_name|
+          expr1 = regexp_or_name.kind_of?(Regexp) ? regexp_or_name.source : regexp_or_name.to_s
+          expr = remove_trailing_equals_and_or_dollar(remove_leading_colon_or_at_sign(expr1))
           if regexp_or_name.kind_of? Regexp
-            exp = remove_trailing_equals_and_or_dollar regexp_or_name.source
-            Regexp.new(remove_leading_colon_or_at_sign(exp + '.*\b$'))
+            Regexp.new(remove_leading_colon_or_at_sign(expr))
           else
-            exp = remove_trailing_equals_and_or_dollar regexp_or_name.to_s
-            remove_leading_colon_or_at_sign(exp.to_s)
+            expr
           end
         end
         Set.new(readers.sort_by {|exp| exp.to_s})
       end  
-  
-      def make_attribute_writers attributes
-        writers = attributes.map do |regexp_or_name|
+        
+      def make_attribute_writers reader_methods
+        writers = reader_methods.map do |regexp_or_name|
+          expr = regexp_or_name.kind_of?(Regexp) ? regexp_or_name.source : regexp_or_name.to_s
           if regexp_or_name.kind_of? Regexp
-            # remove the "\b$" from the end of the reader expression, if present.
-            Regexp.new(remove_trailing_equals_and_or_dollar(regexp_or_name.source) + '=$')
+            Regexp.new(expr+'.*=$')
           else
-            regexp_or_name + '='
+            expr + '='
           end
         end
         Set.new(writers.sort_by {|exp| exp.to_s})
       end
   
-      def read_only attribute_options
-        read_option(attribute_options) && !write_option(attribute_options)
+      def attributes_read_only?
+        read_option && !write_option
       end
   
-      def write_only attribute_options
-        write_option(attribute_options) && !read_option(attribute_options)
+      def attributes_write_only?
+        write_option && !read_option
       end
   
-      def read_option attribute_options
-        attribute_options.include?(:readers) or attribute_options.include?(:reader)
+      def read_option 
+        @specification[:attribute_options].include?(:readers) or @specification[:attribute_options].include?(:reader)
       end
   
-      def write_option attribute_options
-        attribute_options.include?(:writers) or attribute_options.include?(:writer)
+      def write_option 
+        @specification[:attribute_options].include?(:writers) or @specification[:attribute_options].include?(:writer)
       end
   
       def method_options

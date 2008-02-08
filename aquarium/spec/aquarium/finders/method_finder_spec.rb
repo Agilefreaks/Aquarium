@@ -324,9 +324,10 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
   end
   
   it "should find all class methods specified by regular expression for types when :class is used." do
-    # Have to add some rspec methods to the expected lists!
+    # NOTE: The list of methods defined by Kernel is different for MRI and JRuby!
     expected = {}
-    expected[Kernel] = [:chomp!, :chop!, :respond_to?]
+    expected[Kernel] = [:respond_to?]
+    expected[Kernel] += [:chomp!, :chop!] unless Object.const_defined?('JRUBY_VERSION')
     [Object, Module, Class].each do |clazz|
       expected[clazz] = [:respond_to?]
     end

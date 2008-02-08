@@ -6,7 +6,7 @@ module Aquarium
   module Utils
     module NameUtils
 
-      @@char_map = {
+      @@char_expr_map = {
         '='  => '_equal_',
         '?'  => '_questionmark_',
         '!'  => '_exclamationmark_',
@@ -51,8 +51,8 @@ module Aquarium
 
       def self.make_valid_attr_name_from_method_name method_name
         new_name = method_name.to_s
-        @@char_map.each do |char, substitute|
-          new_name.gsub! char, substitute
+        @@char_expr_map.keys.sort{|x,y| y.length <=> x.length}.each do |expr|
+          new_name.gsub! expr, @@char_expr_map[expr]
         end
         new_name.intern
       end

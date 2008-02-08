@@ -118,6 +118,7 @@ module Aquarium
         result - excluded
       end
   
+      
       protected
 
       def handle_errors unknown_options, input_type_nil
@@ -152,8 +153,8 @@ module Aquarium
         result
       end
 
-      def find_namespace_matched expression, option
-        expr = expression.kind_of?(Regexp) ? expression.source : expression.to_s
+      def find_namespace_matched regexp, option
+        expr = regexp.source
         return nil if expr.empty?
         found_types = [Object]
         split_expr = expr.split("::")
@@ -162,18 +163,21 @@ module Aquarium
           found_types = find_next_types found_types, subexp, (index == 0), (index == (split_expr.size - 1))
           break if found_types.size == 0
         end
+        # JRuby returns types that aren't actually defined by the enclosing namespace.
+        # As a sanity check, reject types whose names don't match the full regexp.
+        found_types.reject! {|t| t.name !~ regexp}
         if found_types.size > 0
           finish_and_make_successful_result found_types, option
         else
-          make_failed_result expression
+          make_failed_result regexp
         end
       end
 
       # For a name (not a regular expression), return the corresponding type.
       # (Adapted from the RubyQuiz #113 solution by James Edward Gray II)
       # See also this blog: http://blog.sidu.in/2008/02/loading-classes-from-strings-in-ruby.html
-      # I discovered that eval works fine with JRuby wrapper classes, while the commented out
-      # split then const_get fails!
+      # I discovered that eval works fine with JRuby wrapper classes, while splitting on '::' and 
+      # calling const_get on each module fails!
       def find_by_name type_name, option
         begin
           found = eval type_name.to_s, binding, __FILE__, __LINE__

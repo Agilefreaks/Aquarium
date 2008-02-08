@@ -20,13 +20,13 @@ module Aquarium
 
       def self.visibility type_or_instance, method_sym, class_or_instance_only = nil, include_ancestors = true
         find_method(type_or_instance, method_sym, class_or_instance_only, include_ancestors) do |t_or_o, msym, protection| 
-          return protection
+          protection
         end
       end
       
       def self.has_method type_or_instance, method_sym, class_or_instance_only = nil, include_ancestors = true
         found = find_method(type_or_instance, method_sym, class_or_instance_only, include_ancestors) do |t_or_o, msym, protection| 
-          return true
+          true
         end 
         found ? true : false   # found could be nil; return false, if so
       end
@@ -36,8 +36,8 @@ module Aquarium
         meta_method_suffixes.each do |suffix|
           %w[public protected private].each do |protection|
             meta_method = "#{protection}_#{suffix}"
-            methods = type_or_instance.send(meta_method, include_ancestors)
-            if methods.include?(method_sym.to_s)
+            found_methods = type_or_instance.send(meta_method, include_ancestors)
+            if found_methods.include?(method_sym.to_s)
               return yield(type_or_instance, method_sym, protection.intern)
             end
           end
