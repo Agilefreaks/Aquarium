@@ -44,6 +44,11 @@ Spec::Rake::SpecTask.new('spec_html') do |t|
   t.spec_opts = ['--format html:../doc/output/report.html','--backtrace']
 end
 
+desc "Run all specs without rcov"
+Spec::Rake::SpecTask.new('spec_no_rcov') do |t|
+  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
+end
+
 desc 'Generate HTML documentation for website'
 task :webgen do
   Dir.chdir '../doc' do
