@@ -7,6 +7,7 @@ module Aquarium
     module DefaultLogger
       
       @@default_logger = Logger.new STDERR
+      @@default_logger.level = Logger::Severity::WARN
       
       def self.logger
         @@default_logger

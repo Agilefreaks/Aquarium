@@ -1,3 +1,8 @@
+== Updating to Aquarium-0.4.0
+
+This release is fully backwards-compatible with previous releases. It expands the API slightly and adds
+internal improvements to better support JRuby. There should be no upgrade issues. 
+
 == Updating to Aquarium-0.3.1
 
 There should be no upgrade issues with this release. However, the enhancement #17565 now ensures that a

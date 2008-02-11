@@ -618,6 +618,19 @@ describe Aspect, " with advice that calls JoinPoint#invoke_original_join_point" 
   end
 end
 
+describe Aspect, "#unadvise called more than once on the same aspect" do
+  before(:all) do
+    @advice = Proc.new {}
+  end
+  
+  it "should do nothing on the second invocation." do
+    aspect = Aspect.new :around, :type => Watchful, :method => /does_not_exist/, :advice => @advice, :severity => Logger::Severity::ERROR
+    aspect.unadvise
+    lambda {aspect.unadvise}.should_not raise_error
+    lambda {aspect.unadvise}.should_not raise_error
+  end
+end
+
 describe Aspect, "#unadvise for 'empty' aspects" do
   before(:all) do
     @advice = Proc.new {}

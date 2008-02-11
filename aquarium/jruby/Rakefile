@@ -16,6 +16,14 @@ task :jruby => [:aquarium_spec, :jruby_spec]
 desc "Run all specs"
 Spec::Rake::SpecTask.new do |t|
   t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
+  t.spec_opts = ['--colour']
+end
+task :spec => :verify_jruby
+
+desc "Run all specs in reverse"
+Spec::Rake::SpecTask.new(:spec_in_reverse) do |t|
+  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
+  t.spec_opts = ['--reverse', '--colour']
 end
 task :spec => :verify_jruby
 
@@ -33,7 +41,7 @@ task :verify_jruby do
   end
 end
 
-CLEAN.include('example.jar')
+CLEAN.include('java/example.jar')
 CLEAN.include('java/**/*.class')
 SRC = FileList['java/**/*.java']
 OBJ = SRC.ext('class')
@@ -42,8 +50,11 @@ rule '.class' => '.java' do |t|
   sh "javac -cp java #{t.source}"
 end
 
-file 'example.jar' => OBJ do
-  sh 'jar -cf example.jar -C java .'
+file 'java/example.jar' => OBJ do
+  classes = OBJ.map {|c| c.gsub(/^java\//, '')}
+  Dir.chdir 'java' do
+    sh "jar -cf example.jar #{classes}"
+  end
 end
 
-task :jruby_spec => ['example.jar', :spec]
+task :jruby_spec => ['java/example.jar', :spec, :spec_in_reverse]

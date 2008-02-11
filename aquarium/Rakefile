@@ -47,6 +47,7 @@ end
 desc "Run all specs without rcov"
 Spec::Rake::SpecTask.new('spec_no_rcov') do |t|
   t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
+  t.spec_opts = ['--colour']
 end
 
 desc 'Generate HTML documentation for website'
@@ -157,7 +158,7 @@ end
 # ]
 
 desc "Build the website, but do not publish it"
-task :website => [:clobber, :verify_rcov, :spec_html, :webgen, :rdoc]
+task :website => [:clobber, :verify_rcov, :verify_jruby, :spec_html, :webgen, :rdoc]
 
 task :rdoc_rails do
   Dir.chdir '../aquarium_on_rails' do
@@ -165,6 +166,16 @@ task :rdoc_rails do
     `#{rake} rdoc`
   end
 end
+
+desc "Verify that the Aquarium specs run under JRuby and that JRuby can advise Java types"
+task :verify_jruby do
+  puts "Verifying JRuby Support"
+  Dir.chdir 'jruby' do
+    rake = (PLATFORM == "i386-mswin32") ? "rake.cmd" : "rake"
+    sh "jruby -S #{rake}"
+  end
+end
+    
 
 task :verify_user do
   raise "RUBYFORGE_USER environment variable not set!" unless ENV['RUBYFORGE_USER']

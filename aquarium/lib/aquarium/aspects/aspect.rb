@@ -224,7 +224,9 @@ module Aquarium
             return
           end
         end
-        logger.warn "Warning: No join points were matched. The options specified were #{@original_options.inspect}"
+        msg  = "Warning: No join points were matched. The options specified were #{@original_options.inspect}."
+        msg += " The resulting specification was #{@specification.inspect}." if logger.debug?
+        logger.warn msg
       end
       
       def should_warn_if_no_matching_join_points

@@ -15,9 +15,9 @@ This change will obvious break existing aspects.
 
 === Versions 0.3+.0
 
-More refinements and simpliciations to the API and functionality, including much-needed redundancy
-reduction. I haven't used mocks much in the specs, but they are clearly needed now to improve 
-performance of RSpec runs. 
+More refinements and simplifications to the API and functionality, including much-needed 
+redundancy reduction. I haven't used mocks much in the specs, but they would help improve the
+performance of the RSpec runs. 
 
 The main thrust of new feature work will be expanding the pointcut language to include 
 conditionals and stack context constructs, as well as more intuitive ways of expressing sets of 
@@ -39,10 +39,13 @@ How about something like the following?
 	end
 
 I'm not sure it adds much (at this stage of thinking about it...) except that it could make 
-composition of complete pointcuts easier.
+composition of complex pointcuts easier.
+
+I also want to ensure full support for running in JRuby. In particular, you should be able to
+advise Java types!
 	
 === Version 1.0.0
 
-Reasonable stable and full-featured API and DSL. Also, to justify Aquarium's existence ;), I want
+Reasonably stable and full-featured API and DSL. Also, to justify Aquarium's existence ;), I want
 to produce some non-trivial examples of refactoring known APIs and demonstrating improved clarity,
 productivity, modularity, etc., etc.

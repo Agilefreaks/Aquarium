@@ -5,6 +5,7 @@ Aquarium is a toolkit for Aspect-Oriented Programming (AOP) whose goals include:
 * Management of concurrent aspects (i.e., those acting on the same "join points").
 * Adding and removing aspects dynamically.
 * A user-friendly DSL.
+* Support for advising Java types through JRuby.
 
 === Why Is an AOP Framework Useful in Ruby?
 
@@ -35,6 +36,7 @@ Only around advice can prevent execution of the join point, except for the speci
 * Concurrent advice on type AND advice on objects of the type can't be removed cleanly.
 * The pointcut language is still limited, compared to AspectJ's. See also the comparison with AspectJ behavior next.
 * The API and wrapper DSL will probably evolve until the 1.0.0 release. Backwards compatibility will be maintained between releases as much as possible. When it is necessary to break backwards compatibility, translation tools will be provided, if possible.
+* There are limitations when advising Java types through JRuby. The separate RSpec suite in the "jruby" directory documentations how to use Aquarium with JRuby-wrapped Java types and the limitations thereof.
 
 === Differences With Other Ruby AOP Toolkits
 
@@ -46,11 +48,22 @@ The goal of Aquarium is to provide a superset of the functionality provided by t
 
 Many of AspectJ's behaviors that aren't currently supported are planned for future releases.
  
-* Attribute reading and writing join points are not supported. The :attributes and :attributes_options parameters for Aspect.new are "syntactic sugar" for the corresponding accessor methods. 
+* Attribute reading and writing join points are not supported. The :attributes and :attributes_options parameters (and their synonyms) for Aspect.new are actually "syntactic sugar" for the corresponding accessor methods. 
 * At this time, the pointcut language supported by Aquarium is not nearly as feature-rich as AspectJ's language. For example, there are no runtime pointcut designators supported, such as "if" conditions and "cflow" (context flow). Most of AspectJ pointcut language features are planned, however.
 * While AspectJ provides "intertype declaration" capabilities (i.e., adding state and behavior to existing classes), Ruby's native metaprogramming support satisfies this need. There may be convenience hooks added in a future release, however.
 * User defined advice precedence is not supported. However, advice precedence is unambiguous; the last aspects created while modules are loaded at runtime have higher precedence than earlier aspects. Ensuring a particular order is not always easy, of course. 
-* Unlike AspectJ, Aquarium can advise individual objects, can remove advice, and it supports named advice that can be defined separately from the aspects that use the advice. Aquarium can also advise ancestor (parent) types, not just derived (descendent) types of specified types.
+
+However, Aquarium does have a few advantages over AspectJ, especially when advising Java types when running in JRuby.
+
+* Aquarium can add and remove advice dynamically, at runtime.
+* Aquarium can advise individual objects, not just classes.
+* Aquarium can advise JDK classes. AspectJ can also do this, but not by default.
+* Aquarium supports named advice that can be defined separately from the aspects that use the advice. 
+* Aquarium can advise ancestor (parent) types, not just derived (descendent) types of specified types. 
+
+Note: at the time of this writing (V0.4.0 release), there is an important limitation of Aquarium when used with java code; it appears that advice is only invoked if an advised method is called directly from Ruby code. If the advised method is called by other Java code, the advice is *not* invoked. Whether or not this limitation can be removed is under investigation.
+
+Also, as of V0.4.0, the interaction behavior of Aquarium and AspectJ or Spring aspects has not been investigated.
 
 === Examples
 
@@ -142,7 +155,9 @@ You can specify a single type, a type name, a type regular expression, or an arr
 	around :types => /A::.*Helper$/, ...
 	around :types => [/A::.*Helper$/, /B::Foo.*/], ...
 
-Using the plural versions of the synonyms, with method specifications so they read better:
+Everywhere "type" is used, you can substitute "class", "classes", "module", or "modules". Note that they are treated as synonyms; there is currently no enforcement that the values passed with ":class", for example, are actually classes, not modules.
+
+Using the plural versions of the synonyms with method specifications sometimes read better:
 
 	around :calls_to => :all_methods, :on_types => [A, B, ...], ...
 	around :calls_to => :all_methods, :in_types => [A, B, ...], ...
@@ -154,6 +169,8 @@ You can specify types and their descendents (subclasses or included modules) or 
 	around :types_and_ancestors = A, ...
 	around :type_and_descendents = A, ...
 	around :types_and_descendents = A, ...
+	around :classes_and_descendents = A, ...
+	around :modules_and_descendents = A, ...
 
 Some of the synonyms:
 
@@ -324,6 +341,7 @@ Rather than passing a block as the advice, you can pass a previously-created Pro
 	around :type => [...], :methods => :all, :call => advice         # synonym for advice.
 	around :type => [...], :methods => :all, :invoke => advice       # synonym for advice.
 
+Finally, when running in JRuby, you can advise Java types! See the examples in the separate RSpec suite in the "jruby" directory.
 
 === Packages
 
@@ -375,6 +393,12 @@ or
 * rake spec_rcov  # also runs rcov
 
 Note that Aquarium itself - once built - doesn't have any dependencies outside the Ruby core and stdlib.
+
+If you want to run the tests for the JRuby support, you must also have JRuby 1.1RC1 or later installed. To run the specs for JRuby, use the command
+
+* rake verify_jruby
+
+This command runs the standard Aquarium specs using JRuby instead of MRI, then runs a separate set of specs in the "jruby/spec" directory which test Aquarium with Java classes inside JRuby.
 
 See http://aquarium.rubyforge.org for further documentation.
 

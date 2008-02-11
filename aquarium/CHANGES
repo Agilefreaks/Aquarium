@@ -1,3 +1,47 @@
+== Version 0.4.0
+
+V0.4.0 adds specs to characterize and test advising Java classes when running on JRuby and adds several 
+API enhancements.
+
+Bug fixes:
+17844	JRuby - Advising types, Aquarium thinks the type is a string
+17883	Workaround for JRUBY-2089
+
+Enhancements:
+17834	Allow :class and :module (and variants) wherever :type is allowed
+17881	Add specs that exercise advising Java types and objects using JRuby
+
+#17844 occurred because of the way JRuby encodes Java packages into modules. Aquarium now properly handles 
+JRuby types.
+
+#17883 reflected a JRuby bug, so a workaround was required.
+ 
+#17834 allows the user to substitute the words "class", "classes", "module" or "modules" anywhere the words
+"type" and "types" are used in the API, since some users might naturally want to write aspects like this:
+
+ 	around :calls_to => :my_method, :in_class => MyClass do ...; end
+
+However, there is no enforcement to ensure that "class" is only used for classes and "module" is only used
+for modules, etc. Note: it's possible we'll enforce this in some future release, as a way of saying things
+like "only advise classes that match ...", etc. Caveat Emptor!
+
+For #17881, I created a separate set of specs for JRuby, so it's easier to run the "regular" Aquarium
+specs using MRI and the JRuby-specific specs separately with JRuby. The new "jruby" directory contains a 
+Rakefile, another set of specs, and Java example code for the specs to use. The default Rakefile task 
+re-runs the main Aquarium spec suite using JRuby, to confirm that the suite passes successfully, then it
+runs a set of different specs that load sample Java interfaces and classes into JRuby and then advises
+them with Aquarium.
+
+The separate JRuby spec suite shows what you can and cannot do with Java types. As a side benefit, it also
+demonstrates how Java types, objects, and methods are mapped to Ruby.
+
+I found a few JRuby bugs and other behavior differences between MRI during this release. I was able to handle
+them with modifications to the Aquarium code. If you "grep" the Aquarium "lib" and "spec" directories for the
+word "jruby" (ignoring case), you'll find notes about these issues and the workarounds I implemented.
+
+Note: JRuby 1.1RC1 was used.
+
+ 
 == Version 0.3.1
 
 V0.3.1 adds numerous performance improvements, especially in the RSpec suite, and some minor API additions.

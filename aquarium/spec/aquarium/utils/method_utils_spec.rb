@@ -297,17 +297,10 @@ describe Aquarium::Utils::MethodUtils, ".has_method" do
     Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_instance_m, :instance_method_only).should be_true    
   end
   
-  it "should ignore whether the exclude_ancestors flag is true or false for class methods when running under MRI" do
-    unless Object.const_defined?('JRUBY_VERSION')
-      Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should be_true
-      Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should be_true
-    end
-  end
-  it "should NOT ignore whether the exclude_ancestors flag is true or false for class methods when running under JRuby" do
-    if Object.const_defined?('JRUBY_VERSION')
-      Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should be_false
-      Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should be_false
-    end
+  not_string, true_or_false, ruby_name = Object.const_defined?('JRUBY_VERSION') ? ['NOT ', false, 'JRuby'] : ['', true, 'MRI'] 
+  it "should #{not_string}ignore whether the exclude_ancestors flag is true or false for class methods when running under #{ruby_name}" do
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_class_m,  :class_method_only, false).should == true_or_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :private_class_m, :class_method_only, false).should == true_or_false
   end
   
   it "should return false for public instance methods on a subclass when the exclude_ancestors flag is false" do
