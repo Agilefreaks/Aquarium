@@ -46,6 +46,37 @@ the "extras":rdoc/files/lib/aquarium/extras_rb.html, which this example uses:
 
 Other examples can be found in the "README":rdoc/files/README.html.
 
+h3. Advising Java Classes in JRuby
+
+While you might normally turn to "AspectJ":http://aspectj.org or the "Spring Framework":http://springframework.org/ 
+to advise Java classes, if you are using JRuby, you can now use Aquarium! The advantages and disadvantages of Aquarium
+compared to AspectJ are listed in the "README":rdoc/files/README.html. Briefly, Aquarium lets you add *and* remove advise
+dynamically at runtime, you can advise JDK types easily, and Aquarium lets you advise individual objects. The 
+disadvantages of Aquarium are that it will be slower than using AspectJ (although this has not been tested yet) and 
+Aquarium's pointcut language is not as full-featured as AspectJ's.
+
+Here is an example of adding tracing calls to a method @doIt@ in all classes that implement the Java interface @com.foo.Work@.
+
+<ruby>
+Aspect.new :before, :calls_to => [:doIt, :do_it], :in_types_and_descendents => Java::com.foo.Work do |jp, obj, *args|
+  log "Entering: #{jp.target_type.name}##{jp.method_name}: object = #{object}, args = #{args.inspect}" 
+end
+</ruby>
+
+There are two important points to notice in this example:
+
+# You can choose to refer to the method as @do_it@ (Ruby style) or @doIt@, but these variants are effectively 
+treated as *separate* methods; advice on one will not affect invocations of the other. So, if you want to be sure to catch
+*all* invocations, use *both* forms or just use Java naming conventions consistently.
+# You must use @:types_and_descendents@ (or one of the variants on the word @types@). Since interfaces don't have method 
+implementations, you will match no join points unless you use the @and_descendents@ clause. (By default, Aquarium warns you
+when no join points are matched by an aspect.)
+
+Finally, in this (V0.4.0) release, it is not possible for Aquarium advice on a method to be invoked if the method is called
+by other Java code. The advice is only invoked if the method is called by Ruby code. 
+
+For more details, see the RSpec examples in the @jruby/spec@ directory.
+
 h3. Testing Uses of Aspects
 
 Aspects are sometimes used for "fault injection", to enable easier testing of error handling logic, and for stubbing
