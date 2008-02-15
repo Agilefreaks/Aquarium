@@ -321,19 +321,6 @@ module Aquarium
         EOF
       end
       
-      def static_method_prefix join_point
-        if join_point.instance_method?
-          "@@type_being_advised = self"
-        else
-          "@@type_being_advised = self"
-          "class << self"
-        end
-      end
-
-      def static_method_suffix join_point
-        join_point.instance_method? ? "" : "end"
-      end
-      
       # When advising an instance, create an override method that gets advised instead of the types method.
       # Otherwise, all objects will be advised!
       # Note: this also solves bug #15202.
@@ -417,10 +404,10 @@ module Aquarium
       def restore_original_method_text join_point
         alias_method_name = (Aspect.make_saved_method_name join_point).intern
         <<-EOF
-          #{static_method_prefix join_point}
+          #{join_point.instance_method? ? "" : "class << self"}
           #{unalias_original_method_text alias_method_name, join_point}
           #{undef_eigenclass_method_text join_point}
-          #{static_method_suffix join_point}
+          #{join_point.instance_method? ? "" : "end"}
         EOF
       end
       

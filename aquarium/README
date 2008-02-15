@@ -46,10 +46,10 @@ The goal of Aquarium is to provide a superset of the functionality provided by t
 
 === Differences With AspectJ Behavior
 
-Many of AspectJ's behaviors that aren't currently supported are planned for future releases.
+Many of AspectJ's features are not currently supported by Aquarium, but some of them are planned for future releases.
  
 * Attribute reading and writing join points are not supported. The :attributes and :attributes_options parameters (and their synonyms) for Aspect.new are actually "syntactic sugar" for the corresponding accessor methods. 
-* At this time, the pointcut language supported by Aquarium is not nearly as feature-rich as AspectJ's language. For example, there are no runtime pointcut designators supported, such as "if" conditions and "cflow" (context flow). Most of AspectJ pointcut language features are planned, however.
+* More advanced AspectJ pointcut language features are not supported, such as the runtime pointcut designators like "if" conditionals and "cflow" (context flow) and the compile time "within" and "withincode" designators. Most of AspectJ pointcut language features are planned, however.
 * While AspectJ provides "intertype declaration" capabilities (i.e., adding state and behavior to existing classes), Ruby's native metaprogramming support satisfies this need. There may be convenience hooks added in a future release, however.
 * User defined advice precedence is not supported. However, advice precedence is unambiguous; the last aspects created while modules are loaded at runtime have higher precedence than earlier aspects. Ensuring a particular order is not always easy, of course. 
 
@@ -371,7 +371,7 @@ do the following:
 
 == Running Aquarium's RSpec Specs
 
-In order to run Aquarium's full suite of specs (rake pre_commit) you must install the following gems:
+In order to run Aquarium's full suite of specs (rake pre_commit) you must install the following gems and tools:
 
 * rake          # Runs the build script
 * rspec         # Used instead of Test::Unit for TDD
@@ -383,6 +383,7 @@ In order to run Aquarium's full suite of specs (rake pre_commit) you must instal
 * win32console  # Required by the --colour switch if you're on Windows
 * meta_project  # Required in order to make releases at RubyForge
 * heckle        # Required if you use the --heckle switch
+* jruby         # Required if run the separate spec suite in the "jruby" directory
 
 Once those are all installed, you should be able to run the suite with the following steps:
 

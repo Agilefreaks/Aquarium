@@ -25,7 +25,7 @@ describe Advice, "#invoke_original_join_point" do
     def counter; @counter; end
   end
   
-  it "should invoke the original join_point" do
+  it "should invoke the original join_point with multiple advices" do
     aspect1 = Aspect.new :before, :type => InvocationCounter, :method => :increment do |jp, o|
       jp.invoke_original_join_point
     end
@@ -38,6 +38,18 @@ describe Advice, "#invoke_original_join_point" do
     ic.counter == 3
     aspect1.unadvise
     aspect2.unadvise
+  end
+  
+  Advice.kinds.each do |kind|
+    it "should invoke the original join_point with #{kind} advice" do
+      aspect = Aspect.new kind, :type => InvocationCounter, :method => :increment do |jp, o|
+        jp.invoke_original_join_point
+      end
+      ic = InvocationCounter.new
+      ic.increment
+      ic.counter == 1
+      aspect.unadvise
+    end
   end
 end
 

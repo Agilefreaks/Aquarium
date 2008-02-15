@@ -6,6 +6,7 @@ API enhancements.
 Bug fixes:
 17844	JRuby - Advising types, Aquarium thinks the type is a string
 17883	Workaround for JRUBY-2089
+18090	JoinPoint#invoke_original_join_point only works with :around advice
 
 Enhancements:
 17834	Allow :class and :module (and variants) wherever :type is allowed
@@ -24,6 +25,10 @@ JRuby types.
 However, there is no enforcement to ensure that "class" is only used for classes and "module" is only used
 for modules, etc. Note: it's possible we'll enforce this in some future release, as a way of saying things
 like "only advise classes that match ...", etc. Caveat Emptor!
+
+For #18090, a bug prevented JoinPoint#invoke_original_join_point (which allows you to bypass all advices at
+the join point) from working except for :around advice (and yes, the specs didn't cover this adequately -
+gasp!). Now fixed.
 
 For #17881, I created a separate set of specs for JRuby, so it's easier to run the "regular" Aquarium
 specs using MRI and the JRuby-specific specs separately with JRuby. The new "jruby" directory contains a 

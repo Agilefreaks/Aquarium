@@ -275,7 +275,7 @@ describe Aquarium::Aspects::JoinPoint, "#invoke_original_join_point" do
       :advice_kind => :around, 
       :advised_object => ioc, 
       :parameters => [],
-      :proceed_proc => Aquarium::Aspects::NoAdviceChainNode.new({:alias_method_name => :invoke})
+      :current_advice_node => Aquarium::Aspects::NoAdviceChainNode.new({:alias_method_name => :invoke})
     }
     jp2 = jp.make_current_context_join_point context_opts
     jp2.invoke_original_join_point

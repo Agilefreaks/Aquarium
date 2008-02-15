@@ -12,7 +12,7 @@ module Aquarium
       class ContextNotDefined < Exception; end
       
       class Context
-        attr_accessor :advice_kind, :advised_object, :parameters, :block_for_method, :returned_value, :raised_exception, :proceed_proc
+        attr_accessor :advice_kind, :advised_object, :parameters, :block_for_method, :returned_value, :raised_exception, :proceed_proc, :current_advice_node
 
         alias :target_object  :advised_object
         alias :target_object= :advised_object=
@@ -44,17 +44,17 @@ module Aquarium
     
         def proceed enclosing_join_point, *args, &block
           raise ProceedMethodNotAvailable.new("It looks like you tried to call \"JoinPoint#proceed\" (or \"JoinPoint::Context#proceed\") from within advice that isn't \"around\" advice. Only around advice can call proceed. (Specific error: JoinPoint#proceed cannot be called because no \"@proceed_proc\" attribute was set on the corresponding JoinPoint::Context object.)") if @proceed_proc.nil?
-          do_invoke :call, enclosing_join_point, *args, &block
+          do_invoke proceed_proc, :call, enclosing_join_point, *args, &block
         end
         
         def invoke_original_join_point enclosing_join_point, *args, &block
-          do_invoke :invoke_original_join_point, enclosing_join_point, *args, &block
+          do_invoke current_advice_node, :invoke_original_join_point, enclosing_join_point, *args, &block
         end
         
-        def do_invoke method, enclosing_join_point, *args, &block
+        def do_invoke proc_to_send, method, enclosing_join_point, *args, &block
           args = parameters if (args.nil? or args.size == 0)
           enclosing_join_point.context.block_for_method = block if block 
-          proceed_proc.send method, enclosing_join_point, advised_object, *args
+          proc_to_send.send method, enclosing_join_point, advised_object, *args
         end
         protected :do_invoke
         

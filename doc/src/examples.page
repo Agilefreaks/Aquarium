@@ -50,7 +50,7 @@ h3. Advising Java Classes in JRuby
 
 While you might normally turn to "AspectJ":http://aspectj.org or the "Spring Framework":http://springframework.org/ 
 to advise Java classes, if you are using JRuby, you can now use Aquarium! The advantages and disadvantages of Aquarium
-compared to AspectJ are listed in the "README":rdoc/files/README.html. Briefly, Aquarium lets you add *and* remove advise
+compared to AspectJ are listed in the "README":rdoc/files/README.html. Briefly, Aquarium lets you add *and* remove advice
 dynamically at runtime, you can advise JDK types easily, and Aquarium lets you advise individual objects. The 
 disadvantages of Aquarium are that it will be slower than using AspectJ (although this has not been tested yet) and 
 Aquarium's pointcut language is not as full-featured as AspectJ's.

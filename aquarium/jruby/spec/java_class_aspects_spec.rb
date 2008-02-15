@@ -9,7 +9,15 @@ class StringLengthListComparator
   end
 end
 
-java_example_types = [Java::example.Worker, Java::example.sorter.StringListSorter, Java::example.sorter.converter.StringListCaseConverterAndSorter]
+class StringListCaseConverterAndSorterWithConvertCaseOverride < Java::example.sorter.converter.StringListCaseConverterAndSorter
+  def convertCase *args; super *args; end
+end
+
+java_example_types = [
+  Java::example.Worker, 
+  Java::example.sorter.StringListSorter, 
+  Java::example.sorter.converter.StringListCaseConverterAndSorter,
+  StringListCaseConverterAndSorterWithConvertCaseOverride]
 
 def do_sort list_sorter, method_name = :do_work
   orig_list = %w[now is the time for all good men to come to the aid of their country]
@@ -280,11 +288,10 @@ describe "Java camel-case method name 'doFooBar'" do
   end
 end
 
-describe "Java method advise" do
+describe "Java method advice" do
   it "will not be invoked when the method is called by other Java methods" do
     list_sorter = Java::example.sorter.converter.StringListCaseConverterAndSorter.new(StringLengthListComparator.new)
     @advise_called = false
-    # , :method_options => :protected
     aspect = Aspect.new :before, :calls_to => :convertCase, :in_type => Java::example.sorter.converter.StringListCaseConverterAndSorter do
       @advise_called = true
     end
@@ -292,6 +299,21 @@ describe "Java method advise" do
     @advise_called.should be_false
     aspect.unadvise
   end
+
+  it "should be invoked when the method is called by other Java methods, using a ruby subclass that overrides the advised method" do
+    list_sorter = StringListCaseConverterAndSorterWithConvertCaseOverride.new(StringLengthListComparator.new)
+    @advise_called = false
+    aspect = Aspect.new :before, :calls_to => :convertCase, :in_type => Java::example.sorter.converter.StringListCaseConverterAndSorter do
+      @advise_called = true
+    end
+    p "1: #{Java::example.sorter.converter.StringListCaseConverterAndSorter.class_variables.inspect}"
+    p "2: #{StringListCaseConverterAndSorterWithConvertCaseOverride.class_variables.inspect}"
+    p "diff: #{(Java::example.sorter.converter.StringListCaseConverterAndSorter.class_variables.sort - StringListCaseConverterAndSorterWithConvertCaseOverride.class_variables.sort).inspect}"
+    do_sort list_sorter
+    @advise_called.should be_true
+    aspect.unadvise
+  end
+
   it "should be invoked when the method is called by a Ruby method" do
     list_sorter = Java::example.sorter.converter.StringListCaseConverterAndSorter.new(StringLengthListComparator.new)
     @advise_called = false
@@ -328,18 +350,27 @@ include Aquarium::Utils
 
 describe TypeUtils, ".descendents" do
   it "should return Java classes implementing a Java interface" do
-    TypeUtils.descendents(Java::example.Worker).should == java_example_types
+    actual = TypeUtils.descendents Java::example.Worker
+    actual.size.should == java_example_types.size
+    java_example_types.each {|x| actual.should include(x)}
   end
 
   it "should return Java classes extending a Java class" do
-    TypeUtils.descendents(Java::example.sorter.StringListSorter).should == [Java::example.sorter.StringListSorter, Java::example.sorter.converter.StringListCaseConverterAndSorter]
+    expected = [
+      Java::example.sorter.StringListSorter, 
+      Java::example.sorter.converter.StringListCaseConverterAndSorter,
+      StringListCaseConverterAndSorterWithConvertCaseOverride]
+    actual = TypeUtils.descendents Java::example.sorter.StringListSorter
+    actual.size.should == expected.size
+    expected.each {|x| actual.should include(x)}
   end
 end
 
 describe "Java::Packages::Type.ancestors" do
   it "should return Java classes and interfaces that are ancestors of a Java class" do
-    java_example_types.each do |t|
-      Java::example.sorter.converter.StringListCaseConverterAndSorter.ancestors.should include(t) 
+    anc = Java::example.sorter.converter.StringListCaseConverterAndSorter.ancestors
+    [Java::example.Worker, Java::example.sorter.StringListSorter, Java::example.sorter.converter.StringListCaseConverterAndSorter].each do |t|
+      anc.should include(t) 
     end
   end
 end
