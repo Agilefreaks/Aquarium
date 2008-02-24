@@ -8,7 +8,7 @@ import java.util.*;
  * See the specs that use this class for examples of what you can and can't do with them!
  */
 public class StringListSorter implements Worker<List<String>, List<String>> {
-	private Comparator<String> comparator;
+	protected Comparator<String> comparator;
 	
 	public StringListSorter(Comparator<String> comparator) {
 		this.comparator = comparator;

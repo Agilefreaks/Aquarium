@@ -44,7 +44,7 @@ I found a few JRuby bugs and other behavior differences between MRI during this 
 them with modifications to the Aquarium code. If you "grep" the Aquarium "lib" and "spec" directories for the
 word "jruby" (ignoring case), you'll find notes about these issues and the workarounds I implemented.
 
-Note: JRuby 1.1RC1 was used.
+Note: JRuby 1.1RC2 was used.
 
  
 == Version 0.3.1

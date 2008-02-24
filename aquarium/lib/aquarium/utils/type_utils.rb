@@ -30,14 +30,10 @@ module Aquarium
           next unless visiting_module.const_defined?(const)
           nested_module = constants_method == :constants ? visiting_module.const_get(const) : visiting_module.__const_get__(const)
           next if visited.include?(nested_module)
+          visited << nested_module
           ancestors_method = determine_ancestors_method nested_module
           next if ancestors_method.nil?
-          visited << nested_module
-          if ancestors_method == :ancestors
-            result << nested_module if nested_module.ancestors.include?(clazz)
-          else
-            result << nested_module if nested_module.__ancestors__.include?(clazz)
-          end
+          result << nested_module if nested_module.send(ancestors_method).include?(clazz)
           do_descendents clazz, nested_module, visited, result 
         end
       end
@@ -47,11 +43,8 @@ module Aquarium
       end
       
       def self.determine_ancestors_method mod
-        if mod.respond_to? :__ancestors__
-          return :__ancestors__
-        elsif mod.respond_to? :ancestors
-          return :ancestors
-        end
+        return :__ancestors__ if mod.respond_to? :__ancestors__
+        return :ancestors     if mod.respond_to? :ancestors
         nil
       end
     end

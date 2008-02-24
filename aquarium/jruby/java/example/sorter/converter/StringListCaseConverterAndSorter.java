@@ -24,7 +24,9 @@ public class StringListCaseConverterAndSorter extends StringListSorter {
 	
 	public List<String> doWork(List<String> input) {
 		List<String> newList = convertCase(input);
-		return super.doWork(newList);
+/*		return super.doWork(newList); */
+		Collections.sort(newList, comparator);
+		return newList;
 	}
 	
 	public List<String> convertCase(List<String> input) {

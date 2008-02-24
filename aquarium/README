@@ -36,7 +36,10 @@ Only around advice can prevent execution of the join point, except for the speci
 * Concurrent advice on type AND advice on objects of the type can't be removed cleanly.
 * The pointcut language is still limited, compared to AspectJ's. See also the comparison with AspectJ behavior next.
 * The API and wrapper DSL will probably evolve until the 1.0.0 release. Backwards compatibility will be maintained between releases as much as possible. When it is necessary to break backwards compatibility, translation tools will be provided, if possible.
-* There are limitations when advising Java types through JRuby. The separate RSpec suite in the "jruby" directory documentations how to use Aquarium with JRuby-wrapped Java types and the limitations thereof.
+* There are limitations when advising Java types through JRuby. The separate RSpec suite in the "jruby" directory documentations the details on how to use Aquarium with JRuby-wrapped Java types and the limitations thereof. Here we summarize what works and what doesn't:
+  * If you advise methods in a Java type, the advice is only invoked when the method is called directly from Ruby.
+  * If you want the advice invoked when called from Ruby and Java, create a Ruby subclass of the Java class and override the method you want to advise. (It's sufficient for the method override to just invoke "super".) This means you must instantiate the Ruby class and use it, rather than an instance of a Java type.
+  * There is a bug (#18325) where you can't cleanly "unadvise" a mixed Java-Ruby hierarchy if you advise methods defined in the Java classes and use :types_and_descendents. The workaround is to exclude the Ruby types, either by not using "*_and_descendents" or by using :exclude_types => [ruby types]"" or use :method_options => :exclude_ancestor_methods.
 
 === Differences With Other Ruby AOP Toolkits
 

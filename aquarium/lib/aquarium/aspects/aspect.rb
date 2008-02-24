@@ -248,7 +248,6 @@ module Aquarium
         advice = @advice.to_proc
         @pointcuts.each do |pointcut|
           interesting_join_points(pointcut).each do |join_point|
-            attr_name = Aspect.make_advice_chain_attr_sym(join_point)
             add_advice_framework(join_point) if need_advice_framework?(join_point)
             Advice.sort_by_priority_order(specified_advice_kinds).reverse.each do |advice_kind|
               add_advice_to_chain join_point, advice_kind, advice
@@ -372,6 +371,7 @@ module Aquarium
       end
   
       def remove_advice_for_aspect_at join_point
+        return unless Aspect.advice_chain_exists? join_point
         prune_nodes_in_advice_chain_for join_point
         advice_chain = Aspect.get_advice_chain join_point
         remove_advice_framework_for(join_point) if advice_chain.empty?
@@ -412,6 +412,11 @@ module Aquarium
       end
       
       # TODO optimize calls to these *_advice_chain methods from other private methods.
+      def self.advice_chain_exists? join_point
+        advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
+        type_to_advise_for(join_point).class_variable_defined? advice_chain_attr_sym
+      end
+
       def self.set_advice_chain join_point, advice_chain
         advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
         type_to_advise_for(join_point).send :class_variable_set, advice_chain_attr_sym, advice_chain
