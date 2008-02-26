@@ -11,7 +11,7 @@ def purge_actuals actuals
   end
 end
 
-describe "#find types and their descendents, using :types_and_descendents" do
+describe TypeUtils, "#find types and their descendents, using :types_and_descendents" do
   it "should find the matching types and their descendent subclasses, even in different nested modules." do
     TypeUtils.sample_types.each do |t|
       actual = Aquarium::Finders::TypeFinder.new.find :types_and_descendents => (t.name)
@@ -28,7 +28,7 @@ describe "#find types and their descendents, using :types_and_descendents" do
   end
 end
 
-describe "#find types subtracting out excluded types and descendents, using :exclude_types_and_descendents" do
+describe TypeUtils, "#find types subtracting out excluded types and descendents, using :exclude_types_and_descendents" do
   it "should find the matching types and their descendent subclasses, minus the excluded type hierarchies." do
     actual = Aquarium::Finders::TypeFinder.new.find :types_and_descendents => ModuleForDescendents, :exclude_types_and_descendents => D1ForDescendents
     actual_keys = purge_actuals actual
@@ -47,7 +47,7 @@ describe "#find types subtracting out excluded types and descendents, using :exc
 end
 
 
-describe "#find types and their ancestors, using :types_and_ancestors" do
+describe TypeUtils, "#find types and their ancestors, using :types_and_ancestors" do
   it "should find the matching types and their ancestors, even in different nested modules." do
     TypeUtils.sample_types.each do |t|
       actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => (t.name)
@@ -65,7 +65,7 @@ describe "#find types and their ancestors, using :types_and_ancestors" do
 end
 
 
-describe "#find types subtracting out excluded types and ancestors, using :exclude_types_and_ancestors" do
+describe TypeUtils, "#find types subtracting out excluded types and ancestors, using :exclude_types_and_ancestors" do
   it "should find the matching types and their ancestors, minus the excluded types and ancestors." do
     actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => D1ForDescendents, :exclude_types_and_ancestors => ModuleForDescendents
     actual_keys = purge_actuals actual
@@ -84,7 +84,7 @@ describe "#find types subtracting out excluded types and ancestors, using :exclu
 end
 
 
-describe "#find types and their descendents and ancestors" do
+describe TypeUtils, "#find types and their descendents and ancestors" do
   it "should find the matching types and their descendents and ancestors, even in different nested modules." do
     TypeUtils.sample_types.each do |t|
       actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => (t.name), :types_and_descendents => (t.name)
@@ -96,7 +96,7 @@ describe "#find types and their descendents and ancestors" do
   end
 end
 
-describe "#find types subtracting out excluded types and their descendents and ancestors" do
+describe TypeUtils, "#find types subtracting out excluded types and their descendents and ancestors" do
   it "should find the matching types and their descendents and ancestors, minus the excluded types and their descendents and ancestors." do
     actual = Aquarium::Finders::TypeFinder.new.find \
       :types_and_ancestors => Aquarium::ForDescendents::NestedD1ForDescendents, 
@@ -110,7 +110,7 @@ describe "#find types subtracting out excluded types and their descendents and a
   end
 end
 
-describe "#find types and their descendents and ancestors, specified with regular expressions" do
+describe TypeUtils, "#find types and their descendents and ancestors, specified with regular expressions" do
   it "should find the matching types and their descendents and ancestors, even in different nested modules." do
     regexs = [/ForDescendents$/, /Aquarium::ForDescendents::.*ForDescendents/]
     actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => regexs, :types_and_descendents => regexs
@@ -125,7 +125,7 @@ describe "#find types and their descendents and ancestors, specified with regula
   end
 end
 
-describe "#find types and their descendents and ancestors, subtracting out excluded types and their descendents and ancestors, specified using regular expressions" do
+describe TypeUtils, "#find types and their descendents and ancestors, subtracting out excluded types and their descendents and ancestors, specified using regular expressions" do
   it "should find the matching types and their descendents and ancestors, minus the excluded types and their descendents and ancestors." do
     actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => /Aquarium::ForDescendents::.*D1ForDescendents/, 
       :types_and_descendents => /Aquarium::ForDescendents::.*D1ForDescendents/, 
