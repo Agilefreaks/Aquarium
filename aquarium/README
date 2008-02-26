@@ -37,9 +37,10 @@ Only around advice can prevent execution of the join point, except for the speci
 * The pointcut language is still limited, compared to AspectJ's. See also the comparison with AspectJ behavior next.
 * The API and wrapper DSL will probably evolve until the 1.0.0 release. Backwards compatibility will be maintained between releases as much as possible. When it is necessary to break backwards compatibility, translation tools will be provided, if possible.
 * There are limitations when advising Java types through JRuby. The separate RSpec suite in the "jruby" directory documentations the details on how to use Aquarium with JRuby-wrapped Java types and the limitations thereof. Here we summarize what works and what doesn't:
-  * If you advise methods in a Java type, the advice is only invoked when the method is called directly from Ruby.
-  * If you want the advice invoked when called from Ruby and Java, create a Ruby subclass of the Java class and override the method you want to advise. (It's sufficient for the method override to just invoke "super".) This means you must instantiate the Ruby class and use it, rather than an instance of a Java type.
-  * There is a bug (#18325) where you can't cleanly "unadvise" a mixed Java-Ruby hierarchy if you advise methods defined in the Java classes and use :types_and_descendents. The workaround is to exclude the Ruby types, either by not using "*_and_descendents" or by using :exclude_types => [ruby types]"" or use :method_options => :exclude_ancestor_methods.
+  * Aquarium advice on a method in a Java type will only be invoked when the method is called directly from Ruby.
+  * To have the advice invoked when the method is called from either Java or Ruby, it is necessary to create a subclass of the Java type in Ruby and an override of the method, which can just call "super". Note that it will be necessary for instances of this Ruby type to be used throughout, not instances of a Java parent type.
+  * BUG #18325: If you have Ruby subclasses of Java types *and* you advise a Java method in the hierarchy using @:types_and_descendents => MyJavaBaseClassOrInterface@ *and* you call unadvise on the aspect, the advice "infrastructure" is not correctly removed from the Ruby types. Workaround: Only advise methods in Ruby subclasses of Java types where the method is explicitly overridden in the Ruby class. (The spec and the "Rubyforge bug report":http://rubyforge.org/tracker/index.php?func=detail&aid=18325&group_id=4281&atid=16494 provide examples.)
+  * BUG #18326: Normally, you can use either Java- or Ruby-style method names (e.g., "doSomething" vs. "do_something"), for Java types. However, if you write an aspect using the Java-style for a method name and a Ruby subclass of the Java type where the method is actually defined (i.e., the Ruby class doesn't override the method), it appears that the JoinPoint was advised, but the advice is never called. Workaround: Use the Ruby-style name in this scenario.
 
 === Differences With Other Ruby AOP Toolkits
 
@@ -398,7 +399,7 @@ or
 
 Note that Aquarium itself - once built - doesn't have any dependencies outside the Ruby core and stdlib.
 
-If you want to run the tests for the JRuby support, you must also have JRuby 1.1RC1 or later installed. To run the specs for JRuby, use the command
+If you want to run the tests for the JRuby support, you must also have JRuby 1.1RC2 or later installed. To run the specs for JRuby, use the command
 
 * rake verify_jruby
 
