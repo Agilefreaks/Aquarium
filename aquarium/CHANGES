@@ -43,7 +43,7 @@ word "jruby" (ignoring case), you'll find notes about these issues and the worka
 
 The separate JRuby spec suite shows what you can and cannot do with Java types. As a side benefit, it also
 demonstrates how Java types, objects, and methods are mapped to Ruby. There are some important limitations,
-however. See the "JRuby.html":jruby.html page or the README for more details. 
+however. See the jruby.html page on the website or the README for more details. 
 
 Note: JRuby 1.1RC2 was used.
 
