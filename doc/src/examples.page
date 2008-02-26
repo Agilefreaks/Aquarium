@@ -46,6 +46,7 @@ the "extras":rdoc/files/lib/aquarium/extras_rb.html, which this example uses:
 
 Other examples can be found in the "README":rdoc/files/README.html.
 
+<a name="jruby"/>
 h3. Advising Java Classes in JRuby
 
 While you might normally turn to "AspectJ":http://aspectj.org or the "Spring Framework":http://springframework.org/ 

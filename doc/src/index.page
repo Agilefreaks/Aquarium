@@ -19,7 +19,7 @@ the domain to the persistence approach in separate "components" and programmatic
 or declaratively modify the model objects to synchronize state changes with the 
 persistent memory of the state.
  
-*New in V0.4.0*: Preliminary support for advising Java classes in JRuby!
+*New in V0.4.0*: Preliminary support for advising Java classes in JRuby! See the discussion "here":examples.html#jruby.
 
 See also the "RubyForge project page":http://rubyforge.org/projects/aquarium/.
 
