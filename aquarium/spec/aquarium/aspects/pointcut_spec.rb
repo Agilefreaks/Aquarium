@@ -365,6 +365,67 @@ describe Pointcut, "methods" do
     end  
   end
 
+  describe Pointcut, ".new (default_objects specified)" do
+    it "should use the :default_objects if specified and no other :join_point, :type, or :object is given." do
+      object1 = ClassWithPublicInstanceMethod.new
+      pc = Pointcut.new :default_objects => object1, :method => :public_instance_test_method
+      pc.join_points_matched.size.should == 1
+      pc.join_points_matched.each {|jp| jp.type_or_object.should == object1}
+    end
+
+    it "should ignore the :default_objects if at least one other :object is given and the :default_objects are objects." do
+      object1 = ClassWithPublicInstanceMethod.new
+      object2 = ClassWithPublicInstanceMethod.new
+      pc = Pointcut.new :default_objects => object1, :object => object2, :method => :public_instance_test_method
+      pc.join_points_matched.size.should == 1
+      pc.join_points_matched.each {|jp| jp.type_or_object.should == object2}
+    end
+
+    it "should ignore the :default_objects if at least one other :object is given and the :default_objects are types." do
+      object = ClassWithProtectedInstanceMethod.new
+      pc = Pointcut.new :default_objects => ClassWithPublicInstanceMethod, :object => object, :method => /_instance_test_method/, :method_options => [:public, :protected, :exclude_ancestor_methods]
+      pc.join_points_matched.size.should == 1
+      pc.join_points_matched.each {|jp| jp.type_or_object.should_not == ClassWithPublicInstanceMethod}
+    end
+
+    it "should ignore the :default_objects if at least one :join_point is given and the :default_objects are objects." do
+      join_point = JoinPoint.new :type => ClassWithProtectedInstanceMethod, :method => :protected_instance_test_method
+      object = ClassWithProtectedInstanceMethod.new
+      pc = Pointcut.new :default_objects => object, :join_point => join_point, :method => /_instance_test_method/, :method_options => [:public, :protected, :exclude_ancestor_methods]
+      pc.join_points_matched.size.should == 1
+      pc.join_points_matched.each {|jp| jp.type_or_object.should_not == ClassWithPublicInstanceMethod}
+    end
+
+    it "should ignore the :default_objects if at least one :pointcut is given and the :default_objects are types." do
+      join_point = JoinPoint.new :type => ClassWithProtectedInstanceMethod, :method => :protected_instance_test_method
+      object = ClassWithProtectedInstanceMethod.new
+      pc = Pointcut.new :default_objects => ClassWithPublicInstanceMethod, :join_point => join_point, :method => /_instance_test_method/, :method_options => [:public, :protected, :exclude_ancestor_methods]
+      pc.join_points_matched.size.should == 1
+      pc.join_points_matched.each {|jp| jp.type_or_object.should_not == ClassWithPublicInstanceMethod}
+    end
+
+    [:type, :type_and_descendents, :type_and_ancestors].each do |type_key|
+      it "should ignore the :default_objects if at least one :#{type_key} is given and the :default_objects are objects." do
+        object = ClassWithPublicInstanceMethod.new
+        pc = Pointcut.new :default_objects => object, type_key => ClassWithProtectedInstanceMethod, :method => /_instance_test_method/, :method_options => [:public, :protected, :exclude_ancestor_methods]
+        pc.join_points_matched.size.should == 1
+        pc.join_points_matched.each {|jp| jp.type_or_object.should_not == ClassWithPublicInstanceMethod}
+      end
+
+      it "should ignore the :default_objects if at least one :#{type_key} is given and the :default_objects are types." do
+        pc = Pointcut.new :default_objects => ClassWithPublicInstanceMethod, type_key => ClassWithProtectedInstanceMethod, :method => /_instance_test_method/, :method_options => [:public, :protected, :exclude_ancestor_methods]
+        pc.join_points_matched.size.should == 1
+        pc.join_points_matched.each {|jp| jp.type_or_object.should_not == ClassWithPublicInstanceMethod}
+      end
+    end
+
+    Aspect::CANONICAL_OPTIONS["default_objects"].each do |key|
+      it "should accept :#{key} as a synonym for :default_objects." do
+        pc = Pointcut.new key.intern => ClassWithPublicInstanceMethod.new, :method => :public_instance_test_method
+      end
+    end
+  end
+
   describe Pointcut, ".new (:exclude_types => types specified)" do
     before(:each) do
       before_exclude_spec

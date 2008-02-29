@@ -42,6 +42,11 @@ module Aquarium
     def self.private_class_test_method *args; end
     private_class_method :private_class_test_method
   end
+  class AspectInvocationTestClass2
+    include Aquarium::Aspects::DSL::AspectDSL
+    attr_accessor :public_test_method_args
+    def public_test_method *args; @args=args; end
+  end
 end
 
 describe Aspect, "methods" do
@@ -60,15 +65,15 @@ describe Aspect, "methods" do
     end
   
     it "should warn about no join point matches if the :ignore_no_matching_join_points is not specified." do
-      lambda {Aspect.new(:after, :logger_stream => @log_stream) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :logger_stream => @log_stream) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
       @log_stream.string.should_not be_empty
     end
     it "should warn about no join point matches if :ignore_no_matching_join_points => false is specified." do
-      lambda {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => false) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => false) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
       @log_stream.string.should_not be_empty
     end
     it "should not warn about no join point matches if :ignore_no_matching_join_points => true is specified." do
-      lambda {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => true) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => true) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
       @log_stream.string.should be_empty
     end
   end
@@ -122,22 +127,83 @@ describe Aspect, "methods" do
     end
     
     it "should contain at least one of :method(s), :pointcut(s), :type(s), or :object(s)." do
-      lambda {Aspect.new(:after, :ignore_no_matching_join_points => true) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :ignore_no_matching_join_points => true) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should contain at least one of :pointcut(s), :type(s), or :object(s) unless :default_objects => object is given." do
-      aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass.new, :methods => :public_test_method, :noop => true) {|jp, obj, *args| true}
+      aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method, :noop => true) {true}
+    end
+
+    it "should ignore the :default_objects if at least one other :object is given and the :default_objects are objects." do
+      object1 = Aquarium::AspectInvocationTestClass.new
+      object2 = Aquarium::AspectInvocationTestClass2.new
+      aspect = Aspect.new(:after, :default_objects => object1, :object => object2, :method => :public_test_method) {true}
+      aspect.join_points_matched.size.should == 1
+      aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object1}
+    end
+
+    it "should ignore the :default_objects if at least one other :object is given and the :default_objects are types." do
+      object = Aquarium::AspectInvocationTestClass2.new
+      aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, 
+        :object => object, :method => :public_test_method) {true}
+      aspect.join_points_matched.size.should == 1
+      aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+    end
+
+    it "should ignore the :default_objects if at least one :pointcut is given and the :default_objects are objects." do
+      object = Aquarium::AspectInvocationTestClass.new
+      aspect = Aspect.new(:after, :default_objects => object, 
+        :pointcut => {:type => Aquarium::AspectInvocationTestClass2, :method => :public_test_method}, :method => :public_test_method) {true}
+      aspect.join_points_matched.size.should == 1
+      aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
+    end
+
+    it "should ignore the :default_objects if at least one :pointcut is given and the :default_objects are types." do
+      aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, 
+        :pointcut => {:type => Aquarium::AspectInvocationTestClass2, :method => :public_test_method}, :method => :public_test_method) {true}
+      aspect.join_points_matched.size.should == 1
+      aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+    end
+
+    it "should ignore the :default_objects if at least one :join_point is given and the :default_objects are objects." do
+      join_point = JoinPoint.new :type => Aquarium::AspectInvocationTestClass2, :method => :public_test_method
+      object = Aquarium::AspectInvocationTestClass.new
+      aspect = Aspect.new(:after, :default_objects => object, :join_point => join_point, :method => :public_test_method) {true}
+      aspect.join_points_matched.size.should == 1
+      aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
+    end
+
+    it "should ignore the :default_objects if at least one :join_point is given and the :default_objects are types." do
+      join_point = JoinPoint.new :type => Aquarium::AspectInvocationTestClass2, :method => :public_test_method
+      aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, :join_point => join_point, :method => :public_test_method) {true}
+      aspect.join_points_matched.size.should == 1
+      aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+    end
+
+    [:type, :type_and_descendents, :type_and_ancestors].each do |type_key|
+      it "should ignore the :default_objects if at least one :#{type_key} is given and the :default_objects are objects." do
+        object = Aquarium::AspectInvocationTestClass.new
+        aspect = Aspect.new(:after, :default_objects => object, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method, :method => :public_test_method) {true}
+        aspect.join_points_matched.size.should == 1
+        aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
+      end
+
+      it "should ignore the :default_objects if at least one :#{type_key} is given and the :default_objects are types." do
+        aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method, :method => :public_test_method) {true}
+        aspect.join_points_matched.size.should == 1
+        aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+      end
     end
 
     Aspect::CANONICAL_OPTIONS["default_objects"].each do |key|
       it "should accept :#{key} as a synonym for :default_objects." do
-        aspect = Aspect.new(:after, key.intern => Aquarium::AspectInvocationTestClass.new, :methods => :public_test_method, :noop => true) {|jp, obj, *args| true}
+        aspect = Aspect.new(:after, key.intern => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method, :noop => true) {true}
       end
     end
   
     it "should not contain :pointcut(s) and either :type(s) or :object(s)." do
-      lambda {Aspect.new(:after, :pointcuts => @pointcut_opts, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda {Aspect.new(:after, :pointcuts => @pointcut_opts, :object => Aquarium::AspectInvocationTestClass.new, :methods => :public_test_method) {|jp, obj, *args| true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :pointcuts => @pointcut_opts, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :pointcuts => @pointcut_opts, :object => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 

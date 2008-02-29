@@ -271,7 +271,7 @@ module Aquarium
         @specification.merge! Pointcut.make_attribute_reading_writing_options(options_hash)
         # Map the method options to their canonical values:
         @specification[:method_options] = Aquarium::Finders::MethodFinder.init_method_options(@specification[:method_options])
-        use_default_objects_if_defined unless (types_given? || objects_given?)
+        use_default_objects_if_defined unless (objects_given? or join_points_given? or types_given? or types_and_descendents_given? or types_and_ancestors_given?)
 
         raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
         if options_hash[:reading] and (options_hash[:writing] or options_hash[:changing])

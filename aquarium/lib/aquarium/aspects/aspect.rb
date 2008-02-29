@@ -174,7 +174,6 @@ module Aquarium
           @specification[kind] = Set.new(make_array(options_hash[kind])) if options_hash[kind]
         end
         @specification.merge! Pointcut.make_attribute_reading_writing_options(options_hash)
-        use_default_objects_if_defined unless some_type_or_pc_option_given? 
         use_first_nonadvice_symbol_as_method(original_options) unless methods_given?
         calculate_excluded_types
         @advice = determine_advice block
@@ -454,8 +453,8 @@ module Aquarium
         "_aspect_"
       end
   
-      def some_type_or_pc_option_given?
-        pointcuts_given? or some_type_option_given? or objects_given? 
+      def some_type_object_join_point_or_pc_option_given?
+        pointcuts_given? or join_points_given? or some_type_option_given? or objects_given? 
       end
       
       def some_type_option_given?
@@ -483,8 +482,8 @@ module Aquarium
         bad_options(":after can't be used with :after_returning.")   if after_given_with? :after_returning
         bad_options(":after can't be used with :after_raising.")     if after_given_with? :after_raising
         bad_options(":after_returning can't be used with :after_raising.") if after_returning_given_with? :after_raising
-        unless some_type_or_pc_option_given?
-          bad_options("At least one of :pointcut(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, :object(s) is required.") 
+        unless some_type_object_join_point_or_pc_option_given? or default_objects_given?
+          bad_options("At least one of :pointcut(s), :join_point(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, or :object(s) is required.") 
         end
         if pointcuts_given? and (some_type_option_given? or objects_given?)
           bad_options("Can't specify both :pointcut(s) and one or more of :type(s), and/or :object(s).") 
