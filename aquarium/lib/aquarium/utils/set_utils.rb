@@ -6,14 +6,19 @@ module Aquarium
 
       # Return a set containing the input item or list of items. If the input
       # is a set or an array, it is returned. In all cases, the constructed set is a
-      # flattened version of the input and any nil elements are removed by #strip_nils.
+      # flattened version of the input and any nil elements are removed by #strip_set_nils.
       # Note that this behavior effectively converts +nil+ to +[]+.
       def make_set *value_or_set_or_array
-        strip_nils(convert_to_set(*value_or_set_or_array))
+        strip_set_nils(convert_to_set(*value_or_set_or_array))
       end
 
       # Return a new set that is a copy of the input set with all nils removed.
-      def strip_nils set
+      def strip_set_nils set
+        set.delete_if {|x| x.nil?}
+      end
+  
+      # Return a new set that is a copy of the input set with all nils removed.
+      def self.strip_set_nils set
         set.delete_if {|x| x.nil?}
       end
   

@@ -32,29 +32,18 @@ module Aquarium
   
       attr_reader   :specification, :pointcuts, :advice
   
-      CANONICAL_OPTIONS = Pointcut::CANONICAL_OPTIONS.merge({
+      ASPECT_CANONICAL_OPTIONS = {
         "advice"            => %w[action do_action use_advice advise_with invoke call],
         "pointcuts"         => %w[pointcut within_pointcuts within_pointcut on_pointcuts on_pointcut],
         "exclude_pointcuts" => %w[exclude_pointcut exclude_on_pointcut exclude_on_pointcuts exclude_within_pointcut exclude_within_pointcuts],
         "ignore_no_matching_join_points" => %[ignore_no_jps]
-      })
+      }
+      CANONICAL_OPTIONS = Pointcut::CANONICAL_OPTIONS.merge ASPECT_CANONICAL_OPTIONS
          
-      ALL_ALLOWED_OPTIONS = CANONICAL_OPTIONS.keys.inject([]) {|ary,i| ary << i << CANONICAL_OPTIONS[i]}.flatten +
-        Pointcut::ATTRIBUTE_OPTIONS
+      canonical_options_given_methods CANONICAL_OPTIONS
+      # don't define accessors this way:
+      # canonical_option_accessor CANONICAL_OPTIONS
 
-      ALL_ALLOWED_OPTION_SYMBOLS = ALL_ALLOWED_OPTIONS.map {|o| o.intern} + Advice::kinds
-
-      CANONICAL_OPTIONS.keys.each do |name|
-        module_eval(<<-EOF, __FILE__, __LINE__)
-          def #{name}_given
-            @specification[:#{name}]
-          end
-  
-          def #{name}_given?
-            not (#{name}_given.nil? or #{name}_given.empty?)
-          end
-        EOF
-      end
 
       # Aspect.new (:around | :before | :after | :after_returning | :after_raising ) \
       #   (:pointcuts => [...]), | \
@@ -115,7 +104,7 @@ module Aquarium
       def initialize *options, &block
         @first_option_that_was_method = []
         opts = rationalize options
-        init_specification opts, CANONICAL_OPTIONS, &block
+        init_specification opts, CANONICAL_OPTIONS, (Pointcut::ATTRIBUTE_OPTIONS_VALUES + KINDS_IN_PRIORITY_ORDER), &block
         init_pointcuts
         validate_specification
         return if noop
@@ -130,10 +119,6 @@ module Aquarium
         get_jps :join_points_not_matched
       end
       
-      def all_allowed_option_symbols
-        ALL_ALLOWED_OPTION_SYMBOLS + @first_option_that_was_method
-      end
-
       def unadvise
         return if noop
         @pointcuts.each do |pointcut|
@@ -173,8 +158,8 @@ module Aquarium
         Advice.kinds.each do |kind|
           @specification[kind] = Set.new(make_array(options_hash[kind])) if options_hash[kind]
         end
-        @specification.merge! Pointcut.make_attribute_reading_writing_options(options_hash)
-        use_first_nonadvice_symbol_as_method(original_options) unless methods_given?
+        init_pointcut_specific_specification original_options, options_hash, &block
+        use_first_nonadvice_symbol_as_method(original_options, options_hash) unless methods_given?
         calculate_excluded_types
         @advice = determine_advice block
       end
@@ -193,6 +178,29 @@ module Aquarium
         block || (@specification[:advice].to_a.first)
       end
       
+      def init_pointcut_specific_specification original_options, options_hash
+        @specification.merge! Pointcut.make_attribute_reading_writing_options(options_hash)
+        # Map the method options to their canonical values:
+        @specification[:method_options] = Aquarium::Finders::MethodFinder.init_method_options(@specification[:method_options])
+        # use_default_objects_if_defined unless any_type_related_options_given?
+
+        raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
+        if options_hash[:reading] and (options_hash[:writing] or options_hash[:changing])
+          unless options_hash[:reading].eql?(options_hash[:writing]) or options_hash[:reading].eql?(options_hash[:changing])
+            raise Aquarium::Utils::InvalidOptions.new(":reading and :writing/:changing can only be used together if they refer to the same set of attributes.") 
+          end
+        end
+        # init_methods_specification options_hash
+      end
+    
+      # def init_methods_specification options
+      #   match_all_methods if ((no_methods_specified? and no_attributes_specified?) or all_methods_specified?)
+      # end
+      # 
+      # def any_type_related_options_given?
+      #   objects_given? or join_points_given? or types_given? or types_and_descendents_given? or types_and_ancestors_given?
+      # end
+
       def init_pointcuts
         pointcuts = []
         if pointcuts_given?
@@ -207,8 +215,9 @@ module Aquarium
           end
         else
           pc_options = {}
-          Pointcut::ALL_ALLOWED_OPTION_SYMBOLS.each do |pc_option|
-            pc_options[pc_option] = @specification[pc_option] unless @specification[pc_option].nil?
+          Pointcut::CANONICAL_OPTIONS.keys.each do |pc_option|
+            pco_sym = pc_option.intern
+            pc_options[pco_sym] = @specification[pco_sym] unless @specification[pco_sym].nil?
           end
           pointcuts << Pointcut.new(pc_options)
         end
@@ -516,12 +525,14 @@ module Aquarium
         EOF
       end
       
-      def use_first_nonadvice_symbol_as_method options
+      def use_first_nonadvice_symbol_as_method options, options_hash
         2.times do |i|
           if options.size >= i+1
             sym = options[i]
             if sym.kind_of?(Symbol) && !Advice::kinds.include?(sym)
               @specification[:methods] = Set.new([sym])
+              @specification.delete sym
+              options_hash.delete sym
               @first_option_that_was_method << sym
               return
             end

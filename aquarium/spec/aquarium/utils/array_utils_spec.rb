@@ -49,24 +49,26 @@ describe Aquarium::Utils::ArrayUtils, "#make_array" do
   end
 end
 
-describe Aquarium::Utils::ArrayUtils, "#strip_nils" do
+describe Aquarium::Utils::ArrayUtils, "#strip_array_nils" do
   it "should return an empty array if an input array contains all nils." do
-    strip_nils([nil, nil]).should == []
+    strip_array_nils([nil, nil]).should == []
   end
   
   it "should return an empty array if an input Set contains all nils." do
-    strip_nils(Set.new([nil, nil])).should == []
+    strip_array_nils(Set.new([nil, nil])).should == []
   end
   
   it "should return an array with all nils removed from the input array." do
-    strip_nils([nil, 1, 2, nil, 3, 4]).should == [1, 2, 3, 4]
+    strip_array_nils([nil, 1, 2, nil, 3, 4]).should == [1, 2, 3, 4]
   end
 
   it "should return an array with all nils removed from the input Set." do
-    strip_nils(Set.new([nil, 1, 2, nil, 3, 4])).should == [1, 2, 3, 4]
+    strip_array_nils(Set.new([nil, 1, 2, nil, 3, 4])).should == [1, 2, 3, 4]
   end
+end
 
-  it "should be accessible as a class method." do
-    Aquarium::Utils::ArrayUtils.strip_nils(Set.new([nil, 1, 2, nil, 3, 4])).should == [1, 2, 3, 4]
+describe Aquarium::Utils::ArrayUtils, ".strip_array_nils" do
+  it "should work like the instance method." do
+    Aquarium::Utils::ArrayUtils.strip_array_nils(Set.new([nil, 1, 2, nil, 3, 4])).should == [1, 2, 3, 4]
   end
 end

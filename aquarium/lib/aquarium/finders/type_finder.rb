@@ -13,8 +13,34 @@ module Aquarium
     class TypeFinder
       include Aquarium::Utils::ArrayUtils
       include Aquarium::Utils::TypeUtils
+      include Aquarium::Utils::OptionsUtils
 
-      TYPES_SYNONYMS = %w[name names type types]
+      def self.add_exclude_options_for option, options_hash
+        all_variants = options_hash[option].dup
+        options_hash["exclude_#{option}"] = all_variants.map {|x| "exclude_#{x}"}
+      end
+      def self.add_prepositional_option_variants_for option, options_hash
+        all_variants = options_hash[option].dup + [option]
+        %w[for on in within].each do |prefix|
+          all_variants.each do |variant|
+            options_hash[option] << "#{prefix}_#{variant}" 
+          end
+        end
+      end
+      
+      TYPE_FINDER_CANONICAL_OPTIONS = {
+        "types"                 => %w[type class classes module modules name names],
+        "types_and_descendents" => %w[type_and_descendents class_and_descendents classes_and_descendents module_and_descendents modules_and_descendents names_and_descendents names_and_descendents],
+        "types_and_ancestors"   => %w[type_and_ancestors class_and_ancestors classes_and_ancestors module_and_ancestors modules_and_ancestors name_and_ancestors names_and_ancestors],
+      }
+      TYPE_FINDER_CANONICAL_OPTIONS.keys.dup.each do |type_option|
+        TypeFinder.add_prepositional_option_variants_for type_option, TYPE_FINDER_CANONICAL_OPTIONS
+        TypeFinder.add_exclude_options_for               type_option, TYPE_FINDER_CANONICAL_OPTIONS
+      end
+      CANONICAL_OPTIONS = TYPE_FINDER_CANONICAL_OPTIONS.dup
+      
+      canonical_options_given_methods CANONICAL_OPTIONS
+      canonical_option_accessor CANONICAL_OPTIONS
       
       # Usage:
       #  finder_result = TypeFinder.new.find [options => [...] ]
@@ -90,54 +116,37 @@ module Aquarium
       # Note: a common idiom in aspects is to include descendents of a type, but not the type
       # itself. You can do as in the following example:
       #   <tt>... :type_and_descendents => "Foo", :exclude_type => "Foo" 
-      # TODO: Use the new OptionsUtils.
+      # 
       def find options = {}
-        result   = Aquarium::Finders::FinderResult.new
-        excluded = Aquarium::Finders::FinderResult.new
-        unknown_options = []
-        input_type_nil = false
-        noop = false
-        options.each do |option, value|
-          unless TypeFinder.is_recognized_option option
-            unknown_options << option
-            next
-          end
-          if value.nil?
-            input_type_nil = true
-            next
-          end
-          noop = value if option == :noop
-          next if noop
-          if option.to_s =~ /^exclude_/
-            excluded << find_matching(value, option)
-          else
-            result << find_matching(value, option)
-          end
-        end
-        handle_errors unknown_options, input_type_nil
-        result - excluded
+        init_specification options, CANONICAL_OPTIONS
+        result = do_find_types
+        unset_specification
+        result 
       end
   
       
       protected
 
-      def handle_errors unknown_options, input_type_nil
-        message = ""
-        message += "Unknown options: #{unknown_options.inspect}. " unless unknown_options.empty?
-        message += "Input type specification can't be nil! " if input_type_nil
-        raise Aquarium::Utils::InvalidOptions.new(message) unless message.empty?
+      # Hack. Since the finder could be reused, unset the specification created by #find.
+      def unset_specification
+        @specification = {}
       end
-
-      def self.is_recognized_option option_or_symbol
-        TYPES_SYNONYMS.each do |t|
-          ['', "exclude_"].each do |excl| 
-            return true if ["#{excl}#{t}", "#{excl}#{t}_and_descendents", "#{excl}#{t}_and_ancestors"].include?(option_or_symbol.to_s)
+      
+      def do_find_types
+        result   = Aquarium::Finders::FinderResult.new
+        excluded = Aquarium::Finders::FinderResult.new
+        return result if noop
+        @specification.each do |option, types|
+          next unless TYPE_FINDER_CANONICAL_OPTIONS.keys.include?(option.to_s)
+          next if types.nil? or types.empty?
+          target_result = option.to_s =~ /^exclude_/ ? excluded : result
+          types.each do |value|
+            target_result << find_matching(value, option)
           end
         end
-        return true if option_or_symbol.to_s.eql?("noop")
-        false
+        result - excluded
       end
-  
+      
       def find_matching regexpes_or_names, option
         result = Aquarium::Finders::FinderResult.new
         expressions = make_array regexpes_or_names

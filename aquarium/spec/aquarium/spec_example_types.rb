@@ -225,7 +225,8 @@ module Aquarium
     include SpecExampleTypes
     
     def stub_type_utils_descendents
-  	  @stubbed_type_utils_descendents = Aspect.new :around, :calls_to => :descendents, :on_type => Aquarium::Utils::TypeUtils, :restricting_methods_to => :class_methods do |jp, object, *args|
+  	  @stubbed_type_utils_descendents = Aspect.new :around, :calls_to => :descendents, :on_type => Aquarium::Utils::TypeUtils, 
+  	      :restricting_methods_to => :class_methods do |jp, object, *args|
         descendents[args[0]]
       end
     end

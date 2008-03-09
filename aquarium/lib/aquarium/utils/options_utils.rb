@@ -3,15 +3,43 @@ require 'aquarium/utils/default_logger'
 
 module Aquarium
   module Utils
+    include SetUtils
+    include ArrayUtils
 
-    # Support parsing and processing of key-value pairs of options.
-    # Types including this module must define the following methods (see Pointcut for an example):
-    #   <tt>all_allowed_option_symbols</tt>
-    #     Return an array of all allowed options as symbols.
+    # Support parsing and processing of key-value pairs of options, where the values are always converted
+    # to sets.
+    # Types including this module should have their <tt>initialize</tt> methods call this module's
+    #   <tt>init_specification</tt> to do the options processing.
+    # Including types may define the following method:
     #   <tt>init_type_specific_specification(original_options, options_hash)</tt>
-    #     Called to perform any final options handling unique for the type (optional).
-    # In addition, including types should have their <tt>initialize</tt> methods calls this module's
-    # <tt>init_specification</tt> to do the options processing.
+    # If defined, it is called to perform any final options handling unique for the type 
+    # (see Pointcut for an example).
+    #
+    # Several class methods are included in including types for defining convenience instance methods.
+    # for options +:foo+ and +:bar+, calling:
+    #   <tt>canonical_options_given_methods :foo, :bar</tt>
+    # will define several methods for each option specified, e.g.,:
+    #   <tt>foo_given? # => returns true if a value was specified for the :foo option</tt>
+    #   <tt>foo_given  # => returns the value of @specification[:foo]</tt>
+    #   <tt>bar_given? # etc.
+    #   <tt>bar_given
+    # If you would like corresponding reader and writer methods, pass a list of the keys for which you want these
+    # methods defined to
+    #   <tt>canonical_option_reader   :foo, :bar   # analogous to attr_reader
+    #   <tt>canonical_option_writer   :foo, :bar   # analogous to attr_writer
+    #   <tt>canonical_option_accessor :foo, :bar   # analogous to attr_accessor
+    # For all of these methods, you can also pass CANONICAL_OPTIONS (discussed below) to define methods
+    # for all of the "canonical" options. _E.g.,_
+    #   <tt>canonical_option_accessor CANONICAL_OPTIONS
+    #
+    # These methods are not defined by default to prevent accidentally overriding other methods that you might
+    # have defined with the same names. Also, note that the writer methods will convert the inputs to sets,
+    # following the conventions for the options and the readers will return the sets. If you want different handling,
+    # you'll have to provide custom implementations. Note that special-case accessor methods are already defined 
+    # for the :noop and :logger options (discussed below) where the writers expect single values, not sets, and the
+    # readers return the single values.
+    # Finally, these +canonical_option_*+ methods should only be called with the *keys* for the +CANONICAL_OPTIONS+.
+    # The keys are considered the "canonical options", while the values for the keys are synonyms that can be used instead.
     #
     # This module also defines several universal options that will be available to all types that include this module:
     # <tt>:logger => options_hash[:logger] || default system-wide Logger</tt>
@@ -38,9 +66,12 @@ module Aquarium
       def self.universal_options
         [:logger_stream, :logger, :severity, :noop]
       end
+
+      attr_reader :specification
       
-      def init_specification options, canonical_options, &optional_block
+      def init_specification options, canonical_options, additional_allowed_options = [], &optional_block
         @canonical_options = canonical_options
+        @additional_allowed_options = additional_allowed_options.map{|x| x.respond_to?(:intern) ? x.intern : x}
         @original_options = options.dup unless options.nil?
         @specification = {}
         options ||= {} 
@@ -51,7 +82,7 @@ module Aquarium
             ary << options_hash[o.intern] if options_hash[o.intern]
             ary
           end
-          @specification[key.intern] = Set.new(make_array(all_related_options))
+          @specification[key.intern] = Set.new(all_related_options.flatten)
         end
 
         universal_options = {
@@ -67,23 +98,10 @@ module Aquarium
         OptionsUtils::universal_options.each do |uopt| 
           @specification[uopt] = Set.new([universal_options[uopt]]) unless universal_options[uopt].nil?
         end
-        init_type_specific_specification @original_options, options_hash, &optional_block
+        if respond_to? :init_type_specific_specification
+          init_type_specific_specification @original_options, options_hash, &optional_block
+        end
         validate_options options_hash
-      end
-      
-      [:logger, :noop].each do |name|
-        module_eval(<<-EOF, __FILE__, __LINE__)
-          def #{name}
-            @specification[:#{name}].to_a.first
-          end
-          def #{name}= value
-            @specification[:#{name}] = Set.new([value])
-          end
-        EOF
-      end
-      
-      # Override for type-specific initialization
-      def init_type_specific_specification original_options, options_hash, &optional_block
       end
       
       def hashify options
@@ -104,8 +122,74 @@ module Aquarium
         raise Aquarium::Utils::InvalidOptions.new("Unknown options specified: #{unknowns.inspect}") if unknowns.size > 0
       end
   
+      [:logger, :noop].each do |name|
+        define_method(name)       { @specification[name].to_a.first }
+        define_method("#{name}=") { |value| @specification[name] = make_set([value]) }
+      end
+    
+      module ClassMethods
+        def canonical_option_reader *canonical_option_key_list
+          return if canonical_option_key_list.nil? or canonical_option_key_list.empty?
+          keys = determine_options_for_accessors canonical_option_key_list
+          keys.each do |name|
+            define_method(name) do 
+              @specification[name]
+            end
+          end
+        end
+        def canonical_option_writer *canonical_option_key_list
+          return if canonical_option_key_list.nil? or canonical_option_key_list.empty?
+          keys = determine_options_for_accessors canonical_option_key_list
+          keys.each do |name|
+            define_method("#{name}=") do |value|
+              @specification[name] = make_set(make_array(value))
+            end
+          end
+        end
+        def canonical_option_accessor *canonical_option_key_list
+          canonical_option_reader *canonical_option_key_list
+          canonical_option_writer *canonical_option_key_list
+        end
+      
+        def canonical_options_given_methods canonical_options
+          keys = canonical_options.respond_to?(:keys) ? canonical_options.keys : canonical_options 
+          keys.each do |name|
+            module_eval(<<-EOF, __FILE__, __LINE__)
+              def #{name}_given
+                @specification[:#{name}]
+              end
+  
+              def #{name}_given?
+                not (#{name}_given.nil? or #{name}_given.empty?)
+              end
+            EOF
+          end
+        end
+
+        protected
+        def determine_options_for_accessors canonical_option_key_list
+          keys = canonical_option_key_list
+          if canonical_option_key_list.kind_of?(Array) and canonical_option_key_list.size == 1
+            keys = canonical_option_key_list[0]
+          end
+          if keys.respond_to? :keys
+            keys = keys.keys
+          end
+          keys
+        end
+      end
+      
+      def self.append_features clazz
+        super
+        ClassMethods.send :append_features, (class << clazz; self; end)
+      end
+  
       protected
     
+      def all_allowed_option_symbols
+        @canonical_options.to_a.flatten.map {|o| o.intern} + @additional_allowed_options
+      end
+      
       def set_logger_if_logger_or_stream_specified universal_options, options_hash 
         if not options_hash[:logger].nil?
           universal_options[:logger] = options_hash[:logger]

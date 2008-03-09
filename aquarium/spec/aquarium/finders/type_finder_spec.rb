@@ -7,6 +7,7 @@ class Outside
     class ReallyInside; end
   end
 end
+class SubOutside < Outside; end
 
 describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
 
@@ -18,12 +19,14 @@ describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
     lambda { Aquarium::Finders::TypeFinder.new.find "foo" }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
   
-  it "should raise if the input type value is nil." do
-    lambda { Aquarium::Finders::TypeFinder.new.find :type => nil }.should raise_error(Aquarium::Utils::InvalidOptions)
-  end
-  
   it "should return no matched types and no unmatched type expressions by default (i.e., the input is empty)." do
     actual = Aquarium::Finders::TypeFinder.new.find
+    actual.matched.should == {}
+    actual.not_matched.should == {}
+  end
+  
+  it "should return no matched types and no unmatched type expressions if nil is specified for the types." do
+    actual = Aquarium::Finders::TypeFinder.new.find :type => nil
     actual.matched.should == {}
     actual.not_matched.should == {}
   end
@@ -62,51 +65,33 @@ describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
   end
 end
 
-describe Aquarium::Finders::TypeFinder, "#is_recognized_option" do
-  
-  it "should be true for :names, :types, :name, :type (synonyms), as strings or symbols." do
-    %w[name type names types].each do |s|
-      Aquarium::Finders::TypeFinder.is_recognized_option(s).should == true
-      Aquarium::Finders::TypeFinder.is_recognized_option(s.to_sym).should == true
-    end
-  end  
-  
-  it "should be false for unknown options." do
-    %w[public2 wierd unknown string method object].each do |s|
-      Aquarium::Finders::TypeFinder.is_recognized_option(s).should == false
-      Aquarium::Finders::TypeFinder.is_recognized_option(s.to_sym).should == false
-    end
-  end
-end
-
-
-describe Aquarium::Finders::TypeFinder, "#find with :type or :name used to specify a single type" do
+describe Aquarium::Finders::TypeFinder, "#find with :types used to specify a single type" do
   it "should find a type matching a simple name (without :: namespace delimiters) using its name and the :type option." do
-    actual = Aquarium::Finders::TypeFinder.new.find :type => :Object
+    actual = Aquarium::Finders::TypeFinder.new.find :types => :Object
     actual.matched_keys.should == [Object]
     actual.not_matched.should == {}
   end
   
   it "should find a type matching a simple name (without :: namespace delimiters) using its name and the :name option." do
-    actual = Aquarium::Finders::TypeFinder.new.find :name => :Object
+    actual = Aquarium::Finders::TypeFinder.new.find :types => :Object
     actual.matched_keys.should == [Object]
     actual.not_matched.should == {}
   end
   
   it "should return an empty match for a simple name (without :: namespace delimiters) that doesn't match an existing type." do
-    actual = Aquarium::Finders::TypeFinder.new.find :name => :Unknown
+    actual = Aquarium::Finders::TypeFinder.new.find :types => :Unknown
     actual.matched.should == {}
     actual.not_matched_keys.should == [:Unknown]
   end
   
   it "should find a type matching a name with :: namespace delimiters using its name." do
-    actual = Aquarium::Finders::TypeFinder.new.find :name => "Outside::Inside1"
+    actual = Aquarium::Finders::TypeFinder.new.find :types => "Outside::Inside1"
     actual.matched_keys.should == [Outside::Inside1]
     actual.not_matched.should == {}
   end
 end
-  
-describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :name used to specify one or more names" do
+
+describe Aquarium::Finders::TypeFinder, "#find with :types used to specify one or more names" do
   it "should find types matching simple names (without :: namespace delimiters) using their names." do
     expected_found_types  = [Class, Kernel, Module, Object]
     expected_unfound_exps = %w[TestCase Unknown1 Unknown2]
@@ -124,7 +109,7 @@ describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :
   end
 end
   
-describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :name used to specify one or more regular expressions" do
+describe Aquarium::Finders::TypeFinder, "#find with :types used to specify one or more regular expressions" do
   it "should find types matching simple names (without :: namespace delimiters) using lists of regular expressions." do
     expected_found_types  = [Class, Kernel, Module, Object]
     expected_unfound_exps = [/Unknown2/, /^.*TestCase.*$/, /^Unknown1/]
@@ -172,6 +157,16 @@ describe Aquarium::Finders::TypeFinder, "#find with :types, :names, :type, and :
   end
 end
 
+describe Aquarium::Finders::TypeFinder, "#find with :types" do
+  Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["types"].reject{|key| key.eql?("types")}.each do |key|
+    it "should accept :#{key} as a synonym for :types." do
+      actual = Aquarium::Finders::TypeFinder.new.find key.intern => "Outside::Inside1"
+      actual.matched_keys.should == [Outside::Inside1]
+      actual.not_matched.should == {}
+    end
+  end  
+end
+  
 describe Aquarium::Finders::TypeFinder, "#find with :exclude_types" do
   it "should exclude types specified with a regular expression." do
     expected_found_types  = [Class, Module, Object]
@@ -193,35 +188,45 @@ describe Aquarium::Finders::TypeFinder, "#find with :exclude_types" do
     actual.not_matched.size.should == 0
   end
 
-  it "should be a synonym for :exclude_type." do
-    expected_found_types  = [Class, Module]
-    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_type => [Kernel, Object]
-    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
-    actual.not_matched.size.should == 0
-  end
-
-  it "should be a synonym for :exclude_names." do
-    expected_found_types  = [Class, Module]
-    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_names => [Kernel, Object]
-    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
-    actual.not_matched.size.should == 0
-  end
-
-  it "should be a synonym for :exclude_name." do
-    expected_found_types  = [Class, Module]
-    actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], :exclude_name => [Kernel, Object]
-    actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
-    actual.not_matched.size.should == 0
-  end
+  Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["exclude_types"].reject{|key| key.eql?("exclude_types")}.each do |key|
+    it "should accept :#{key} as a synonym for :exclude_types." do
+      expected_found_types  = [Class, Module]
+      actual = Aquarium::Finders::TypeFinder.new.find :types => [/K.+l/, /^Mod.+e$/, /^Object$/, /^Clas{2}$/], key.intern => [Kernel, Object]
+      actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
+      actual.not_matched.size.should == 0
+    end
+  end  
 end
   
-describe Aquarium::Finders::TypeFinder, "#find" do
-  it "should find types when types given." do
-    expected_found_types  = [Outside::Inside1, Outside::Inside2]
-    actual = Aquarium::Finders::TypeFinder.new.find :names => expected_found_types
+describe Aquarium::Finders::TypeFinder, "#find with :types_and_descendents" do
+  it "should find the types and their descendents." do
+    expected_found_types  = [Outside, SubOutside]
+    actual = Aquarium::Finders::TypeFinder.new.find :types_and_descendents => Outside
     actual.matched_keys.sort_by {|x| x.to_s}.should == expected_found_types.sort_by {|x| x.to_s}
-    actual.not_matched_keys.should == []
+    actual.not_matched.size.should == 0
   end
+
+  Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["types_and_descendents"].reject{|key| key.eql?("types_and_descendents")}.each do |key|
+    it "should accept :#{key} as a synonym for :types_and_descendents." do
+      lambda {actual = Aquarium::Finders::TypeFinder.new.find key.intern => Outside, :noop => true}.should_not raise_error
+    end
+  end  
+end
+
+describe Aquarium::Finders::TypeFinder, "#find with :types_and_ancestors" do
+  it "should find the types and their ancestors." do
+    actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => SubOutside
+    [Outside, SubOutside, Kernel, Object].each do |x| 
+      actual.matched_keys.should include(x)
+    end
+    actual.not_matched.size.should == 0
+  end
+
+  Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["types_and_ancestors"].reject{|key| key.eql?("types_and_ancestors")}.each do |key|
+    it "should accept :#{key} as a synonym for :types_and_ancestors." do
+      lambda {actual = Aquarium::Finders::TypeFinder.new.find key.intern => SubOutside, :noop => true}.should_not raise_error
+    end
+  end  
 end
 
 

@@ -119,18 +119,10 @@ module Aquarium
       %w[types objects methods].each do |key|
         CANONICAL_OPTIONS["exclude_#{key}"] = CANONICAL_OPTIONS[key].map {|x| "exclude_#{x}"}
       end
-      CANONICAL_OPTIONS["methods"].dup.each do |synonym|
+      CANONICAL_OPTIONS["methods"].dup.find_all {|synonym| synonym =~ /methods?$/}.each do |synonym|
         CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
       end
       
-      ALL_ALLOWED_OPTIONS = CANONICAL_OPTIONS.keys.inject([]) {|ary,i| ary << i << CANONICAL_OPTIONS[i]}.flatten
-
-      ALL_ALLOWED_OPTION_SYMBOLS = ALL_ALLOWED_OPTIONS.map {|o| o.intern}
-         
-      def all_allowed_option_symbols
-        ALL_ALLOWED_OPTION_SYMBOLS
-      end
-
       RECOGNIZED_METHOD_OPTIONS = {
         "all"       => %w[all_methods],
         "public"    => %w[public_methods],

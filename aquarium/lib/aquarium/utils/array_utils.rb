@@ -7,22 +7,23 @@ module Aquarium
   
       # Return an array containing the input item or list of items. If the input
       # is an array, it is returned. In all cases, the constructed array is a
-      # flattened version of the input and any nil elements are removed by #strip_nils.
+      # flattened version of the input and any nil elements are removed by #strip_array_nils.
       # Note that this behavior effectively converts +nil+ to +[]+.
       def make_array *value_or_enum
         ArrayUtils.make_array value_or_enum
       end
 
       def self.make_array *value_or_enum
-        strip_nils do_make_array(value_or_enum)
+        strip_array_nils do_make_array(value_or_enum)
       end
       
       # Return a copy of the input array with all nils removed.
-      def strip_nils array
-        ArrayUtils.strip_nils array
+      def strip_array_nils array
+        ArrayUtils.strip_array_nils array
       end
   
-      def self.strip_nils array
+      # Return a copy of the input array with all nils removed.
+      def self.strip_array_nils array
         array.to_a.compact
       end
   

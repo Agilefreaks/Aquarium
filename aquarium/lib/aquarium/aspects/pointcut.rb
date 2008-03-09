@@ -160,7 +160,7 @@ module Aquarium
       #
       # Pointcut.new also accepts all the "universal" options documented in OptionsUtils.
       def initialize options = {} 
-        init_specification options, CANONICAL_OPTIONS
+        init_specification options, CANONICAL_OPTIONS, (ATTRIBUTE_OPTIONS_VALUES + Advice::KINDS_IN_PRIORITY_ORDER)
         return if noop
         init_candidate_types 
         init_candidate_objects
@@ -174,8 +174,9 @@ module Aquarium
       # the specifications are equal, and the candidate types and candidate objects are equal.
       # if you care only about the matched join points, then just compare #join_points_matched
       def eql? other
-        object_id == other.object_id ||
-        (specification == other.specification && 
+        object_id == other.object_id || 
+        (self.class === other &&
+         specification == other.specification && 
          candidate_types == other.candidate_types && 
          candidate_types_excluded == other.candidate_types_excluded && 
          candidate_objects == other.candidate_objects && 
@@ -195,83 +196,62 @@ module Aquarium
   
       alias to_s inspect
 
-      CANONICAL_OPTIONS = {
-        "types"                 => %w[type class classes module modules],
-        "types_and_descendents" => %w[type_and_descendents class_and_descendents classes_and_descendents module_and_descendents modules_and_descendents],
-        "types_and_ancestors"   => %w[type_and_ancestors class_and_ancestors classes_and_ancestors module_and_ancestors modules_and_ancestors],
+      POINTCUT_CANONICAL_OPTIONS = {
         "objects"               => %w[object],
+        "default_objects"       => %w[default_object],
         "join_points"           => %w[join_point],
         "methods"               => %w[method within_method within_methods calling invoking calls_to invocations_of sending_message_to sending_messages_to],
         "attributes"            => %w[attribute accessing],
         "method_options"        => %w[method_option restricting_methods_to], 
         "attribute_options"     => %w[attribute_option],
-        "default_objects"       => %w[default_object]
       }
-      %w[types types_and_descendents types_and_ancestors objects join_points ].each do |thing|
-        roots = CANONICAL_OPTIONS[thing].dup + [thing]
-        CANONICAL_OPTIONS["exclude_#{thing}"] = roots.map {|x| "exclude_#{x}"}
+      %w[objects join_points].each do |thing|
+        roots = POINTCUT_CANONICAL_OPTIONS[thing].dup 
+        POINTCUT_CANONICAL_OPTIONS["exclude_#{thing}"] = roots.map {|x| "exclude_#{x}"}
         %w[for on in within].each do |prefix|
+          POINTCUT_CANONICAL_OPTIONS[thing] << "#{prefix}_#{thing}" 
           roots.each do |root|
-            CANONICAL_OPTIONS[thing] << "#{prefix}_#{root}" 
+            POINTCUT_CANONICAL_OPTIONS[thing] << "#{prefix}_#{root}" 
           end
         end
       end
-      CANONICAL_OPTIONS["methods"].dup.each do |synonym|
-        CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
+      POINTCUT_CANONICAL_OPTIONS["methods"] << "methods_matching"
+      POINTCUT_CANONICAL_OPTIONS["methods"].dup.find_all {|synonym| synonym =~ /methods?$/}.each do |synonym|
+        POINTCUT_CANONICAL_OPTIONS["methods"] << "#{synonym}_matching"
       end
-      CANONICAL_OPTIONS["exclude_methods"] = []
-      CANONICAL_OPTIONS["methods"].each do |synonym|
-        CANONICAL_OPTIONS["exclude_methods"] << "exclude_#{synonym}"
+      POINTCUT_CANONICAL_OPTIONS["exclude_methods"] = []
+      POINTCUT_CANONICAL_OPTIONS["methods"].each do |synonym|
+        POINTCUT_CANONICAL_OPTIONS["exclude_methods"] << "exclude_#{synonym}"
       end
-      CANONICAL_OPTIONS["exclude_pointcuts"] = ["exclude_pointcut"] + 
+      POINTCUT_CANONICAL_OPTIONS["exclude_pointcuts"] = ["exclude_pointcut"] + 
         %w[for on in within].map {|prefix| ["exclude_#{prefix}_pointcuts", "exclude_#{prefix}_pointcut"]}.flatten
-            
-      ATTRIBUTE_OPTIONS = %w[reading writing changing]
-      
-      ALL_ALLOWED_OPTIONS = ATTRIBUTE_OPTIONS +
-          CANONICAL_OPTIONS.keys.inject([]) {|ary,i| ary << i << CANONICAL_OPTIONS[i]}.flatten
 
-      ALL_ALLOWED_OPTION_SYMBOLS = ALL_ALLOWED_OPTIONS.map {|o| o.intern}
-         
-      def all_allowed_option_symbols
-        ALL_ALLOWED_OPTION_SYMBOLS
-      end
+      CANONICAL_OPTIONS = Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS.merge POINTCUT_CANONICAL_OPTIONS
 
-      CANONICAL_OPTIONS.keys.each do |name|
-        module_eval(<<-EOF, __FILE__, __LINE__)
-          def #{name}_given
-            @specification[:#{name}]
-          end
-  
-          def #{name}_given?
-            not (#{name}_given.nil? or #{name}_given.empty?)
-          end
-        EOF
-      end
+      ATTRIBUTE_OPTIONS_VALUES = %w[reading writing changing]
+
+      canonical_options_given_methods CANONICAL_OPTIONS
+      canonical_option_accessor CANONICAL_OPTIONS
 
       def self.make_attribute_reading_writing_options options_hash
         result = {}
         [:writing, :changing, :reading].each do |attr_key|
-          unless options_hash[attr_key].nil? or options_hash[attr_key].empty?
-            result[:attributes] ||= Set.new([])
-            result[:attribute_options] ||= Set.new([])
-            result[:attributes].merge(Aquarium::Utils::ArrayUtils.make_array(options_hash[attr_key]))
-            attr_opt = attr_key == :reading ? :readers : :writers
-            result[:attribute_options] << attr_opt
-          end
+          next if options_hash[attr_key].nil? or options_hash[attr_key].empty?
+          result[:attributes] ||= Set.new([])
+          result[:attribute_options] ||= Set.new([])
+          result[:attributes].merge(Aquarium::Utils::ArrayUtils.make_array(options_hash[attr_key]))
+          attr_opt = attr_key == :reading ? :readers : :writers
+          result[:attribute_options] << attr_opt
         end
         result
       end
             
-      protected
-  
-      attr_writer :join_points_matched, :join_points_not_matched, :specification, :candidate_types, :candidate_types_excluded, :candidate_objects, :candidate_join_points
-
+      # TODO remove duplication w/ aspect.rb
       def init_type_specific_specification original_options, options_hash
         @specification.merge! Pointcut.make_attribute_reading_writing_options(options_hash)
         # Map the method options to their canonical values:
         @specification[:method_options] = Aquarium::Finders::MethodFinder.init_method_options(@specification[:method_options])
-        use_default_objects_if_defined unless (objects_given? or join_points_given? or types_given? or types_and_descendents_given? or types_and_ancestors_given?)
+        use_default_objects_if_defined unless any_type_related_options_given?
 
         raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
         if options_hash[:reading] and (options_hash[:writing] or options_hash[:changing])
@@ -283,23 +263,31 @@ module Aquarium
       end
     
       def init_methods_specification options
-        match_all_methods if ((no_methods_specified and no_attributes_specified) or all_methods_specified)
+        match_all_methods if ((no_methods_specified? and no_attributes_specified?) or all_methods_specified?)
       end
+
+      def any_type_related_options_given?
+        objects_given? or join_points_given? or types_given? or types_and_descendents_given? or types_and_ancestors_given?
+      end
+      
+      protected
+  
+      attr_writer :join_points_matched, :join_points_not_matched, :specification, :candidate_types, :candidate_types_excluded, :candidate_objects, :candidate_join_points
 
       def match_all_methods
         @specification[:methods] = Set.new([:all])
       end
       
-      def no_methods_specified
+      def no_methods_specified?
         @specification[:methods].nil? or @specification[:methods].empty?
       end
       
-      def all_methods_specified
+      def all_methods_specified?
         methods_spec = @specification[:methods].to_a
         methods_spec.include?(:all) or methods_spec.include?(:all_methods)
       end
       
-      def no_attributes_specified
+      def no_attributes_specified?
         @specification[:attributes].nil? or @specification[:attributes].empty?
       end
       

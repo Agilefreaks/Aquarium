@@ -8,10 +8,7 @@ module Aquarium
   class OptionsUtilsUser
     include OptionsUtils
     def initialize hash = {}
-      init_specification hash, {}
-    end
-    def all_allowed_option_symbols
-      []
+      init_specification hash, {}, []
     end
   end
 end
@@ -118,5 +115,109 @@ describe OptionsUtils, "#noop=" do
     object = Aquarium::OptionsUtilsUser.new :noop => true
     object.noop = false
     object.noop.should be_false
+  end
+end
+
+module Aquarium
+  class OptionsUtilsExample
+    include OptionsUtils
+    CANONICAL_OPTIONS = {
+      "foos" => %w[foo foo1 foo2],
+      "bars" => %w[bar bar1 bar2]
+    }
+    def initialize options = {}
+      init_specification options, CANONICAL_OPTIONS
+    end
+  end
+  
+  class OptionsUtilsExampleWithCanonicalOptionsAccessors < OptionsUtilsExample
+    canonical_option_accessor CANONICAL_OPTIONS
+  end
+  class OptionsUtilsExampleWithAccessors < OptionsUtilsExample
+    canonical_option_accessor :foos, :bars
+  end
+  class OptionsUtilsExampleWithReaders < OptionsUtilsExample
+    canonical_option_reader :foos, :bars
+  end
+  class OptionsUtilsExampleWithWriters < OptionsUtilsExample
+    canonical_option_writer :foos, :bars
+  end
+  class OptionsUtilsExampleWithAdditionalAllowedOptions
+    include OptionsUtils
+    CANONICAL_OPTIONS = {
+      "foos" => %w[foo foo1 foo2],
+      "bars" => %w[bar bar1 bar2]
+    }
+    canonical_option_writer :foos, :bars
+    def initialize options = {}
+      init_specification options, CANONICAL_OPTIONS, [:baz, :bbb]
+    end
+  end
+end
+
+describe OptionsUtils, ".canonical_option_accessor" do
+  it "should create a reader and writer method for each option" do
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("foos")
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("bars")
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("foos=")
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("bars=")
+  end
+  it "should accept individual options" do
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("foos")
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("bars")
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("foos=")
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("bars=")
+  end
+  it "should accept the CANONICAL_OPTIONS as an argument" do
+    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include("foos")
+    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include("bars")
+    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include("foos=")
+    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include("bars=")
+  end
+end
+describe OptionsUtils, ".canonical_option_reader" do
+  it "creates a reader method for each option" do
+    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should include("foos")
+    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should include("bars")
+    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should_not include("foos=")
+    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should_not include("bars=")
+  end
+  it "should create readers that return set values" do
+    object = Aquarium::OptionsUtilsExampleWithReaders.new
+    object.foos.class.should == Set
+  end
+end
+describe OptionsUtils, ".canonical_option_writer" do
+  it "creates a writer method for each option" do
+    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should_not include("foos")
+    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should_not include("bars")
+    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should include("foos=")
+    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should include("bars=")
+  end
+  it "should create writers that convert the input values to sets, if they aren't already sets" do
+    object = Aquarium::OptionsUtilsExampleWithAccessors.new
+    object.foos = "bar"
+    object.foos.class.should == Set
+  end
+  it "should create writers that leave the input sets unchanged" do
+    expected = Set.new([:b1, :b2])
+    object = Aquarium::OptionsUtilsExampleWithAccessors.new
+    object.foos = expected
+    object.foos.should == expected
+  end
+end
+
+describe OptionsUtils, "and options handling" do
+  it "should raise if an unknown option is specified" do
+    lambda {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :unknown => true}.should raise_error(Aquarium::Utils::InvalidOptions)
+  end
+  it "should not raise if a known canonical option is specified" do
+    lambda {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :foos => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+  end
+  it "should not raise if a known canonical option synonym is specified" do
+    lambda {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :foo1 => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+  end
+  it "should not raise if an known additional allowed option is specified" do
+    lambda {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :baz => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
