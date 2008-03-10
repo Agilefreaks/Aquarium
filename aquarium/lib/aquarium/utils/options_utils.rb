@@ -3,8 +3,6 @@ require 'aquarium/utils/default_logger'
 
 module Aquarium
   module Utils
-    include SetUtils
-    include ArrayUtils
 
     # Support parsing and processing of key-value pairs of options, where the values are always converted
     # to sets.
@@ -62,6 +60,8 @@ module Aquarium
     #   do nothing after that. Primarily useful for debugging.    
     #   The value can be accessed through the <tt>noop</tt> and <tt>noop=</tt> accessors.
     module OptionsUtils
+      include SetUtils
+      include ArrayUtils
       
       def self.universal_options
         [:logger_stream, :logger, :severity, :noop]
@@ -69,6 +69,8 @@ module Aquarium
 
       attr_reader :specification
       
+      # Todo: Replace this with an aspect advising initialize?
+      # Todo: Intead of calling an :init_type_specific_specification, just use the block argument!!
       def init_specification options, canonical_options, additional_allowed_options = [], &optional_block
         @canonical_options = canonical_options
         @additional_allowed_options = additional_allowed_options.map{|x| x.respond_to?(:intern) ? x.intern : x}
@@ -84,20 +86,15 @@ module Aquarium
           end
           @specification[key.intern] = Set.new(all_related_options.flatten)
         end
-
-        universal_options = {
-          :logger_stream => options_hash[:logger_stream],
-          :severity      => options_hash[:severity],
-          :noop          => options_hash[:noop] || false
-        }
-
-        set_logger_if_logger_or_stream_specified universal_options, options_hash 
-        set_logger_severity_if_specified         universal_options, options_hash 
-        set_logger_if_not_specified              universal_options, options_hash 
         
         OptionsUtils::universal_options.each do |uopt| 
-          @specification[uopt] = Set.new([universal_options[uopt]]) unless universal_options[uopt].nil?
+          @specification[uopt] = Set.new(make_array(options_hash[uopt])) unless options_hash[uopt].nil? 
         end
+        @specification[:noop] ||= Set.new([false])
+        set_logger_if_stream_specified     
+        set_logger_severity_if_specified   
+        set_default_logger_if_not_specified 
+        
         if respond_to? :init_type_specific_specification
           init_type_specific_specification @original_options, options_hash, &optional_block
         end
@@ -123,8 +120,14 @@ module Aquarium
       end
   
       [:logger, :noop].each do |name|
-        define_method(name)       { @specification[name].to_a.first }
-        define_method("#{name}=") { |value| @specification[name] = make_set([value]) }
+        module_eval(<<-EOF, __FILE__, __LINE__)
+          def #{name}
+            @specification[:#{name}].kind_of?(Set) ? @specification[:#{name}].to_a.first : @specification[:#{name}]
+          end
+          def #{name}= value
+            @specification[:#{name}] = make_set(make_array(value))
+          end
+        EOF
       end
     
       module ClassMethods
@@ -153,7 +156,7 @@ module Aquarium
       
         def canonical_options_given_methods canonical_options
           keys = canonical_options.respond_to?(:keys) ? canonical_options.keys : canonical_options 
-          keys.each do |name|
+          (keys + OptionsUtils::universal_options).each do |name|
             module_eval(<<-EOF, __FILE__, __LINE__)
               def #{name}_given
                 @specification[:#{name}]
@@ -190,31 +193,25 @@ module Aquarium
         @canonical_options.to_a.flatten.map {|o| o.intern} + @additional_allowed_options
       end
       
-      def set_logger_if_logger_or_stream_specified universal_options, options_hash 
-        if not options_hash[:logger].nil?
-          universal_options[:logger] = options_hash[:logger]
-        elsif not options_hash[:logger_stream].nil?
-          universal_options[:logger] = Logger.new options_hash[:logger_stream]
+      # While it's tempting to use the #logger_stream_given?, etc. methods, they will only exist if the
+      # including class called canonical_options_given_methods!
+      def set_logger_if_stream_specified 
+        return if @specification[:logger_stream].nil? or @specification[:logger_stream].empty?
+        self.logger = Logger.new @specification[:logger_stream].to_a.first
+        self.logger.level = DefaultLogger::DEFAULT_SEVERITY_LEVEL
+      end
+    
+      def set_logger_severity_if_specified 
+        return if @specification[:severity].nil? or @specification[:severity].empty?
+        if self.logger.nil?
+          self.logger = Logger.new STDERR
         end
+        self.logger.level = @specification[:severity].to_a.first
       end
     
-      def set_logger_severity_if_specified universal_options, options_hash 
-        unless options_hash[:severity].nil?
-          unless universal_options[:logger].nil?
-            universal_options[:logger].level = options_hash[:severity]
-          else
-            universal_options[:logger] = Logger.new STDERR
-            universal_options[:logger].level = options_hash[:severity]
-          end
-        end
+      def set_default_logger_if_not_specified 
+        self.logger ||= DefaultLogger.logger
       end
-    
-      def set_logger_if_not_specified universal_options, options_hash 
-        if universal_options[:logger].nil?
-          universal_options[:logger] = DefaultLogger.logger
-        end 
-      end
-    
     end
   end
 end

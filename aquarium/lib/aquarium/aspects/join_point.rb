@@ -217,7 +217,7 @@ module Aquarium
         return type if type.kind_of? Module
         found = Aquarium::Finders::TypeFinder.new.find :type => type
         if found.matched.empty?
-          bad_attributes("No type matched the string or regular expression: #{type.type}", options)
+          bad_attributes("No type matched the string or regular expression: #{type.inspect}", options)
         elsif found.matched.size > 1
           bad_attributes("More than one type matched the string or regular expression: #{type.inspect}", options)
         end

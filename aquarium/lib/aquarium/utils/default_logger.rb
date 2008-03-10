@@ -6,8 +6,9 @@ module Aquarium
     # Individual objects may chose to create their own loggers.
     module DefaultLogger
       
+      DEFAULT_SEVERITY_LEVEL = Logger::Severity::WARN
       @@default_logger = Logger.new STDERR
-      @@default_logger.level = Logger::Severity::WARN
+      @@default_logger.level = DEFAULT_SEVERITY_LEVEL
       
       def self.logger
         @@default_logger
