@@ -376,7 +376,7 @@ module Aquarium
           advice_chain = #{type_being_advised_text}.send :class_variable_get, "#{advice_chain_attr_sym}"
           static_join_point = advice_chain.static_join_point
           advice_join_point = static_join_point.make_current_context_join_point(
-            :advice_kind => :before, 
+            :advice_kind => #{advice_kinds_given.inspect}, 
             :advised_object => #{target_self}, 
             :parameters => args, 
             :block_for_method => block_for_method)
@@ -527,7 +527,7 @@ module Aquarium
       end
 
       def advice_kinds_given
-        Advice.kinds.inject([]) {|ary, kind| ary << @specification[kind] if @specification[kind]; ary}
+        Advice.kinds.inject([]) {|ary, kind| ary << kind if @specification[kind]; ary}
       end
 
       def advice_kinds_given?
