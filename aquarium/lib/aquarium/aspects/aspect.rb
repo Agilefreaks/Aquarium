@@ -104,7 +104,9 @@ module Aquarium
       def initialize *options, &block
         @first_option_that_was_method = []
         opts = rationalize options
-        init_specification opts, CANONICAL_OPTIONS, (Pointcut::ATTRIBUTE_OPTIONS_VALUES + KINDS_IN_PRIORITY_ORDER), &block
+        init_specification opts, CANONICAL_OPTIONS, (Pointcut::ATTRIBUTE_OPTIONS_VALUES + KINDS_IN_PRIORITY_ORDER) do
+          finish_specification_initialization &block
+        end
         init_pointcuts
         validate_specification
         return if noop
@@ -154,14 +156,34 @@ module Aquarium
         return (options.first.kind_of?(Hash) or options.first.kind_of?(Array)) ? options.first : options  
       end
       
-      def init_type_specific_specification original_options, options_hash, &block
+      def finish_specification_initialization &block
         Advice.kinds.each do |kind|
-          @specification[kind] = Set.new(make_array(options_hash[kind])) if options_hash[kind]
+          found, value_array = contains_advice_kind kind
+          @specification[kind] = Set.new(value_array) if found
         end
-        init_pointcut_specific_specification original_options, options_hash, &block
-        use_first_nonadvice_symbol_as_method(original_options, options_hash) unless methods_given?
+        init_pointcut_specific_specification
+        options_to_ignore_when_validating = []
+        unless methods_given?
+          options_to_ignore_when_validating = use_first_nonadvice_symbol_as_method
+        end
         calculate_excluded_types
         @advice = determine_advice block
+        options_to_ignore_when_validating
+      end
+      
+      def contains_advice_kind kind
+        keys = @original_options
+        hash = {}
+        if Array === @original_options 
+          if Hash === @original_options.last 
+            hash = @original_options.last
+            keys = @original_options[0...-1] + hash.keys
+          end
+        else Hash === @original_options
+          hash = @original_options
+          keys = @original_options.keys
+        end
+        keys.include?(kind) ? [true, make_array(hash[kind])] : [false, []]
       end
       
       def calculate_excluded_types
@@ -178,11 +200,11 @@ module Aquarium
         block || (@specification[:advice].to_a.first)
       end
       
-      def init_pointcut_specific_specification original_options, options_hash
+      def init_pointcut_specific_specification
+        options_hash = hash_in_original_options
         @specification.merge! Pointcut.make_attribute_reading_writing_options(options_hash)
         # Map the method options to their canonical values:
         @specification[:method_options] = Aquarium::Finders::MethodFinder.init_method_options(@specification[:method_options])
-        # use_default_objects_if_defined unless any_type_related_options_given?
 
         raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
         if options_hash[:reading] and (options_hash[:writing] or options_hash[:changing])
@@ -190,17 +212,12 @@ module Aquarium
             raise Aquarium::Utils::InvalidOptions.new(":reading and :writing/:changing can only be used together if they refer to the same set of attributes.") 
           end
         end
-        # init_methods_specification options_hash
       end
-    
-      # def init_methods_specification options
-      #   match_all_methods if ((no_methods_specified? and no_attributes_specified?) or all_methods_specified?)
-      # end
-      # 
-      # def any_type_related_options_given?
-      #   objects_given? or join_points_given? or types_given? or types_and_descendents_given? or types_and_ancestors_given?
-      # end
-
+      
+      def hash_in_original_options
+        @original_options.kind_of?(Array) ? @original_options.last : @original_options
+      end
+      
       def init_pointcuts
         pointcuts = []
         if pointcuts_given?
@@ -525,19 +542,19 @@ module Aquarium
         EOF
       end
       
-      def use_first_nonadvice_symbol_as_method options, options_hash
+      def use_first_nonadvice_symbol_as_method 
         2.times do |i|
-          if options.size >= i+1
-            sym = options[i]
+          if @original_options.size >= i+1
+            sym = @original_options[i]
             if sym.kind_of?(Symbol) && !Advice::kinds.include?(sym)
               @specification[:methods] = Set.new([sym])
               @specification.delete sym
-              options_hash.delete sym
               @first_option_that_was_method << sym
-              return
+              return [sym]
             end
           end
         end
+        []
       end
       
       def bad_options message

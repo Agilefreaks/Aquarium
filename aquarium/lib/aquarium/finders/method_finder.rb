@@ -90,7 +90,9 @@ module Aquarium
       # +Derived+ class that is defined in the +Base+ class, you won't find it!
       #
       def find options = {}
-        init_specification options, CANONICAL_OPTIONS
+        init_specification options, CANONICAL_OPTIONS do
+          finish_specification_initialization 
+        end
         return Aquarium::Finders::FinderResult.new if nothing_to_find?
         types_and_objects = input_types + input_objects
         method_names_or_regexps = input_methods
@@ -192,7 +194,7 @@ module Aquarium
         Aquarium::Finders::FinderResult.new types_and_objects_to_matched_methods.merge(:not_matched => types_and_objects_not_matched)
       end
   
-      def init_type_specific_specification original_options, options_hash
+      def finish_specification_initialization
         @specification[:options] = MethodFinder.init_method_options(@specification[:options]) if @specification[:options]
         extra_validation
       end

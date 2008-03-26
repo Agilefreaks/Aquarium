@@ -7,11 +7,8 @@ module Aquarium
     # Support parsing and processing of key-value pairs of options, where the values are always converted
     # to sets.
     # Types including this module should have their <tt>initialize</tt> methods call this module's
-    #   <tt>init_specification</tt> to do the options processing.
-    # Including types may define the following method:
-    #   <tt>init_type_specific_specification(original_options, options_hash)</tt>
-    # If defined, it is called to perform any final options handling unique for the type 
-    # (see Pointcut for an example).
+    #   <tt>init_specification</tt> 
+    # to do the options processing. See its documentation for more details.
     #
     # Several class methods are included in including types for defining convenience instance methods.
     # for options +:foo+ and +:bar+, calling:
@@ -40,25 +37,26 @@ module Aquarium
     # The keys are considered the "canonical options", while the values for the keys are synonyms that can be used instead.
     #
     # This module also defines several universal options that will be available to all types that include this module:
-    # <tt>:logger => options_hash[:logger] || default system-wide Logger</tt>
-    #   A standard library Logger used for any messages. A default system-wide logger is used otherwise.
+    # <tt>:logger</tt>
+    #   A Ruby standard library Logger used for any messages. A default system-wide logger is used otherwise.
     #   The corresponding <tt>logger</tt> and <tt>logger=</tt> accessors are defined.
     #
-    # <tt>:logger_stream => options_hash[:logger_stream]</tt>
+    # <tt>:logger_stream</tt>
     #   An an alternative to defining the logger, you can define just the output stream where log output will be written.
     #   If this option is specified, a new logger will be created for the instance with this output stream.
-    #   There is no corresponding accessors; use the corresponding methods on the <tt>logger</tt> object instead.
+    #   There are no corresponding accessors; use the appropriate methods on the <tt>logger</tt> object instead.
     #
-    # <tt>:severity => options_hash[:severity]</tt>
-    #   The logging severity level, one of the Logger::Severity values or the corresponding integer value.
+    # <tt>:severity</tt>
+    #   The logging severity level, one of the Logger::Severity values or a corresponding integer value.
     #   If this option is specified, a new logger will be created for the instance with this output stream.
-    #   There is no corresponding accessors; use the corresponding methods on the <tt>logger</tt> object instead.
+    #   There are no corresponding accessors; use the corresponding methods on the <tt>logger</tt> object instead.
     #
     # <tt>:noop => options_hash[:noop] || false</tt>
     #   If true, don't do "anything", the interpretation of which will vary with the type receiving the option.
-    #   For example, a type might go through some initialization, such as parsng its argument list, but
-    #   do nothing after that. Primarily useful for debugging.    
+    #   For example, a type might go through some initialization, such as parsng its options, but
+    #   do nothing after that. Primarily useful for debugging and testing.    
     #   The value can be accessed through the <tt>noop</tt> and <tt>noop=</tt> accessors.
+    #
     module OptionsUtils
       include SetUtils
       include ArrayUtils
@@ -68,13 +66,22 @@ module Aquarium
       end
 
       attr_reader :specification
-      
-      # Todo: Replace this with an aspect advising initialize?
-      # Todo: Intead of calling an :init_type_specific_specification, just use the block argument!!
-      def init_specification options, canonical_options, additional_allowed_options = [], &optional_block
+
+      # Class #initialize methods call this method to process the input options.
+      # Pass an optional block to the method that takes no parameters if you want 
+      # to do additional processing of the options before init_specification validates 
+      # the options. The block will have access to the @specification hash built up by
+      # init_specification and to a new attribute @original_options, which will be a 
+      # copy of the original options passed to init_specification (it will be either a 
+      # hash or an array). 
+      # Finally, if the block returns a value or an array of values, they will be 
+      # treated as keys to ignore in the options when they are validated. This is a 
+      # way of dynamically treating an option as valid that can't be known in advance.
+      # (See Aspect and Pointcut for examples of this feature in use.)
+      def init_specification options, canonical_options, additional_allowed_options = []
         @canonical_options = canonical_options
         @additional_allowed_options = additional_allowed_options.map{|x| x.respond_to?(:intern) ? x.intern : x}
-        @original_options = options.dup unless options.nil?
+        @original_options = options.nil? ? {} : options.dup 
         @specification = {}
         options ||= {} 
         options_hash = hashify options
@@ -95,10 +102,10 @@ module Aquarium
         set_logger_severity_if_specified   
         set_default_logger_if_not_specified 
         
-        if respond_to? :init_type_specific_specification
-          init_type_specific_specification @original_options, options_hash, &optional_block
-        end
-        validate_options options_hash
+        ignorables = yield if block_given?
+        ignorables = [] if ignorables.nil? 
+        ignorables = [ignorables] unless ignorables.kind_of? Array
+        validate_options(options_hash.reject {|k,v| ignorables.include?(k)})
       end
       
       def hashify options

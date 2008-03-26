@@ -160,7 +160,9 @@ module Aquarium
       #
       # Pointcut.new also accepts all the "universal" options documented in OptionsUtils.
       def initialize options = {} 
-        init_specification options, CANONICAL_OPTIONS, (ATTRIBUTE_OPTIONS_VALUES + Advice::KINDS_IN_PRIORITY_ORDER)
+        init_specification options, CANONICAL_OPTIONS, (ATTRIBUTE_OPTIONS_VALUES + Advice::KINDS_IN_PRIORITY_ORDER) do 
+          finish_specification_initialization
+        end
         return if noop
         init_candidate_types 
         init_candidate_objects
@@ -247,22 +249,22 @@ module Aquarium
       end
             
       # TODO remove duplication w/ aspect.rb
-      def init_type_specific_specification original_options, options_hash
-        @specification.merge! Pointcut.make_attribute_reading_writing_options(options_hash)
+      def finish_specification_initialization
+        @specification.merge! Pointcut.make_attribute_reading_writing_options(@original_options)
         # Map the method options to their canonical values:
         @specification[:method_options] = Aquarium::Finders::MethodFinder.init_method_options(@specification[:method_options])
         use_default_objects_if_defined unless any_type_related_options_given?
 
         raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
-        if options_hash[:reading] and (options_hash[:writing] or options_hash[:changing])
-          unless options_hash[:reading].eql?(options_hash[:writing]) or options_hash[:reading].eql?(options_hash[:changing])
+        if @original_options[:reading] and (@original_options[:writing] or @original_options[:changing])
+          unless @original_options[:reading].eql?(@original_options[:writing]) or @original_options[:reading].eql?(@original_options[:changing])
             raise Aquarium::Utils::InvalidOptions.new(":reading and :writing/:changing can only be used together if they refer to the same set of attributes.") 
           end
         end
-        init_methods_specification options_hash
+        init_methods_specification
       end
     
-      def init_methods_specification options
+      def init_methods_specification
         match_all_methods if ((no_methods_specified? and no_attributes_specified?) or all_methods_specified?)
       end
 
