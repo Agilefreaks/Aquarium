@@ -30,9 +30,9 @@ with any form of advice, except for :around advice. (See, however, feature reque
 
 h3. "Hack" to Create a Reusable Aspect that Is Defined When a Module is Included in Another
 
-It's actually hard to define a reusable aspect, because the aspect is evaluated when it's defined, which means the
-pointcut needs to be known at that time. Feature request #19122 will address this issue. For now, here's a hack that
-works around the limitation. Make sure you heed the warning!
+It's actually harder than it should be to define a reusable aspect, because the aspect is evaluated when it's defined,
+which means the pointcut needs to be known at that time. Feature request #19122 will address this issue. For now, 
+here's a hack that works around the limitation. Make sure you heed the warning!
 
 <ruby file="../aquarium/examples/reusable_aspect_hack_example.rb" /> 
 
