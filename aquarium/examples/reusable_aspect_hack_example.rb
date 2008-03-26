@@ -16,19 +16,13 @@ require 'aquarium'
 module Aquarium
   module Reusables
     module TraceMethods
-      def self.aspect_string target_type
-        <<-EOF
-          Aquarium::Aspects::Aspect.new :around, 
-              :type => #{target_type}, :methods => :all, :method_options => [:exclude_ancestor_methods] do |jp, object, *args|
-            p "Entering: "+jp.target_type.name+"#"+jp.method_name.to_s+": args = "+args.inspect
-            jp.proceed
-            p "Leaving:  "+jp.target_type.name+"#"+jp.method_name.to_s+": args = "+args.inspect
-          end
-        EOF
-      end
-
       def self.append_features mod
-        module_eval aspect_string(mod)
+        Aquarium::Aspects::Aspect.new :around, 
+            :type => mod, :methods => :all, :method_options => [:exclude_ancestor_methods] do |jp, object, *args|
+          p "Entering: "+jp.target_type.name+"#"+jp.method_name.to_s+": args = "+args.inspect
+          jp.proceed
+          p "Leaving:  "+jp.target_type.name+"#"+jp.method_name.to_s+": args = "+args.inspect
+        end
       end
     end    
   end
