@@ -218,8 +218,12 @@ module Aquarium
         end
       end
       POINTCUT_CANONICAL_OPTIONS["methods"] << "methods_matching"
-      POINTCUT_CANONICAL_OPTIONS["methods"].dup.find_all {|synonym| synonym =~ /methods?$/}.each do |synonym|
-        POINTCUT_CANONICAL_OPTIONS["methods"] << "#{synonym}_matching"
+      POINTCUT_CANONICAL_OPTIONS["methods"].dup.each do |synonym|
+        if synonym =~ /methods?$/
+          POINTCUT_CANONICAL_OPTIONS["methods"] << "#{synonym}_matching"
+        else
+          POINTCUT_CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
+        end
       end
       POINTCUT_CANONICAL_OPTIONS["exclude_methods"] = []
       POINTCUT_CANONICAL_OPTIONS["methods"].each do |synonym|

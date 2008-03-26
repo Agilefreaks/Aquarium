@@ -58,3 +58,17 @@ describe Aquarium::Utils::SetUtils, "make_set" do
     make_set(Set.new([nil, 1, 2, nil, 3, 4])).should == Set.new([1, 2, 3, 4])
   end
 end
+
+describe Aquarium::Utils::SetUtils, "strip_set_nils" do
+  it "should return an empty set if an empty set is specified" do
+    strip_set_nils(Set.new([])).should == Set.new([])
+  end
+
+  it "should return an empty set if a set of only nil values is specified" do
+    strip_set_nils(Set.new([nil, nil])).should == Set.new([])
+  end
+
+  it "should return a set will all nil values removed" do
+    strip_set_nils(Set.new([nil, :a, nil, :b])).should == Set.new([:a, :b])
+  end
+end

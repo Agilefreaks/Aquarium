@@ -47,6 +47,11 @@ module Aquarium
     attr_accessor :public_test_method_args
     def public_test_method *args; @args=args; end
   end
+  class AspectInvocationTestClass3
+    attr_accessor :public_test_method_args
+    attr_accessor :public_test_method_args2
+    def public_test_method *args; @args=args; end
+  end
 end
 
 describe Aspect, "methods" do
@@ -282,6 +287,18 @@ describe Aspect, "methods" do
         Aquarium::AspectInvocationTestClass.new.public_test_method_args
         aspect.unadvise
       end
+    end
+
+    it "should require the values for :reading => ... and :writing => ... to be equal if both are specified." do
+      @advice = Proc.new {}
+      lambda {Aspect.new :before, :type => Aquarium::AspectInvocationTestClass3, 
+        :reading => :public_test_method_args, :writing => :public_test_method_args2, :advice => @advice}.should raise_error(Aquarium::Utils::InvalidOptions)
+    end
+
+    it "should require the values for :reading => ... and :changing => ... to be equal if both are specified." do
+      @advice = Proc.new {}
+      lambda {Aspect.new :before, :type => Aquarium::AspectInvocationTestClass3, 
+        :reading => :public_test_method_args, :changing => :public_test_method_args2, :advice => @advice}.should raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should accept :reading => ... as a synonym for :attributes => ..., :attribute_options => [:readers]." do

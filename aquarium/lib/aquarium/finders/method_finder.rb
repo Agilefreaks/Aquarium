@@ -121,8 +121,12 @@ module Aquarium
       %w[types objects methods].each do |key|
         CANONICAL_OPTIONS["exclude_#{key}"] = CANONICAL_OPTIONS[key].map {|x| "exclude_#{x}"}
       end
-      CANONICAL_OPTIONS["methods"].dup.find_all {|synonym| synonym =~ /methods?$/}.each do |synonym|
-        CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
+      CANONICAL_OPTIONS["methods"].dup.each do |synonym|
+        if synonym =~ /methods?$/
+          CANONICAL_OPTIONS["methods"] << "#{synonym}_matching"
+        else
+          CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
+        end
       end
       
       RECOGNIZED_METHOD_OPTIONS = {

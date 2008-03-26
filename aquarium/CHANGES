@@ -1,3 +1,14 @@
+== Version 0.4.1
+
+V0.4.1 adds a few bug fixes, a few more examples, and internal refactoring.
+
+Bug fixes:
+19116	When an exception is thrown during advice execution, the error message reports the advice type is :before always!
+
+Enhancements:
+18705	Remove duplication and complexity in options-handling code
+
+
 == Version 0.4.0
 
 V0.4.0 adds specs to characterize and test advising Java classes when running on JRuby and adds several 
