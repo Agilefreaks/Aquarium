@@ -21,6 +21,21 @@ which can increase the risk of collisions with overrides from other toolkits:
 
 <ruby file="../aquarium/examples/method_missing_example.rb" /> 
 
+h3. "Wrapping" an Exception: Rescuing one type and raising another
+
+While it's tempting to try this with :after_raising advice, this won't work, because you can't change the control flow
+with any form of advice, except for :around advice. (See, however, feature request #19119.) Here is the idiom to use.
+
+<ruby file="../aquarium/examples/exception_wrapping_example.rb" /> 
+
+h3. "Hack" to Create a Reusable Aspect that Is Defined When a Module is Included in Another
+
+It's actually hard to define a reusable aspect, because the aspect is evaluated when it's defined, which means the
+pointcut needs to be known at that time. Feature request #19122 will address this issue. For now, here's a hack that
+works around the limitation. Make sure you heed the warning!
+
+<ruby file="../aquarium/examples/reusable_aspect_hack_example.rb" /> 
+
 h3. Aspect Design
 
 The AOP community is still discovering good design principles. However, simple extensions of good OOD principles
