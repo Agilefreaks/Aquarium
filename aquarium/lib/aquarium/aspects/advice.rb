@@ -37,6 +37,15 @@ module Aquarium
             attr_accessor(:#{key})
           EOF
         end
+        
+        def call_advice jp, obj, *args
+          case advice.arity
+          when 0 then advice.call
+          when 1 then advice.call jp
+          when 2 then advice.call jp, obj
+          else        advice.call jp, obj, *args
+          end
+        end
       end
   
       def call jp, obj, *args
@@ -123,7 +132,7 @@ module Aquarium
       def initialize options = {}
         super(options) { |jp, obj, *args| 
           before_jp = jp.make_current_context_join_point :advice_kind => :before, :current_advice_node => self
-          advice.call(before_jp, obj, *args)
+          call_advice(before_jp, obj, *args)
           next_node.call(jp, obj, *args)
         }
       end
@@ -134,7 +143,7 @@ module Aquarium
         super(options) { |jp, obj, *args| 
           returned_value = next_node.call(jp, obj, *args)
           next_jp = jp.make_current_context_join_point :advice_kind => :after_returning, :returned_value => returned_value, :current_advice_node => self
-          advice.call(next_jp, obj, *args)
+          call_advice(next_jp, obj, *args)
           next_jp.context.returned_value   # allow advice to modify the returned value
         }
       end
@@ -151,7 +160,7 @@ module Aquarium
           rescue Object => raised_exception
             if after_raising_exceptions_list_includes raised_exception
               next_jp = jp.make_current_context_join_point :advice_kind => :after_raising, :raised_exception => raised_exception, :current_advice_node => self
-              advice.call(next_jp, obj, *args)
+              call_advice(next_jp, obj, *args)
               raised_exception = next_jp.context.raised_exception   # allow advice to modify raised exception
             end
             raise raised_exception
@@ -173,16 +182,16 @@ module Aquarium
     class AfterAdviceChainNode < AdviceChainNode
       def initialize options = {}
         super(options) { |jp, obj, *args| 
-          # advice.call is invoked in each bloc, rather than once in an "ensure" clause, so the invocation in the rescue class
+          # call_advice is invoked in each bloc, rather than once in an "ensure" clause, so the invocation in the rescue class
           # can allow the advice to change the exception that will be raised.
           begin
             returned_value = next_node.call(jp, obj, *args)
             next_jp = jp.make_current_context_join_point :advice_kind => :after, :returned_value => returned_value, :current_advice_node => self
-            advice.call(next_jp, obj, *args)
+            call_advice(next_jp, obj, *args)
             next_jp.context.returned_value   # allow advice to modify the returned value
           rescue Object => raised_exception
             next_jp = jp.make_current_context_join_point :advice_kind => :after, :raised_exception => raised_exception, :current_advice_node => self
-            advice.call(next_jp, obj, *args)
+            call_advice(next_jp, obj, *args)
             raise next_jp.context.raised_exception
           end
         }
@@ -193,7 +202,7 @@ module Aquarium
       def initialize options = {}
         super(options) { |jp, obj, *args| 
           around_jp = jp.make_current_context_join_point :advice_kind => :around, :proceed_proc => next_node, :current_advice_node => self
-          advice.call(around_jp, obj, *args)
+          call_advice(around_jp, obj, *args)
         }
       end
     end

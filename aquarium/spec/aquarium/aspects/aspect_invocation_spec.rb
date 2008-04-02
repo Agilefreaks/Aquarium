@@ -1366,12 +1366,11 @@ describe Aspect, "methods" do
       advice_called.should be_true
       aspect.unadvise
     end
-
   end
 
   describe Aspect, ".new (advice block or proc parameter list)" do  
     it "should raise unless an advice block or :advice => advice parameter is specified." do
-      lambda {Aspect.new(:after, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method)}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda { Aspect.new(:after, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method)}.should raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should raise if obsolete |jp, *args| list is used." do
@@ -1398,7 +1397,14 @@ describe Aspect, "methods" do
       lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do; end }.should_not raise_error(Exception)
     end
   end
-
+  
+  describe Aspect, ".new (advice block to around advice with just the join_point parameter - Bug #19262)" do  
+    it "should work not raise an error" do
+      aspect = Aspect.new :around, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method do |jp|; jp.proceed; end
+      Aquarium::AspectInvocationTestClass.new.public_test_method
+      aspect.unadvise
+    end
+  end
 
   class ExcludeBase
     def doit; end
