@@ -248,7 +248,7 @@ describe Aspect, " with :after_raising advice" do
     do_watchful_public_protected_private true
   end
   
-  it "should not advise rescue clauses for raised exceptions of types that don't match the specified exception" do
+  it "should not advise methods that raise exceptions when exceptions of types that don't match the specified exception type are raised" do
     class MyError < StandardError; end
     aspect_advice_invoked = false
     @aspect = Aspect.new(:after_raising => MyError, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
@@ -259,7 +259,7 @@ describe Aspect, " with :after_raising advice" do
     block_invoked.should be_true
   end
   
-  it "should not advise rescue clauses for raised exceptions of types that don't match the list of specified exceptions" do
+  it "should not advise methods that raise exceptions when exceptions of types that don't match the specified list of exception types are raised" do
     class MyError1 < StandardError; end
     class MyError2 < StandardError; end
     aspect_advice_invoked = false
@@ -271,7 +271,7 @@ describe Aspect, " with :after_raising advice" do
     block_invoked.should be_true
   end
   
-  it "should advise all rescue clauses in the matched methods, if no specific exceptions are specified" do
+  it "should advise all methods that raise exceptions when no specific exceptions are specified" do
     class ClassThatRaises
       class CTRException < Exception; end
       def raises
@@ -285,6 +285,23 @@ describe Aspect, " with :after_raising advice" do
     aspect_advice_invoked.should be_false
     ctr = ClassThatRaises.new
     lambda {ctr.raises}.should raise_error(ClassThatRaises::CTRException)
+    aspect_advice_invoked.should be_true
+  end
+
+  it "should advise all methods that raise strings (which are converted to RuntimeError) when no specific exceptions are specified" do
+    class ClassThatRaisesString
+      class CTRException < Exception; end
+      def raises
+        raise "A string exception."
+      end
+    end
+    aspect_advice_invoked = false
+    @aspect = Aspect.new :after_raising, :pointcut => {:type => ClassThatRaisesString, :methods => :raises} do |jp, obj, *args|
+      aspect_advice_invoked = true
+    end 
+    aspect_advice_invoked.should be_false
+    ctr = ClassThatRaisesString.new
+    lambda {ctr.raises}.should raise_error(RuntimeError)
     aspect_advice_invoked.should be_true
   end
 end
