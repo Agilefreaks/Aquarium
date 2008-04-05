@@ -31,7 +31,7 @@ Imagine you want to trace all invocations of the public, instance methods in all
 
 <ruby>
 class ServiceTracer
-	include Aquarium::Aspects::DSL::AspectsDSL
+	include Aquarium::Aspects::DSL::AspectDSL
 	before :calls_to => :all_methods, :in_types => /Service$/ do |join_point, object, *args|
 	  log "Entering: #{join_point.target_type.name}##{join_point.method_name}: object = #{object}, args = #{args.inspect}" 
 	end
