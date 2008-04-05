@@ -220,6 +220,10 @@ describe Aspect, " with :after_returning advice" do
   end
 end
 
+class MyError1 < StandardError; end
+class MyError2 < StandardError; end
+class MyError3 < StandardError; end
+
 describe Aspect, " with :after_raising advice" do  
   after(:each) do
     @aspect.unadvise if @aspect
@@ -248,10 +252,29 @@ describe Aspect, " with :after_raising advice" do
     do_watchful_public_protected_private true
   end
   
-  it "should not advise methods that raise exceptions when exceptions of types that don't match the specified exception type are raised" do
-    class MyError < StandardError; end
+  it "should invoke advice when exceptions of the specified type are raised" do
     aspect_advice_invoked = false
-    @aspect = Aspect.new(:after_raising => MyError, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
+    @aspect = Aspect.new(:after_raising => Watchful::WatchfulError, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
+    block_invoked = false
+    watchful = Watchful.new
+    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    aspect_advice_invoked.should be_true
+    block_invoked.should be_true
+  end
+  
+  it "should invoke advice when exceptions of the specified type are raised, which were specified with :exceptions => ..." do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new(:after_raising, :exceptions => Watchful::WatchfulError, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
+    block_invoked = false
+    watchful = Watchful.new
+    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    aspect_advice_invoked.should be_true
+    block_invoked.should be_true
+  end
+  
+  it "should not invoke advice when exceptions of types that don't match the specified exception type are raised" do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new(:after_raising => MyError1, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
     lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
@@ -259,9 +282,27 @@ describe Aspect, " with :after_raising advice" do
     block_invoked.should be_true
   end
   
-  it "should not advise methods that raise exceptions when exceptions of types that don't match the specified list of exception types are raised" do
-    class MyError1 < StandardError; end
-    class MyError2 < StandardError; end
+  it "should not invoke advice when exceptions of types that don't match the specified exception type are raised, which were specified with :exceptions => ..." do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new(:after_raising, :exceptions => MyError1, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
+    block_invoked = false
+    watchful = Watchful.new
+    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    aspect_advice_invoked.should be_false
+    block_invoked.should be_true
+  end
+  
+  it "should invoke advice when one exception in the list of the specified types is raised" do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new(:after_raising => [Watchful::WatchfulError, MyError1], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
+    block_invoked = false
+    watchful = Watchful.new
+    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    aspect_advice_invoked.should be_true
+    block_invoked.should be_true
+  end
+  
+  it "should not invoke advice when exceptions of types that don't match the specified list of exception types are raised" do
     aspect_advice_invoked = false
     @aspect = Aspect.new(:after_raising => [MyError1, MyError2], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
@@ -269,6 +310,32 @@ describe Aspect, " with :after_raising advice" do
     lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_false
     block_invoked.should be_true
+  end
+  
+  it "should not invoke advice when exceptions of types that don't match the specified list of exception types are raised, which were specified with :exceptions => ..." do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new(:after_raising, :exceptions => [MyError1, MyError2], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
+    block_invoked = false
+    watchful = Watchful.new
+    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    aspect_advice_invoked.should be_false
+    block_invoked.should be_true
+  end
+  
+  it "should treat :exception as a synonym for :exceptions" do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new(:after_raising, :exception => [MyError1, MyError2], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
+    block_invoked = false
+    watchful = Watchful.new
+    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    aspect_advice_invoked.should be_false
+    block_invoked.should be_true
+  end
+  
+  it "should merge exceptions specified with :exception(s) and :after_raising" do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new(:after_raising => MyError1, :exception => [MyError2, MyError3], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
+    @aspect.specification[:after_raising].should eql(Set.new([MyError1, MyError2, MyError3]))
   end
   
   it "should advise all methods that raise exceptions when no specific exceptions are specified" do

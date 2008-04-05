@@ -20,7 +20,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
   
-    it "should be equivalent to advise :before." do
+    it "should be equivalent to advice kind :before." do
       @aspects << DSLClass.advise(:before, :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.before(         :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -35,10 +35,33 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :after." do
+    it "should be equivalent to advice kind :after." do
       @aspects << DSLClass.advise(:after, :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.after(         :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
+    end
+  end
+
+  describe "DSL method #after_raising" do    
+    before :each do
+      @aspects = []
+    end
+    after :each do
+      @aspects.each {|a| a.unadvise}
+    end
+
+    it "should be equivalent to advice kind :after_raising." do
+      @aspects << DSLClass.advise(:after_raising, :noop => true, :pointcut => @pointcut_opts, &@advice)
+      @aspects << DSLClass.after_raising(         :noop => true, :pointcut => @pointcut_opts, &@advice)
+      @aspects[1].should == @aspects[0]
+    end
+
+    it "should be equivalent to advice kind :after_raising => exceptions, when used with the :exceptions argument." do
+      @aspects << DSLClass.advise(:after_raising, :exceptions => [StandardError], :noop => true, :pointcut => @pointcut_opts, &@advice)
+      @aspects << DSLClass.after_raising(         :exceptions => [StandardError], :noop => true, :pointcut => @pointcut_opts, &@advice)
+      @aspects << Aquarium::Aspects::Aspect.new(:after_raising => [StandardError], :noop => true, :pointcut => @pointcut_opts, &@advice)
+      @aspects[1].should == @aspects[0]
+      @aspects[2].specification[:after_raising].should == @aspects[0].specification[:after_raising]
     end
   end
 
@@ -52,7 +75,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :after." do
+    it "should be equivalent to advice kind :after." do
       @aspects << DSLClass.after(                                 :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.after_raising_within_or_returning_from(:noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -69,7 +92,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :after_returning." do
+    it "should be equivalent to advice kind :after_returning." do
       @aspects << DSLClass.advise(:after_returning, :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.after_returning(         :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -86,7 +109,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :after_returning." do
+    it "should be equivalent to advice kind :after_returning." do
       @aspects << DSLClass.advise(:after_returning, :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.after_returning_from(    :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -103,7 +126,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :after_raising." do
+    it "should be equivalent to advice kind :after_raising." do
       class ThrowsUp
         def tosses_cookies *args; raise Exception.new(args.inspect); end
       end
@@ -123,7 +146,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :after_raising." do
+    it "should be equivalent to advice kind :after_raising." do
       class ThrowsUp
         def tosses_cookies *args; raise Exception.new(args.inspect); end
       end
@@ -143,7 +166,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :before, :after." do
+    it "should be equivalent to advice kind :before, :after." do
       @aspects << DSLClass.advise(:before, :after,  :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.before_and_after(        :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -160,7 +183,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :before and advise :after." do
+    it "should be equivalent to advice kind :before and advice :after." do
       @aspects << DSLClass.advise(:before, :after,                           :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.before_and_after_raising_within_or_returning_from(:noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -177,7 +200,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :before and advise :after_returning." do
+    it "should be equivalent to advice kind :before and advice :after_returning." do
       @aspects << DSLClass.advise(:before, :after_returning, :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.before_and_after_returning(       :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -194,7 +217,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :before and advise :after_returning." do
+    it "should be equivalent to advice kind :before and advice :after_returning." do
       @aspects << DSLClass.advise(:before, :after_returning, :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.before_and_after_returning_from(  :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -211,7 +234,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :before and advise :after_raising." do
+    it "should be equivalent to advice kind :before and advice :after_raising." do
       @aspects << DSLClass.advise(:before, :after_raising, :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.before_and_after_raising(       :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]
@@ -228,7 +251,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       @aspects.each {|a| a.unadvise}
     end
 
-    it "should be equivalent to advise :around." do
+    it "should be equivalent to advice kind :around." do
       @aspects << DSLClass.advise(:around, :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects << DSLClass.around(         :noop => true, :pointcut => @pointcut_opts, &@advice)
       @aspects[1].should == @aspects[0]

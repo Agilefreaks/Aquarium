@@ -35,14 +35,14 @@ module Aquarium
       ASPECT_CANONICAL_OPTIONS = {
         "advice"            => %w[action do_action use_advice advise_with invoke call],
         "pointcuts"         => %w[pointcut within_pointcuts within_pointcut on_pointcuts on_pointcut],
-        "exclude_pointcuts" => %w[exclude_pointcut exclude_on_pointcut exclude_on_pointcuts exclude_within_pointcut exclude_within_pointcuts],
+        "exclude_pointcuts" => %w[exclude_pointcut exclude_on_pointcut exclude_on_pointcuts 
+            exclude_within_pointcut exclude_within_pointcuts],
+        "exceptions"        => %w[exception],
         "ignore_no_matching_join_points" => %[ignore_no_jps]
       }
       CANONICAL_OPTIONS = Pointcut::CANONICAL_OPTIONS.merge ASPECT_CANONICAL_OPTIONS
          
       canonical_options_given_methods CANONICAL_OPTIONS
-      # don't define accessors this way:
-      # canonical_option_accessor CANONICAL_OPTIONS
 
 
       # Aspect.new (:around | :before | :after | :after_returning | :after_raising ) \
@@ -73,6 +73,8 @@ module Aquarium
       #   Invoke the specified advice after the join point returns successfully.
       #
       # <tt>:after_raising [=> exception || [exception_list]]</tt>::
+      # <tt>:after_raising, :exceptions => (exception || [exception_list])</tt>::
+      # <tt>:after_raising, :exception  => (exception || [exception_list])</tt>::
       #   Invoke the specified advice after the join point raises one of the specified exceptions.
       #   If no exceptions are specified, the advice is invoked after any exception is raised. 
       #
@@ -168,6 +170,10 @@ module Aquarium
         end
         calculate_excluded_types
         @advice = determine_advice block
+        # Be careful to only add the exceptions if :after_raising was actually specified! 
+        if (exceptions_given? and specified_advice_kinds.include?(:after_raising))
+          @specification[:after_raising] += exceptions_given
+        end
         options_to_ignore_when_validating
       end
       
@@ -499,15 +505,20 @@ module Aquarium
         Advice.kinds & @specification.keys
       end
   
+      def options_given? option1, option2
+        @specification[option1] and @specification[option2]
+      end
+      
       def validate_specification 
         bad_options("One of #{Advice.kinds.inspect} is required.") unless advice_kinds_given?
-        bad_options(":around can't be used with :before.") if around_given_with? :before
-        bad_options(":around can't be used with :after.")  if around_given_with? :after
-        bad_options(":around can't be used with :after_returning.")  if around_given_with? :after_returning
-        bad_options(":around can't be used with :after_raising.")    if around_given_with? :after_raising
-        bad_options(":after can't be used with :after_returning.")   if after_given_with? :after_returning
-        bad_options(":after can't be used with :after_raising.")     if after_given_with? :after_raising
-        bad_options(":after_returning can't be used with :after_raising.") if after_returning_given_with? :after_raising
+        %w[before after after_returning after_raising].each do |advice_kind|
+          bad_options(":around can't be used with :#{advice_kind}.") if options_given? :around, advice_kind.intern
+        end
+        %w[after_returning after_raising].each do |advice_kind|
+          bad_options(":after can't be used with :#{advice_kind}.") if options_given? :after, advice_kind.intern
+        end
+        bad_options(":after_returning can't be used with :after_raising.") if options_given? :after_returning, :after_raising
+        bad_options(":exceptions can't be specified except with :after_raising.") if exceptions_given? and not specified_advice_kinds.include?(:after_raising)
         unless some_type_object_join_point_or_pc_option_given? or default_objects_given?
           bad_options("At least one of :pointcut(s), :join_point(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, or :object(s) is required.") 
         end
@@ -534,14 +545,6 @@ module Aquarium
         not advice_kinds_given.empty?
       end
 
-      %w[around after after_returning].each do |advice_kind|
-        class_eval(<<-EOF, __FILE__, __LINE__)
-          def #{advice_kind}_given_with? other_advice_kind_sym
-            @specification[:#{advice_kind}] and @specification[other_advice_kind_sym]
-          end
-        EOF
-      end
-      
       def use_first_nonadvice_symbol_as_method 
         2.times do |i|
           if @original_options.size >= i+1

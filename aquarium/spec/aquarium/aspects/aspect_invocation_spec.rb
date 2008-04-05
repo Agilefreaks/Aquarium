@@ -121,10 +121,18 @@ describe Aspect, "methods" do
       lambda { Aspect.new :before, :after_raising => Exception, :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
     end
   
-    it "should accept a a list of exceptions specified with :after_raising." do
+    it "should accept a list of exceptions specified with :after_raising." do
       lambda { Aspect.new :before, :after_raising => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
     end
-  end
+
+    it "should accept a separate :exceptions => list of exceptions specified with :after_raising." do
+      lambda { Aspect.new :before, :after_raising, :exceptions => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    end
+
+    it "should reject the :exceptions argument unless specified with :after_raising." do
+      lambda { Aspect.new :before, :after, :exceptions => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.should raise_error(Aquarium::Utils::InvalidOptions)
+    end
+end
 
   describe Aspect, ".new (parameters that specify pointcuts)" do
     before :all do
