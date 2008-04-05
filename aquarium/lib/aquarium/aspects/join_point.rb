@@ -38,7 +38,7 @@ module Aquarium
 
         def update options
           options.each do |key, value|
-            instance_variable_set "@#{key}".intern, value
+            instance_variable_set "@#{key}", value
           end
         end
     

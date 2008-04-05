@@ -115,15 +115,9 @@ module Aquarium
       def initialize options = {}
         super(options) { |jp, obj, *args| 
           block_for_method = jp.context.block_for_method
-          method = invoking_object(jp).method(@alias_method_name)
           block_for_method.nil? ? 
             invoking_object(jp).send(@alias_method_name, *args) : 
             invoking_object(jp).send(@alias_method_name, *args, &block_for_method)
-          # Buggy!!
-          # method = invoking_object.method(@alias_method_name)
-          # block_for_method.nil? ? 
-          #   method.call(*args) : 
-          #   method.call(*args, &block_for_method)
         }
       end
     end
