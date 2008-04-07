@@ -4,10 +4,14 @@ V0.4.1 adds a few bug fixes, a few more examples, and internal refactoring.
 
 Bug fixes:
 19116	When an exception is thrown during advice execution, the error message reports the advice type is :before always!
+19261	after_raising DSL method provides no way to specify exceptions
 
 Enhancements:
 18705	Remove duplication and complexity in options-handling code
 
+I added a new :exceptions argument (synonym :exception) that takes a single exception or list thereof. 
+You can only use this argument with :after_raising. If you specify exceptions with the latter and use
+the :exceptions argument, the values will be merged.
 
 == Version 0.4.0
 
@@ -311,7 +315,7 @@ Fixing 13650 required an API change, which is why I've tagged this release "0.1.
 something like "0.1.1" (and the changes don't seem big enough to warrant "0.2.0"...).
 
 Previously, requiring "aquarium.rb" in the top-level "lib" directory would implicitly require 
-lib/aquarium/aspects/dsl/aspect_dsl.rb, which
+lib/aquarium/dsl/aspect_dsl.rb, which
 has Object include the AspectDSL module. This module adds methods like :before and :after to Object. 
 Unfortunately, those methods collide with methods of the same name that Rails adds to Object. It was 
 also a bit presumptuous of me to assume that everyone wanted those methods on Object ;)
@@ -325,22 +329,22 @@ then do the following:
 
 	class MyClass   # reopen "MyClass"
 		# Add the methods as _class_ methods
-		include Aquarium::Aspects::DSL::AspectDSL
+		include Aquarium::DSL
 	end
 
 or, use (class|module)_eval:
 
-	require 'aquarium/aspects/dsl/aspect_dsl'
+	require 'aquarium/dsl/aspect_dsl'
 
 	MyClass.class_eval do
 		# Add the methods as _class_ methods
-		include Aquarium::Aspects::DSL::AspectDSL
+		include Aquarium::DSL
 	end
 
 To add the methods as _instance_ methods on individual objects:
 
 	object = MyClass.new
-	object.extend(Aquarium::Aspects::DSL::AspectDSL)
+	object.extend(Aquarium::DSL)
 
 
 Note: as discussed at http://practicalruby.blogspot.com/2007/02/reopen-with-moduleeval.html, 

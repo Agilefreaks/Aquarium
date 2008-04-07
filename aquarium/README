@@ -85,9 +85,9 @@ Here is an example that traces invocations of all public instance methods (inclu
 		result  # block needs to return the result of the "proceed"!
 	end
 
-The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, excluding inherited (ancestor) methods, etc.) Here is the same example using the convenience DSL that adds aspect methods to Object (available only if you require aquarium/aspects/dsl/object_dsl', since other toolkits, like Rails, define similar methods on Object!).
+The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, excluding inherited (ancestor) methods, etc.) Here is the same example using the convenience DSL that adds aspect methods to Object (available only if you require aquarium/dsl/object_dsl', since other toolkits, like Rails, define similar methods on Object!).
 
-	require 'aquarium/aspects/dsl/object_dsl'
+	require 'aquarium/dsl/object_dsl'
 	around :calls_to => :all_methods, :on_types => [Foo, Bar] do |join_point, object, *args|
 		p "Entering: #{join_point.target_type.name}##{join_point.method_name} for object #{object}"
 		result = join_point.proceed
@@ -99,23 +99,23 @@ See "examples/method_tracing_example.rb" for a more detailed version of this exa
 
 If you don't want to add these methods to Object, you can also add them individually to modules, classes, or objects:
 
-	require 'aquarium/aspects/dsl/aspect_dsl'  # NOT object_dsl
+	require 'aquarium'
 	...
 	module MyModule
-		include Aquarium::Aspects::DSL::AspectDSL
+		include Aquarium::DSL
 	end
 
 	class MyClass
-		include Aquarium::Aspects::DSL::AspectDSL
+		include Aquarium::DSL
 	end
 
 	my_object = MyOtherClass.new
-	my_object.extend (Aquarium::Aspects::DSL::AspectDSL)
+	my_object.extend (Aquarium::DSL)
 
 If you use the DSL inside a class and omit the :type(s) and :object(s) options, "self" is assumed.
 
 	class Foo
-		include Aquarium::Aspects::DSL::AspectDSL
+		include Aquarium::DSL
 		...
 		def critical_operation *args
 			...
@@ -199,7 +199,7 @@ Some of the synonyms:
 If no types or objects are specified, the object defaults to "self". However, this default is only supported when using the DSL to create an aspect, e.g.,
 
 	class MyClass
-		include Aquarium::Aspects::DSL::AspectDSL
+		include Aquarium::DSL
 		def doit; ...; end
 	
 		around :method => doit, ...   # Implicit :object => self, i.e., MyClass

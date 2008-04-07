@@ -1,12 +1,12 @@
-require File.dirname(__FILE__) + '/../../spec_helper'
-require File.dirname(__FILE__) + '/../../spec_example_types'
-require 'aquarium/aspects/dsl/aspect_dsl'
+require File.dirname(__FILE__) + '/../spec_helper'
+require File.dirname(__FILE__) + '/../spec_example_types'
+require 'aquarium/dsl/aspect_dsl'
 
 class DSLClass
-  include Aquarium::Aspects::DSL::AspectDSL
+  include Aquarium::DSL
 end
 
-describe "Aquarium::Aspects::DSL::AspectDSL" do
+describe "Aquarium::DSL" do
   before :all do
     @advice = proc {|jp, obj, *args| "advice"}
     @pointcut_opts = {:calls_to => :public_watchful_method, :in_type => Watchful}
@@ -268,7 +268,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
   
     it "should ignore the default object \"self\" when an :object is specified." do
       class Watchful1
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         def public_watchful_method; end
         @@watchful = Watchful1.new
         @@aspect = after(:invoking => :public_watchful_method, :on_object => @@watchful) {|jp, obj, *args|}
@@ -284,7 +284,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
 
     it "should ignore the default object \"self\" when a :type is specified." do
       class Watchful2
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         def public_watchful_method; end
         @@aspect = after(:calls_to => :public_watchful_method, :in_type => Watchful2) {|jp, obj, *args|}
         def self.aspect; @@aspect; end
@@ -305,7 +305,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
     end
 
     class WatchfulSelf
-      include Aquarium::Aspects::DSL::AspectDSL
+      include Aquarium::DSL
       @@aspect = nil
       def self.aspect; @@aspect; end
       def public_watchful_method; "public_watchful_method"; end
@@ -323,7 +323,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
 
     it "should infer the object as \"self\" when no :object, :type, or :pointcut is specified." do
       watchful_self = WatchfulSelf.new
-      watchful_self.extend Aquarium::Aspects::DSL::AspectDSL
+      watchful_self.extend Aquarium::DSL
       @aspects << WatchfulSelf.advise(:after, :pointcut => {:invoking => :public_watchful_method, :on_object => watchful_self}) {|jp, obj, *args|}
       @aspects << watchful_self.after(:method => :public_watchful_method)  {|jp, obj, *args|}
       @aspects[1].join_points_matched.should == @aspects[0].join_points_matched
@@ -337,7 +337,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
 
   describe "DSL method #advise, when parsing the parameter list," do    
     class Watchful3
-      include Aquarium::Aspects::DSL::AspectDSL
+      include Aquarium::DSL
       def public_watchful_method; "public_watchful_method"; end
     end
 
@@ -367,7 +367,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
 
     it "should treat \"ClassName.advise\" as advising instance methods, by default." do
       class WatchfulExampleWithSeparateAdviseCall
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         def public_watchful_method *args; end
       end
       advice_called = 0
@@ -381,7 +381,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
   
     it "should treat \"ClassName.advise\" as advising instance methods when the :instance method option is specified." do
       class WatchfulExampleWithSeparateAdviseCall2
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         def self.class_public_watchful_method *args; end
         def public_watchful_method *args; end
       end
@@ -399,7 +399,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
   
     it "should treat \"ClassName.advise\" as advising class methods when the :class method option is specified." do
       class WatchfulExampleWithSeparateAdviseCall3
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         def self.class_public_watchful_method *args; end
         def public_watchful_method *args; end
       end
@@ -417,7 +417,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
   
     it "should invoke the type-based advise for all objects when the aspect is defined by calling #advise within the class definition." do
       class WatchfulExampleWithBeforeAdvice
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         @@advice_called = 0
         def public_watchful_method *args; end
         before :public_watchful_method do |jp, obj, *args|
@@ -433,7 +433,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
 
   describe "DSL methods for the advice kind, when determining instance or class methods to advise," do    
     class Watchful4
-      include Aquarium::Aspects::DSL::AspectDSL
+      include Aquarium::DSL
       def public_watchful_method; "public_watchful_method"; end
     end
 
@@ -513,7 +513,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
   describe "DSL method #advise (or synonyms) called within a type body" do
     it "will not advise a method whose definition hasn't been seen yet in the type body." do
       class WatchfulWithMethodAlreadyDefined
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         @@advice_called = 0
         def public_watchful_method *args; end
         before :public_watchful_method do |jp, obj, *args|
@@ -525,7 +525,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       WatchfulWithMethodAlreadyDefined.new.public_watchful_method :a3, :a4
       WatchfulWithMethodAlreadyDefined.advice_called.should == 2
       class WatchfulWithMethodNotYetDefined
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         @@advice_called = 0
         before(:public_watchful_method, :ignore_no_matching_join_points=>true) {|jp, obj, *args| @@advice_called += 1}
         def public_watchful_method *args; end
@@ -551,7 +551,7 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
   
     it "should use self as the object if no object or type is specified." do
       class PC2
-        include Aquarium::Aspects::DSL::AspectDSL
+        include Aquarium::DSL
         POINTCUT = pointcut :method => :doit
       end
       pointcut2 = Aquarium::Aspects::Pointcut.new :type => PC2, :method => :doit
@@ -559,4 +559,26 @@ describe "Aquarium::Aspects::DSL::AspectDSL" do
       PC2::POINTCUT.join_points_not_matched.should == pointcut2.join_points_not_matched
     end
   end
+  
+  class OldDSLClass
+    include Aquarium::Aspects::DSL::AspectDSL
+  end
+
+  describe "DSL methods available through the old package Aquarium::Aspects::DSL::AspectDSL" do    
+    before :each do
+      @dsl = OldDSLClass.new
+      @advice = proc {|jp, obj, *args| "advice"}
+      @aspects = []
+    end
+    after :each do
+      @aspects.each {|a| a.unadvise}
+    end
+
+    it "should be equivalent to advice kind :around." do
+      @aspects << OldDSLClass.advise(:around, :noop => true, :pointcut => @pointcut_opts, &@advice)
+      @aspects << OldDSLClass.around(         :noop => true, :pointcut => @pointcut_opts, &@advice)
+      @aspects[1].should == @aspects[0]
+    end
+  end
 end
+

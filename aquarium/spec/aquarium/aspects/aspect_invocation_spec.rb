@@ -31,7 +31,7 @@ end
 
 module Aquarium
   class AspectInvocationTestClass
-    include Aquarium::Aspects::DSL::AspectDSL
+    include Aquarium::DSL
     attr_accessor :public_test_method_args
     def public_test_method *args; @args=args; end
     protected
@@ -43,7 +43,7 @@ module Aquarium
     private_class_method :private_class_test_method
   end
   class AspectInvocationTestClass2
-    include Aquarium::Aspects::DSL::AspectDSL
+    include Aquarium::DSL
     attr_accessor :public_test_method_args
     def public_test_method *args; @args=args; end
   end

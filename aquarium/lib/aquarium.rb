@@ -4,4 +4,5 @@ require 'aquarium/extensions'
 require 'aquarium/finders'
 require 'aquarium/aspects'
 require 'aquarium/version'
+require 'aquarium/dsl'
 

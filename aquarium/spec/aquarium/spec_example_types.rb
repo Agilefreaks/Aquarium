@@ -1,6 +1,6 @@
 # :enddoc:
 
-require 'aquarium/aspects/dsl/aspect_dsl'
+require 'aquarium/dsl/aspect_dsl'
 
 # Declares classes, etc. that support several different module specs.
 class ExampleParentClass
@@ -101,7 +101,7 @@ class ClassWithAttribs < ExampleParentClass
 end
 
 class Watchful 
-  include Aquarium::Aspects::DSL::AspectDSL
+  include Aquarium::DSL
   class WatchfulError < Exception
     def initialize message = nil
       super

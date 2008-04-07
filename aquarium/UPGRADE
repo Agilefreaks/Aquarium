@@ -53,21 +53,21 @@ As an alternative, if you just want these methods added selectively in certain t
 following:
 
 <ruby>
-require 'aquarium/aspects/dsl/aspect_dsl'
+require 'aquarium/dsl/aspect_dsl'
 
 class MyClass   # reopen "MyClass"
 	# Add the methods as _class_ methods
-	include Aquarium::Aspects::DSL::AspectDSL
+	include Aquarium::DSL
 end
 </ruby>
 
 or, use (class|module)_eval:
 <ruby>
-require 'aquarium/aspects/dsl/aspect_dsl'
+require 'aquarium/dsl/aspect_dsl'
 
 MyClass.class_eval do
 	# Add the methods as _class_ methods
-	include Aquarium::Aspects::DSL::AspectDSL
+	include Aquarium::DSL
 end
 </ruby>
 
@@ -75,7 +75,7 @@ To add the methods as _instance_ methods on individual objects:
 
 <ruby>
 object = MyClass.new
-object.extend(Aquarium::Aspects::DSL::AspectDSL)
+object.extend(Aquarium::DSL)
 </ruby>
 
 See the CHANGES for more details.

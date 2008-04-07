@@ -11,7 +11,7 @@ require 'aquarium'
 
 module Aquarium
   class ClassWithStateAndBehavior
-    include Aquarium::Aspects::DSL::AspectDSL
+    include Aquarium::DSL
     def initialize *args
       @state = args
     end
