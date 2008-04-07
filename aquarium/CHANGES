@@ -8,10 +8,15 @@ Bug fixes:
 
 Enhancements:
 18705	Remove duplication and complexity in options-handling code
+19320	Move the Aquarium::...::AspectDSL file to Aquarium::DSL for convenience
 
 I added a new :exceptions argument (synonym :exception) that takes a single exception or list thereof. 
 You can only use this argument with :after_raising. If you specify exceptions with the latter and use
 the :exceptions argument, the values will be merged.
+
+I thought it was ugly to have to type "include Aquarium::Aspects::DSL::AspectDSL", so I moved the code so
+now it's "include Aquarium::DSL".
+
 
 == Version 0.4.0
 
