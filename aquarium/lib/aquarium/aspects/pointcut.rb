@@ -237,13 +237,7 @@ module Aquarium
         # Map the method options to their canonical values:
         @specification[:method_options] = Aquarium::Finders::MethodFinder.init_method_options(@specification[:method_options])
         use_default_objects_if_defined unless any_type_related_options_given?
-
-        raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
-        if @original_options[:reading] and (@original_options[:writing] or @original_options[:changing])
-          unless @original_options[:reading].eql?(@original_options[:writing]) or @original_options[:reading].eql?(@original_options[:changing])
-            raise Aquarium::Utils::InvalidOptions.new(":reading and :writing/:changing can only be used together if they refer to the same set of attributes.") 
-          end
-        end
+        Pointcut::validate_attribute_options @specification, @original_options
         init_methods_specification
       end
     
@@ -253,6 +247,15 @@ module Aquarium
 
       def any_type_related_options_given?
         objects_given? or join_points_given? or types_given? or types_and_descendents_given? or types_and_ancestors_given?
+      end
+      
+      def self.validate_attribute_options spec_hash, options_hash
+        raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if spec_hash[:attributes] == Set.new([:all])
+        if options_hash[:reading] and (options_hash[:writing] or options_hash[:changing])
+          unless options_hash[:reading].eql?(options_hash[:writing]) or options_hash[:reading].eql?(options_hash[:changing])
+            raise Aquarium::Utils::InvalidOptions.new(":reading and :writing/:changing can only be used together if they refer to the same set of attributes.") 
+          end
+        end
       end
       
       protected

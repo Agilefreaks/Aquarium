@@ -212,12 +212,7 @@ module Aquarium
         # Map the method options to their canonical values:
         @specification[:method_options] = Aquarium::Finders::MethodFinder.init_method_options(@specification[:method_options])
 
-        raise Aquarium::Utils::InvalidOptions.new(":all is not yet supported for :attributes.") if @specification[:attributes] == Set.new([:all])
-        if options_hash[:reading] and (options_hash[:writing] or options_hash[:changing])
-          unless options_hash[:reading].eql?(options_hash[:writing]) or options_hash[:reading].eql?(options_hash[:changing])
-            raise Aquarium::Utils::InvalidOptions.new(":reading and :writing/:changing can only be used together if they refer to the same set of attributes.") 
-          end
-        end
+        Pointcut::validate_attribute_options @specification, options_hash
       end
       
       def hash_in_original_options
