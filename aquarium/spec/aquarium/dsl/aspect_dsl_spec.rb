@@ -563,7 +563,6 @@ describe "Aquarium::DSL" do
   class OldDSLClass
     include Aquarium::Aspects::DSL::AspectDSL
   end
-
   describe "DSL methods available through the old package Aquarium::Aspects::DSL::AspectDSL" do    
     before :each do
       @dsl = OldDSLClass.new

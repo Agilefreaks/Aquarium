@@ -6,7 +6,7 @@ require 'aquarium/utils/type_utils'
 # and create instances of Aspect.
 
 module Aquarium
-  module DSL
+  module DSLMethods
         
     def advise *options, &block
       o = append_implicit_self options
@@ -42,11 +42,6 @@ module Aquarium
       Aquarium::Aspects::Pointcut.new *o, &block
     end
 
-    # Add the methods as class, not instance, methods.
-    def self.append_features clazz
-      super(class << clazz; self; end)
-    end
-    
     private
     def append_implicit_self options
       opts = options.dup
@@ -58,14 +53,24 @@ module Aquarium
       opts
     end
   end
-end
 
-# Backwards compatibility with old name.
-module Aquarium
+  module DSL
+    include Aquarium::DSLMethods
+    # Add the methods as class, not instance, methods.
+    def self.append_features clazz
+      super(class << clazz; self; end)
+    end
+  end
+
+  # Backwards compatibility with old name.
   module Aspects
     module DSL
       module AspectDSL
-        include Aquarium::DSL
+        include Aquarium::DSLMethods
+        # Add the methods as class, not instance, methods.
+        def self.append_features clazz
+          super(class << clazz; self; end)
+        end
       end
     end
   end
