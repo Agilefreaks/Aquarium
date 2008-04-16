@@ -33,12 +33,12 @@ Aquarium::PreCond.new.action :a1
 module Aquarium
   class PostCond
     def action *args
-      p "inside :action"
+      args.empty? ? args.dup : args + [:a]
     end
   
     postcondition :calls_to => :action, 
-      :message => "Must pass more than one argument and first argument must be non-empty." do |jp, obj, *args|
-      args.size > 0 && ! args[0].empty?
+      :message => "Must return a copy of the input args with :a appended to it." do |jp, obj, *args|
+      jp.context.returned_value.size == args.size + 1 && jp.context.returned_value[-1] == :a
     end
   end
 end
@@ -49,13 +49,8 @@ begin
 rescue Aquarium::Extras::DesignByContract::ContractError => e
   p e.inspect
 end
-begin
-  Aquarium::PostCond.new.action ""
-rescue Aquarium::Extras::DesignByContract::ContractError => e
-  p e.inspect
-end
 p "This call will pass because the postcondition is satisfied:"
-Aquarium::PostCond.new.action :a1
+Aquarium::PostCond.new.action  :x1, :x2
 
 module Aquarium
   class InvarCond

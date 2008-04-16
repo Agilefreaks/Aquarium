@@ -37,27 +37,25 @@ end
 module Aquarium
   class PostCondExample
     def action *args
-      @state = *args
+      args.empty? ? args.dup : args + [:a]
     end
-    attr_reader :state
-
+  
     postcondition :calls_to => :action, 
-      :message => "Must pass more than one argument and first argument must be non-empty." do |jp, obj, *args|
-      args.size > 0 && ! args[0].empty?
+      :message => "Must return a copy of the input args with :a appended to it." do |jp, obj, *args|
+      jp.context.returned_value.size == args.size + 1 && jp.context.returned_value[-1] == :a
     end
   end
 end
 
 describe "An example using a postcondition" do
   it "should fail at the call exit point if the postcondition is not satisfied." do
-    lambda { Aquarium::PostCondExample.new.action }.should    raise_error(Aquarium::Extras::DesignByContract::ContractError)
-    lambda { Aquarium::PostCondExample.new.action "" }.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    lambda { Aquarium::PostCondExample.new.action }.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
   end
 end
 
 describe "An example using a postcondition" do
-  it "should not fail at the call entry point if the postcondition is satisfied." do
-    Aquarium::PostCondExample.new.action :a1
+  it "should not fail at the call exit point if the postcondition is satisfied." do
+    Aquarium::PostCondExample.new.action :x1, :x2
   end
 end
 
