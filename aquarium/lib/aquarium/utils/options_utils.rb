@@ -64,6 +64,10 @@ module Aquarium
       def self.universal_options
         [:logger_stream, :logger, :severity, :noop]
       end
+      
+      def self.universal_prepositions
+        [:for, :on, :in, :within]
+      end
 
       attr_reader :specification
 
@@ -173,6 +177,25 @@ module Aquarium
                 not (#{name}_given.nil? or #{name}_given.empty?)
               end
             EOF
+          end
+        end
+
+        # Service method that adds a new canonical option and corresponding array with 
+        # "exclude_" prepended to all values. The new options are added to the input hash.
+        def add_exclude_options_for option, options_hash
+          all_variants = options_hash[option].dup
+          options_hash["exclude_#{option}"] = all_variants.map {|x| "exclude_#{x}"}
+        end
+
+        # Service method that adds a new canonical option and corresponding array with 
+        # "preposition" prefixes, e.g., "on_", "for_", etc. prepended to all values. 
+        # The new options are added to the input hash.
+        def add_prepositional_option_variants_for option, options_hash
+          all_variants = options_hash[option].dup + [option]
+          OptionsUtils.universal_prepositions.each do |prefix|
+            all_variants.each do |variant|
+              options_hash[option] << "#{prefix}_#{variant}" 
+            end
           end
         end
 

@@ -125,7 +125,7 @@ module Aquarium
         type_or_object_sym = @target_type ? :type : :object
         results = Aquarium::Finders::MethodFinder.new.find type_or_object_sym => type_or_object, 
                             :method => method_name, 
-                            :options => [visibility, instance_or_class_method]
+                            :method_options => [visibility, instance_or_class_method]
         raise Aquarium::Utils::LogicError("MethodFinder returned more than one item! #{results.inspect}") if (results.matched.size + results.not_matched.size) != 1
         return results.matched.size == 1 ? true : false
       end

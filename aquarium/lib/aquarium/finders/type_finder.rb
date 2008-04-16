@@ -15,28 +15,25 @@ module Aquarium
       include Aquarium::Utils::TypeUtils
       include Aquarium::Utils::OptionsUtils
 
-      def self.add_exclude_options_for option, options_hash
+      def self.add_ancestors_and_descendents_option_variants_for option, options_hash
         all_variants = options_hash[option].dup
-        options_hash["exclude_#{option}"] = all_variants.map {|x| "exclude_#{x}"}
-      end
-      def self.add_prepositional_option_variants_for option, options_hash
-        all_variants = options_hash[option].dup + [option]
-        %w[for on in within].each do |prefix|
-          all_variants.each do |variant|
-            options_hash[option] << "#{prefix}_#{variant}" 
-          end
-        end
+        options_hash["#{option}_and_descendents"] = all_variants.map {|x| "#{x}_and_descendents"}
+        options_hash["#{option}_and_ancestors"]   = all_variants.map {|x| "#{x}_and_ancestors"}
       end
       
       TYPE_FINDER_CANONICAL_OPTIONS = {
-        "types"                 => %w[type class classes module modules name names],
-        "types_and_descendents" => %w[type_and_descendents class_and_descendents classes_and_descendents module_and_descendents modules_and_descendents names_and_descendents names_and_descendents],
-        "types_and_ancestors"   => %w[type_and_ancestors class_and_ancestors classes_and_ancestors module_and_ancestors modules_and_ancestors name_and_ancestors names_and_ancestors],
+        "types" => %w[type class classes module modules name names],
       }
+      # Add the ancestors and descendents first, then add all the preposition and exclude variants, so the latter
+      # are added to the former...
       TYPE_FINDER_CANONICAL_OPTIONS.keys.dup.each do |type_option|
-        TypeFinder.add_prepositional_option_variants_for type_option, TYPE_FINDER_CANONICAL_OPTIONS
-        TypeFinder.add_exclude_options_for               type_option, TYPE_FINDER_CANONICAL_OPTIONS
+        add_ancestors_and_descendents_option_variants_for type_option, TYPE_FINDER_CANONICAL_OPTIONS
       end
+      TYPE_FINDER_CANONICAL_OPTIONS.keys.dup.each do |type_option|
+        add_prepositional_option_variants_for type_option, TYPE_FINDER_CANONICAL_OPTIONS
+        add_exclude_options_for               type_option, TYPE_FINDER_CANONICAL_OPTIONS
+      end
+      
       CANONICAL_OPTIONS = TYPE_FINDER_CANONICAL_OPTIONS.dup
       
       canonical_options_given_methods CANONICAL_OPTIONS

@@ -17,7 +17,7 @@ module Aquarium
       # Method names, not method objects, are always returned, because we can only get
       # method objects for instance methods if we have an instance!
       #
-      # finder_result = MethodFinder.new.find :types => ... {, :methods => ..., :options => [...]}
+      # finder_result = MethodFinder.new.find :types => ... {, :methods => ..., :method_options => [...]}
       # where
       # "{}" indicate optional arguments
       #
@@ -68,10 +68,10 @@ module Aquarium
       #   One or more method names and regular expressions to exclude from the match.
       #   Specify one or an array of values.
       #
-      # <tt>:options => method_options</tt>::
-      # <tt>:method_options => method_options</tt>::
-      # <tt>:method_option  => method_options</tt>::
-      # <tt>:restricting_methods_to => method_options</tt>::
+      # <tt>:method_options => options</tt>::
+      # <tt>:method_option => options</tt>::
+      # <tt>:options  => options</tt>::
+      # <tt>:restricting_methods_to => options</tt>::
       #   By default, searches for public instance methods. Specify one or more
       #   of the following options for alternatives. You can combine any of the
       #   <tt>:public</tt>, <tt>:protected</tt>, and <tt>:private</tt>, as well as
@@ -110,25 +110,26 @@ module Aquarium
   
       NIL_OBJECT = MethodFinder.new unless const_defined?(:NIL_OBJECT)
 
-      # TODO move Pointcut's options to here.
-      CANONICAL_OPTIONS = {
-        "types"   => %w[type for_type for_types on_type on_types in_type in_types within_type within_types],
+      # TODO remove (or deprecate) the "options" option!
+      METHOD_FINDER_CANONICAL_OPTIONS = {
         "objects" => %w[object for_object for_objects on_object on_objects in_object in_objects within_object within_objects],
         "methods" => %w[method within_method within_methods calling invoking invocations_of calls_to sending_message_to sending_messages_to],
-        "options" => %w[method_options method_option restricting_methods_to] 
+        "method_options" => %w[options method_option restricting_methods_to] 
       }
       
-      %w[types objects methods].each do |key|
-        CANONICAL_OPTIONS["exclude_#{key}"] = CANONICAL_OPTIONS[key].map {|x| "exclude_#{x}"}
+      %w[objects methods].each do |key|
+        METHOD_FINDER_CANONICAL_OPTIONS["exclude_#{key}"] = METHOD_FINDER_CANONICAL_OPTIONS[key].map {|x| "exclude_#{x}"}
       end
-      CANONICAL_OPTIONS["methods"].dup.each do |synonym|
+      METHOD_FINDER_CANONICAL_OPTIONS["methods"].dup.each do |synonym|
         if synonym =~ /methods?$/
-          CANONICAL_OPTIONS["methods"] << "#{synonym}_matching"
+          METHOD_FINDER_CANONICAL_OPTIONS["methods"] << "#{synonym}_matching"
         else
-          CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
+          METHOD_FINDER_CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
         end
       end
       
+      CANONICAL_OPTIONS = METHOD_FINDER_CANONICAL_OPTIONS.merge(Aquarium::Finders::TypeFinder::TYPE_FINDER_CANONICAL_OPTIONS)
+
       RECOGNIZED_METHOD_OPTIONS = {
         "all"       => %w[all_methods],
         "public"    => %w[public_methods],
@@ -199,7 +200,7 @@ module Aquarium
       end
   
       def finish_specification_initialization
-        @specification[:options] = MethodFinder.init_method_options(@specification[:options]) if @specification[:options]
+        @specification[:method_options] = MethodFinder.init_method_options(@specification[:method_options]) if @specification[:method_options]
         extra_validation
       end
       
@@ -229,7 +230,7 @@ module Aquarium
       end
   
       def exclude_ancestor_methods?
-        @specification[:options].include?(:exclude_ancestor_methods)
+        @specification[:method_options].include?(:exclude_ancestor_methods)
       end
       
       private
@@ -271,7 +272,7 @@ module Aquarium
         is_type = Aquarium::Utils::TypeUtils.is_type?(type_or_object)
         scope_prefixes = []
         class_instance_prefixes = []
-        @specification[:options].each do |opt, value|
+        @specification[:method_options].each do |opt, value|
           opt_string = opt.to_s
           case opt_string
           when "public", "private", "protected" 
@@ -312,7 +313,7 @@ module Aquarium
       end
   
       def extra_validation 
-        method_options = @specification[:options]
+        method_options = @specification[:method_options]
         return if method_options.nil?
         if method_options.include?(:singleton) && 
           (method_options.include?(:class) || method_options.include?(:public) ||

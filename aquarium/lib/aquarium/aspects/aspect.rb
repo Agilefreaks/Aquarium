@@ -34,12 +34,12 @@ module Aquarium
   
       ASPECT_CANONICAL_OPTIONS = {
         "advice"            => %w[action do_action use_advice advise_with invoke call],
-        "pointcuts"         => %w[pointcut within_pointcuts within_pointcut on_pointcuts on_pointcut],
-        "exclude_pointcuts" => %w[exclude_pointcut exclude_on_pointcut exclude_on_pointcuts 
-            exclude_within_pointcut exclude_within_pointcuts],
+        "pointcuts"         => %w[pointcut],
         "exceptions"        => %w[exception],
         "ignore_no_matching_join_points" => %[ignore_no_jps]
       }
+      add_prepositional_option_variants_for "pointcuts", ASPECT_CANONICAL_OPTIONS
+      add_exclude_options_for               "pointcuts", ASPECT_CANONICAL_OPTIONS
       CANONICAL_OPTIONS = Pointcut::CANONICAL_OPTIONS.merge ASPECT_CANONICAL_OPTIONS
          
       canonical_options_given_methods CANONICAL_OPTIONS

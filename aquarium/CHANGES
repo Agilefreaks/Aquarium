@@ -1,9 +1,10 @@
 == Version 0.4.1
 
-V0.4.1 adds a few bug fixes, a few more examples, and internal refactoring.
+V0.4.1 adds a few bug fixes, a few more user examples, internal refactoring and some performance
+improvements.
 
 Bug fixes:
-19116	When an exception is thrown during advice execution, the error message reports the advice type is :before always!
+19116	When an exception is thrown during advice execution, the error message always reports the advice type is :before!
 19261	after_raising DSL method provides no way to specify exceptions
 
 Enhancements:
@@ -15,8 +16,7 @@ You can only use this argument with :after_raising. If you specify exceptions wi
 the :exceptions argument, the values will be merged.
 
 I thought it was ugly to have to type "include Aquarium::Aspects::DSL::AspectDSL", so I moved the code so
-now it's "include Aquarium::DSL".
-
+now it's "include Aquarium::DSL". However, for backwards compatibility, the old module still works.
 
 == Version 0.4.0
 

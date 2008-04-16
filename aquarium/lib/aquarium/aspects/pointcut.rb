@@ -199,40 +199,19 @@ module Aquarium
       alias to_s inspect
 
       POINTCUT_CANONICAL_OPTIONS = {
-        "objects"               => %w[object],
         "default_objects"       => %w[default_object],
         "join_points"           => %w[join_point],
-        "methods"               => %w[method within_method within_methods calling invoking calls_to invocations_of sending_message_to sending_messages_to],
+        "exclude_pointcuts"     => %w[exclude_pointcut],
         "attributes"            => %w[attribute accessing],
-        "method_options"        => %w[method_option restricting_methods_to], 
         "attribute_options"     => %w[attribute_option],
       }
-      %w[objects join_points].each do |thing|
-        roots = POINTCUT_CANONICAL_OPTIONS[thing].dup 
-        POINTCUT_CANONICAL_OPTIONS["exclude_#{thing}"] = roots.map {|x| "exclude_#{x}"}
-        %w[for on in within].each do |prefix|
-          POINTCUT_CANONICAL_OPTIONS[thing] << "#{prefix}_#{thing}" 
-          roots.each do |root|
-            POINTCUT_CANONICAL_OPTIONS[thing] << "#{prefix}_#{root}" 
-          end
-        end
+      add_prepositional_option_variants_for "join_points", POINTCUT_CANONICAL_OPTIONS
+      add_exclude_options_for               "join_points", POINTCUT_CANONICAL_OPTIONS
+      Aquarium::Utils::OptionsUtils.universal_prepositions.each do |prefix|
+        POINTCUT_CANONICAL_OPTIONS["exclude_pointcuts"] += ["exclude_#{prefix}_pointcuts", "exclude_#{prefix}_pointcut"]
       end
-      POINTCUT_CANONICAL_OPTIONS["methods"] << "methods_matching"
-      POINTCUT_CANONICAL_OPTIONS["methods"].dup.each do |synonym|
-        if synonym =~ /methods?$/
-          POINTCUT_CANONICAL_OPTIONS["methods"] << "#{synonym}_matching"
-        else
-          POINTCUT_CANONICAL_OPTIONS["methods"] << "#{synonym}_methods_matching"
-        end
-      end
-      POINTCUT_CANONICAL_OPTIONS["exclude_methods"] = []
-      POINTCUT_CANONICAL_OPTIONS["methods"].each do |synonym|
-        POINTCUT_CANONICAL_OPTIONS["exclude_methods"] << "exclude_#{synonym}"
-      end
-      POINTCUT_CANONICAL_OPTIONS["exclude_pointcuts"] = ["exclude_pointcut"] + 
-        %w[for on in within].map {|prefix| ["exclude_#{prefix}_pointcuts", "exclude_#{prefix}_pointcut"]}.flatten
-
-      CANONICAL_OPTIONS = Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS.merge POINTCUT_CANONICAL_OPTIONS
+      CANONICAL_OPTIONS = Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS.merge(
+        Aquarium::Finders::MethodFinder::METHOD_FINDER_CANONICAL_OPTIONS.merge(POINTCUT_CANONICAL_OPTIONS))
 
       ATTRIBUTE_OPTIONS_VALUES = %w[reading writing changing]
 
@@ -381,7 +360,7 @@ module Aquarium
         Aquarium::Finders::MethodFinder.new.find type_or_object_sym => candidates.matched_keys, 
               :methods => which_methods.to_a, 
               :exclude_methods => @specification[:exclude_methods], 
-              :options => method_options
+              :method_options => method_options
       end
 
       def add_join_points search_results, type_or_object_sym
