@@ -1,6 +1,7 @@
 require 'set'
 require File.dirname(__FILE__) + '/../utils/array_utils'
 require File.dirname(__FILE__) + '/../utils/invalid_options'
+require File.dirname(__FILE__) + '/../utils/set_utils'
 require File.dirname(__FILE__) + '/../utils/type_utils'
 require File.dirname(__FILE__) + '/../utils/options_utils'
 require File.dirname(__FILE__) + '/finder_result'
