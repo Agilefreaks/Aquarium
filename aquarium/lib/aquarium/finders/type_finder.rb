@@ -40,8 +40,8 @@ module Aquarium
       canonical_option_accessor CANONICAL_OPTIONS
       
       # Usage:
-      #  finder_result = TypeFinder.new.find [options => [...] ]
-      # where
+      #  finder_result = TypeFinder.new.find [:option1 => [...] ]
+      # where the allowed options are
       # <tt>:types => types_and_type_names_and_regexps</tt>::
       # <tt>:names => types_and_type_names_and_regexps</tt>::
       # <tt>:type  => types_and_type_names_and_regexps</tt>::
