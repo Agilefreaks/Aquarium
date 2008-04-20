@@ -231,7 +231,6 @@ module Aquarium
         result
       end
             
-      # TODO remove duplication w/ aspect.rb
       def finish_specification_initialization
         @specification.merge! Pointcut.make_attribute_reading_writing_options(@original_options)
         # Map the method options to their canonical values:
