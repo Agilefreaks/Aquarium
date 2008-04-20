@@ -39,8 +39,10 @@ module Aquarium
         "exceptions"        => %w[exception],
         "ignore_no_matching_join_points" => %[ignore_no_jps]
       }
-      add_prepositional_option_variants_for "pointcuts", ASPECT_CANONICAL_OPTIONS
-      add_exclude_options_for               "pointcuts", ASPECT_CANONICAL_OPTIONS
+      ["pointcuts", "named_pointcuts"].each do |pc_option|
+        add_prepositional_option_variants_for pc_option, ASPECT_CANONICAL_OPTIONS
+        add_exclude_options_for               pc_option, ASPECT_CANONICAL_OPTIONS
+      end
       CANONICAL_OPTIONS = Pointcut::CANONICAL_OPTIONS.merge ASPECT_CANONICAL_OPTIONS
          
       canonical_options_given_methods CANONICAL_OPTIONS
@@ -91,6 +93,10 @@ module Aquarium
       #
       # <tt>:pointcuts => pointcut || [pointcut_list]</tt>::
       # <tt>:pointcut  => pointcut || [pointcut_list]</tt>::
+      # <tt>:on_pointcut  => pointcut || [pointcut_list]</tt>::
+      # <tt>:on_pointcuts => pointcut || [pointcut_list]</tt>::
+      # <tt>:in_pointcut  => pointcut || [pointcut_list]</tt>::
+      # <tt>:in_pointcuts => pointcut || [pointcut_list]</tt>::
       # <tt>:within_pointcut  => pointcut || [pointcut_list]</tt>::
       # <tt>:within_pointcuts => pointcut || [pointcut_list]</tt>::
       #   One or an array of Pointcut or JoinPoint objects. Mutually-exclusive with the :types, :objects,
@@ -98,8 +104,19 @@ module Aquarium
       #
       # <tt>:named_pointcuts => {PointcutFinder options}</tt>::
       # <tt>:named_pointcut  => {PointcutFinder options}</tt>::
+      # <tt>:on_named_pointcuts => {PointcutFinder options}</tt>::
+      # <tt>:on_named_pointcut  => {PointcutFinder options}</tt>::
+      # <tt>:in_named_pointcuts => {PointcutFinder options}</tt>::
+      # <tt>:in_named_pointcut  => {PointcutFinder options}</tt>::
+      # <tt>:within_named_pointcuts => {PointcutFinder options}</tt>::
+      # <tt>:within_named_pointcut  => {PointcutFinder options}</tt>::
       #   Search for class constant and/or class variable "named" pointcuts, as specified using the options
       #   documented for PointcutFinder#find.
+      #
+      # <tt>:exclude_pointcuts => pointcut || [pointcut_list]</tt>::
+      # <tt>:exclude_named_pointcuts => {PointcutFinder options}</tt>::
+      #   Exclude the pointcuts. The "exclude_" prefix can be used with any of the :pointcuts and
+      #   :named_pointcuts synonyms. 
       #
       # <tt>:ignore_no_matching_join_points => true | false</tt>
       # <tt>ignore_no_jps => true | false</tt>::
@@ -226,21 +243,10 @@ module Aquarium
       end
       
       def init_pointcuts
-        pointcuts = []
-        pointcuts_given.each do |pointcut|
-          if pointcut.kind_of? Pointcut
-            pointcuts << pointcut 
-          elsif pointcut.kind_of? JoinPoint
-            pointcuts << Pointcut.new(:join_point => pointcut) 
-          else  # a hash of Pointcut.new options?
-            pointcuts << Pointcut.new(pointcut) 
-          end
-        end
-        named_pointcuts_given.each do |pointcut_spec|
-          found_pointcuts_results = Aquarium::Finders::PointcutFinder.new.find(pointcut_spec) 
-          pointcuts += found_pointcuts_results.found_pointcuts
-        end
-        if pointcuts.empty?
+        set_calculated_excluded_pointcuts determine_excluded_pointcuts
+        pointcuts  = determine_specified_pointcuts
+        pointcuts += determine_named_pointcuts
+        if pointcuts.empty?   # If no PCs specified, then the user must have specified :types, ...
           pc_options = {}
           Pointcut::CANONICAL_OPTIONS.keys.each do |pc_option|
             pco_sym = pc_option.intern
@@ -248,10 +254,38 @@ module Aquarium
           end
           pointcuts << Pointcut.new(pc_options)
         end
-        @pointcuts = Set.new(remove_excluded_join_points_and_empty_pointcuts(pointcuts))
+        @pointcuts = Set.new(remove_excluded_join_points_and_pointcuts(pointcuts))
         warn_if_no_join_points_matched
       end
 
+      def determine_specified_pointcuts
+        pointcuts_given.inject([]) do |pointcuts, pointcut|
+          if pointcut.kind_of? Pointcut
+            pointcuts << pointcut 
+          elsif pointcut.kind_of? JoinPoint
+            pointcuts << Pointcut.new(:join_point => pointcut) 
+          else  # a hash of Pointcut.new options?
+            pointcuts << Pointcut.new(pointcut) 
+          end
+          pointcuts
+        end
+      end
+      
+      def determine_named_pointcuts
+        named_pointcuts_given.inject([]) do |pointcuts, pointcut_spec|
+          found_pointcuts_results = Aquarium::Finders::PointcutFinder.new.find(pointcut_spec) 
+          pointcuts += found_pointcuts_results.found_pointcuts
+          pointcuts
+        end
+      end
+      
+      def determine_excluded_pointcuts
+        exclude_named_pointcuts_given.inject([]) do |excluded_pointcuts, pointcut_spec|
+          found_pointcuts_results = Aquarium::Finders::PointcutFinder.new.find(pointcut_spec) 
+          excluded_pointcuts += found_pointcuts_results.found_pointcuts
+        end
+      end
+      
       def warn_if_no_join_points_matched
         return unless should_warn_if_no_matching_join_points
         @pointcuts.each do |pc|
@@ -270,7 +304,7 @@ module Aquarium
         @specification[:ignore_no_matching_join_points].to_a.first == false
       end
       
-      def remove_excluded_join_points_and_empty_pointcuts pointcuts
+      def remove_excluded_join_points_and_pointcuts pointcuts
         pointcuts.reject do |pc|
           pc.join_points_matched.delete_if do |jp|
             join_point_excluded? jp

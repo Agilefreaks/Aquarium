@@ -230,13 +230,13 @@ describe Aspect, "methods" do
 
     it "should ignore the :default_objects if at least one :named_pointcut is given even if the :default_objects => object are given." do
       object = Aquarium::AspectInvocationTestClass.new
-      aspect = Aspect.new(:after, :default_objects => object, :named_pointcut => {:types => PointcutConstantHolder1}) {true}
+      aspect = Aspect.new(:after, :default_objects => object, :named_pointcut => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
     end
 
     it "should ignore the :default_objects if at least one :named_pointcut is given even if the :default_objects => type are given." do
-      aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, :named_pointcut => {:types => PointcutConstantHolder1}) {true}
+      aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, :named_pointcut => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
     end
@@ -248,8 +248,8 @@ describe Aspect, "methods" do
     end
 
     it "should not contain :named_pointcut(s) and either :type(s) or :object(s)." do
-      lambda {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutConstantHolder1}, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutConstantHolder1}, :object => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}, :object => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
   
@@ -1748,7 +1748,7 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_pointcuts"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_pointcuts." do
-        lambda {aspect = Aspect.new :before, :objects => @all_objects, :exclude_pointcuts => @excluded_pointcuts, :methods => :doit, :noop => true do; end}.should_not raise_error
+        lambda {aspect = Aspect.new :before, :objects => @all_objects, key.intern => @excluded_pointcuts, :methods => :doit, :noop => true do; end}.should_not raise_error
       end
     end
   end
@@ -1819,40 +1819,82 @@ describe Aspect, "methods" do
     end
   end
 
-  describe Aspect, ".new (with type-based :pointcut(s) and :exclude_type(s) parameter)" do  
-    it "should accept :pointcut(s) => [P1, ...], :exclude_type(s) => [types], where join points with [types] are excluded" do  
-      included_types = [DontExclude1, DontExclude2]
-      excluded_types = [Exclude1, Exclude2]
-      pointcut1 = Pointcut.new :types => included_types, :method => :doit
-      pointcut2 = Pointcut.new :types => excluded_types, :method => :doit
+  describe Aspect, ".new (with a :pointcut(s) and an :exclude_named_pointcut(s) parameter)" do  
+    it "should accept :pointcut(s) => [P1, ...], :exclude_named_pointcut(s) => {...}, where any pointcuts matching the latter are excluded" do  
       aspect = nil
       advice_called = false
-      aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_types => excluded_types do |jp, obj, *args|
+      aspect = Aspect.new :before, :pointcuts => Aquarium::PointcutFinderTestClasses.all_pointcuts, 
+        :exclude_named_pointcuts => {:matching => /POINTCUT/, :in_types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes} do |jp, obj, *args|
         advice_called = true
-        excluded_types.should_not include(jp.target_type)
+        Aquarium::PointcutFinderTestClasses.all_constants_pointcut_classes.should_not include(jp.target_type)
+      end 
+      Aquarium::PointcutFinderTestClasses.all_class_variables_pointcut_classes.each do |type|
+        advice_called = false
+        type.new.doit
+        advice_called.should be_true
+      end
+      Aquarium::PointcutFinderTestClasses.all_constants_pointcut_classes.each do |type|
+        advice_called = false
+        type.new.doit
+        advice_called.should_not be_true
+      end
+      aspect.unadvise
+    end
+
+    Aspect::CANONICAL_OPTIONS["exclude_named_pointcuts"].each do |key|
+      it "should accept :#{key} as a synonym for :exclude_named_pointcuts." do
+        lambda {aspect = Aspect.new :before,  :pointcuts => Aquarium::PointcutFinderTestClasses.all_pointcuts, 
+          key.intern => {:matching => /POINTCUT/, :in_types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes},
+          :noop => true do; end}.should_not raise_error
+      end
+    end
+  end
+  
+  describe Aspect, ".new (with type-based :pointcut(s) and :exclude_type(s) parameter)" do 
+    before :all do
+      @included_types = [DontExclude1, DontExclude2]
+      @excluded_types = [Exclude1, Exclude2]
+      @pointcut1 = Pointcut.new :types => @included_types, :method => :doit
+      @pointcut2 = Pointcut.new :types => @excluded_types, :method => :doit
+    end
+       
+    it "should accept :pointcut(s) => [P1, ...], :exclude_type(s) => [types], where join points with [types] are excluded" do  
+      advice_called = false
+      aspect = Aspect.new :before, :pointcuts => [@pointcut1, @pointcut2], :exclude_types => @excluded_types do |jp, obj, *args|
+        advice_called = true
+        @excluded_types.should_not include(jp.target_type)
       end 
 
-      included_types.each do |type|
+      @included_types.each do |type|
         advice_called = false
         type.new(1).doit
         advice_called.should be_true
       end
-      excluded_types.each do |type|
+      @excluded_types.each do |type|
         advice_called = false
         type.new(1).doit
         advice_called.should_not be_true
       end
       aspect.unadvise
     end
+
+    Aspect::CANONICAL_OPTIONS["exclude_types"].each do |key|
+      it "should accept :#{key} as a synonym for :exclude_types." do
+        lambda {aspect = Aspect.new :before,  :pointcuts => [@pointcut1, @pointcut2], key.intern => @excluded_types,
+          :noop => true do; end}.should_not raise_error
+      end
+    end
   end
 
   describe Aspect, ".new (with type-based :pointcut(s) and :exclude_type(s)_and_ancestors parameter)" do  
+    before :all do
+      @excluded_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
+      @types = @excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
+      @pointcut1 = Pointcut.new :types => @types, :method => :all, :method_options => [:exclude_ancestor_methods]
+    end
+    
     it "should accept :pointcut(s) => [P1, ...], :exclude_type(s)_and_ancestors => [types], where join points with [types] are excluded" do  
-      excluded_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
-      types = excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
-      pointcut1 = Pointcut.new :types => types, :method => :all, :method_options => [:exclude_ancestor_methods]
-      advice_called = false
-      aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_ancestors => excluded_types do |jp, obj, *args|; end
+      aspect = Aspect.new :before, :pointcuts => @pointcut1, :exclude_types_and_ancestors => @excluded_types do |jp, obj, *args|; end
       aspect.pointcuts.each do |pc|
         pc.join_points_matched.each do |jp|
           jp.target_type.should == ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod
@@ -1860,47 +1902,73 @@ describe Aspect, "methods" do
       end
       aspect.unadvise
     end
-  end
 
-  describe Aspect, ".new (with type-based :pointcut(s) and :exclude_type(s)_and_descendents parameter)" do  
-    it "should accept :pointcut(s) => [P1, ...], :exclude_type(s)_and_descendents => [types], where join points with [types] are excluded" do  
-      excluded_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
-      types = excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
-      pointcut1 = Pointcut.new :types => types, :method => :all, :method_options => [:exclude_ancestor_methods]
-      advice_called = false
-      aspect = Aspect.new :before, :pointcuts => pointcut1, :exclude_types_and_descendents => excluded_types, :ignore_no_matching_join_points => true do |jp, obj, *args|; end
-      aspect.pointcuts.size.should == 0
-      aspect.unadvise
+    Aspect::CANONICAL_OPTIONS["exclude_types_and_ancestors"].each do |key|
+      it "should accept :#{key} as a synonym for :exclude_types_and_ancestors." do
+        lambda {aspect = Aspect.new :before,  :pointcuts => @pointcut1, key.intern => @excluded_types,
+          :noop => true do; end}.should_not raise_error
+      end
     end
   end
 
-  describe Aspect, ".new (with object-based :pointcut(s) and :exclude_object(s) or :exclude_method(s) parameter)" do  
+  describe Aspect, ".new (with type-based :pointcut(s) and :exclude_type(s)_and_descendents parameter)" do  
+    before :all do
+      @excluded_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
+      @types = @excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
+      @pointcut1 = Pointcut.new :types => @types, :method => :all, :method_options => [:exclude_ancestor_methods]
+    end
+    it "should accept :pointcut(s) => [P1, ...], :exclude_type(s)_and_descendents => [types], where join points with [types] are excluded" do  
+      aspect = Aspect.new :before, :pointcuts => @pointcut1, :exclude_types_and_descendents => @excluded_types, 
+        :ignore_no_matching_join_points => true do |jp, obj, *args|; end
+      aspect.pointcuts.size.should == 0
+      aspect.unadvise
+    end
+
+    Aspect::CANONICAL_OPTIONS["exclude_types_and_descendents"].each do |key|
+      it "should accept :#{key} as a synonym for :exclude_types_and_descendents." do
+        lambda {aspect = Aspect.new :before, :pointcuts => @pointcut1, key.intern => @excluded_types,
+          :ignore_no_matching_join_points => true, :noop => true do; end}.should_not raise_error
+      end
+    end
+  end
+
+  describe Aspect, ".new (with object-based :pointcut(s) and :exclude_object(s) parameter)" do  
+    before :all do
+      @dontExclude1 = DontExclude1.new(1)
+      @dontExclude2 = DontExclude1.new(2)
+      @exclude1 = DontExclude1.new(3)
+      @exclude2 = DontExclude1.new(4)
+      @included_objects = [@dontExclude1, @dontExclude2]
+      @excluded_objects = [@exclude1, @exclude2]
+      @pointcut1 = Pointcut.new :objects => @included_objects, :method => :doit
+      @pointcut2 = Pointcut.new :objects => @excluded_objects, :method => :doit
+    end
+    
     it "should accept :pointcut(s) => [P1, ...], :exclude_object(s) => [objects], where join points with [objects] are excluded" do  
-      dontExclude1 = DontExclude1.new(1)
-      dontExclude2 = DontExclude1.new(2)
-      exclude1 = DontExclude1.new(3)
-      exclude2 = DontExclude1.new(4)
-      included_objects = [dontExclude1, dontExclude2]
-      excluded_objects = [exclude1, exclude2]
-      pointcut1 = Pointcut.new :objects => included_objects, :method => :doit
-      pointcut2 = Pointcut.new :objects => excluded_objects, :method => :doit
       aspect = nil
       advice_called = false
-      aspect = Aspect.new :before, :pointcuts => [pointcut1, pointcut2], :exclude_objects => excluded_objects do |jp, obj, *args|
+      aspect = Aspect.new :before, :pointcuts => [@pointcut1, @pointcut2], :exclude_objects => @excluded_objects do |jp, obj, *args|
         advice_called = true
-        excluded_objects.should_not include(obj)
+        @excluded_objects.should_not include(obj)
       end 
-      included_objects.each do |object|
+      @included_objects.each do |object|
         advice_called = false
         object.doit
         advice_called.should be_true
       end
-      excluded_objects.each do |object|
+      @excluded_objects.each do |object|
         advice_called = false
         object.doit
         advice_called.should_not be_true
       end
       aspect.unadvise
+    end
+
+    Aspect::CANONICAL_OPTIONS["exclude_objects"].each do |key|
+      it "should accept :#{key} as a synonym for :exclude_objects." do
+        lambda {aspect = Aspect.new :before, :pointcuts => [@pointcut1, @pointcut2], key.intern => @excluded_objects,
+          :noop => true do; end}.should_not raise_error
+      end
     end
   end
 

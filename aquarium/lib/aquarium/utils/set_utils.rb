@@ -14,7 +14,7 @@ module Aquarium
 
       # Return a new set that is a copy of the input set with all nils removed.
       def strip_set_nils set
-        set.delete_if {|x| x.nil?}
+        SetUtils.strip_set_nils set
       end
   
       # Return a new set that is a copy of the input set with all nils removed.

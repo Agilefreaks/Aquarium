@@ -8,12 +8,12 @@ N.A.
 Enhancements:
 18537	Provide a search for all pointcut constants
 
-I've provided an example of the design approach where you define pointcuts in a class, as a sort
-of interface and write aspects that specify those pointcuts. The problem has been that you had
-to name every single such pointcut explicitly. There was no "finder" option, as for types, methods,
-etc. Now there is a pointcut finder option with a new option ":named_pointcuts" for Aspect.new to
-specify a search for pointcuts in a set of types matching a name specification. Either constants
-or class variables will be matched (or both).
+I've provided an example of the design approach where you define pointcuts in a class, as a kind
+of "aspect interface" and write aspects that specify those pointcuts. The problem has been that 
+you had to name every single such pointcut explicitly. There was no "finder" option, as for types,
+methods, etc. Now there is a pointcut finder option with a new option ":named_pointcuts" for 
+Aspect.new to specify a search for pointcuts in a set of types matching a name specification.
+Either constants or class variables will be matched (or both).
 
 == Version 0.4.1
 

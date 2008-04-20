@@ -143,7 +143,7 @@ You can pass in pointcuts defined elsewhere:
 	around :pointcuts => my_pointcut do |jp, obj, *args| ...         # Pass in a pointcut
 	around :pointcuts => [my_pointcut, ...] do |jp, obj, *args| ...  # Pass in a pointcut array
 
-As a convenience, since a JoinPoint is like a Pointcut with one element, you can pass a JoinPoint object where Pointcut objects are expected:
+As a convenience, since a JoinPoint is a Pointcut with one element, you can pass a JoinPoint object where Pointcut objects are expected:
 
 my_join_point1 = JoinPoint.new :type => Foo::Bar, :method => do_this
 my_join_point2 = JoinPoint.new :type => Foo::Bar, :method => do_that
@@ -160,6 +160,13 @@ You can specify a single type, a type name, a type regular expression, or an arr
 	around :types => [/A::.*Helper$/, /B::Foo.*/], ...
 
 Everywhere "type" is used, you can substitute "class", "classes", "module", or "modules". Note that they are treated as synonyms; there is currently no enforcement that the values passed with ":class", for example, are actually classes, not modules.
+
+There are also several prepositional prefixes allowed for any of the synonyms. E.g.,
+
+	around :for_types = A, ...
+	around :on_types = A, ...
+	around :in_types = A, ...
+	around :within_types = A, ...
 
 Using the plural versions of the synonyms with method specifications sometimes read better:
 
@@ -252,6 +259,8 @@ You can specify attributes, which are actually convenience methods for the attri
 	around :attributes = /^foo/, ...
 	around :attributes = [/^foo/, /bar$/], ...
 
+Again, it's important to remember that actually advising the attribute accesses is not done; it's the public accessor methods that are advised! This may change in a future release.
+
 You can specify a "Pointcut" that encapsulates one or more pre-defined Pointcuts or JoinPoints.
 
 	around :pointcut = pc, ...                                     # for pre-defined pointcut "pc"
@@ -262,15 +271,57 @@ You can specify a "Pointcut" that encapsulates one or more pre-defined Pointcuts
 
 Using the plural versions of the synonyms, with method specifications so they read better:
 
+	around :for_pointcuts => [pc1, pc2, ...], ...
 	around :on_pointcuts => [pc1, pc2, ...], ...
 	around :in_pointcuts => [pc1, pc2, ...], ...
 	around :within_pointcuts => [pc1, pc2, ...], ...
 
+Since V0.4.2, you can also specify "named" pointcuts, which are searched for just like methods in types (as discussed below).
+For example, if several classes in module "App" define class constant pointcuts named STATE_CHANGE, the following expression
+in an around advice aspect will match all of them:
+
+	around :named_pointcuts => { :constants_matching => :STATE_CHANGE, :in_types => /App::.*/ } ...
+
+For the type specification, which is required, any valid option for the TypeFinder class is allowed. 
+
+You can also match on class variables, using ":class_variables_matching". To match on either kind of definition, use just
+":matching". If no :*matching is specified, then any class constant or variable Pointcut found will be matched. 
+
+Here are the variaus :*matching options and their synonyms:
+
+	around :named_pointcuts => { :constants_matching            => :STATE_CHANGE, ... } ...   # class constants only
+	around :named_pointcuts => { :constants_named               => :STATE_CHANGE, ... } ...
+	around :named_pointcuts => { :constants_with_names_matching => :STATE_CHANGE, ... } ...
+
+	around :named_pointcuts => { :class_variables_matching            => :STATE_CHANGE, ... } ...   # class variables only
+	around :named_pointcuts => { :class_variables_named               => :STATE_CHANGE, ... } ...
+	around :named_pointcuts => { :class_variables_with_names_matching => :STATE_CHANGE, ... } ...
+
+	around :named_pointcuts => { :matching            => :STATE_CHANGE, ... } ...   # class constants and variables
+	around :named_pointcuts => { :named               => :STATE_CHANGE, ... } ...
+	around :named_pointcuts => { :with_names_matching => :STATE_CHANGE, ... } ...
+
+The :*matching options take a name, regular expression or array of the same (you can mix names and regular expressions).
+
+You can also use the following synonyms for :named_pointcuts:
+
+	around :named_pointcut => {...}
+	around :for_named_pointcut => {...}
+	around :on_named_pointcut => {...}
+	around :in_named_pointcut => {...}
+	around :within_named_pointcut => {...}
+	around :for_named_pointcuts => {...}
+	around :on_named_pointcuts => {...}
+	around :in_named_pointcuts => {...}
+	around :within_named_pointcuts => {...}
+	
 You can specifically exclude particular pointcuts, join points, types, objects, methods, or attributes. This is useful when you specify a list or regular expression of "items" to match and you want to exclude some of the items.
 Note that there is an open bug (#15202) that appears to affect advising types, unadvising the types, then advising objects of the same types. (This is not likely to happen a lot in real applications, but it shows up when running Aquarium's specs.)
 
 	around ..., :exclude_pointcut = pc, ...
 	around ..., :exclude_pointcuts = [pc, ...]
+	around ..., :exclude_named_pointcut = {...}
+	around ..., :exclude_named_pointcuts = {...}
 	around ..., :exclude_join_point = jp, ...
 	around ..., :exclude_join_points = [jp, ...]
 	around ..., :exclude_type = t, ...
@@ -286,7 +337,7 @@ Note that there is an open bug (#15202) that appears to affect advising types, u
 	around ..., :exclude_attribute = a, ...
 	around ..., :exclude_attributes = [a, ...]
 
-All the same synonyms for :types, :objects, and :methods apply here as well (after the "exclude_" prefix).
+All the same synonyms for :pointcuts, :named_pointcuts, :types, :objects, and :methods apply here as well (after the "exclude_" prefix).
 
 You can advice methods before execution:
 
@@ -345,7 +396,7 @@ Rather than passing a block as the advice, you can pass a previously-created Pro
 	around :type => [...], :methods => :all, :call => advice         # synonym for advice.
 	around :type => [...], :methods => :all, :invoke => advice       # synonym for advice.
 
-Finally, when running in JRuby, you can advise Java types! See the examples in the separate RSpec suite in the "jruby" directory.
+Finally, when running in JRuby, you can advise Java types! See the examples in the separate RSpec suite in the "jruby" directory and the discussion above concerning known limitations.
 
 === Packages
 
@@ -412,4 +463,5 @@ See http://aquarium.rubyforge.org for further documentation.
 My colleagues in the AOSD community, in particular those who developed AspectJ, have been a big inspiration.
 The RSpec team, in particular David Chelimsky, have really inspired my thinking about what's possible in Ruby, especially in the realm of DSLs. I also cribbed parts of the RSpec Rake process ;)
 My colleagues at Object Mentor are an endless source of insight and inspiration.
+Finally, a number of users have contributed valuable feedback. In particular, thanks to Brendan L., Matthew F., and Mark V. 
  

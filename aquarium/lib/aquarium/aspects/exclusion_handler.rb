@@ -1,22 +1,33 @@
+require 'aquarium/utils/set_utils'
 
 module Aquarium
   module Aspects
     
     # Defines methods shared by several classes that take :exclude_* arguments.
     module ExclusionHandler
+      include Aquarium::Utils::HashUtils
       
       def join_point_excluded? jp
         is_excluded_pointcut?(jp) or is_excluded_join_point?(jp) or is_excluded_type_or_object?(jp.type_or_object) or is_excluded_method?(jp.method_name)
       end
       
       def is_excluded_pointcut? jp
-        return false if @specification[:exclude_pointcuts].nil?
-        @specification[:exclude_pointcuts].find do |pc|
+        return false if all_excluded_pointcuts.empty?
+        all_excluded_pointcuts.find do |pc|
           pc.join_points_matched.find do |jp2|
             jp2 == jp || jp2.eql?(jp)
           end
         end
       end
+      
+      def set_calculated_excluded_pointcuts excluded_pointcuts
+        @calculated_excluded_pointcuts = excluded_pointcuts
+        @all_excluded_pointcuts = @specification[:exclude_pointcuts] | Set.new(@calculated_excluded_pointcuts)
+      end
+      
+      def all_excluded_pointcuts
+        @all_excluded_pointcuts ||= @specification[:exclude_pointcuts]
+      end        
 
       # Using @specification[:exclude_join_points].include?(jp) doesn't always work correctly (it probably uses equal?())!
       def is_excluded_join_point? jp
@@ -56,6 +67,7 @@ module Aquarium
         return false if regexs.empty?
         regexs.find {|re| method.to_s =~ re}          
       end
+      
     end
   end
 end

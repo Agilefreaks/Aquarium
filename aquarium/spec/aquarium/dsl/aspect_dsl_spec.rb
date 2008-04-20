@@ -559,25 +559,25 @@ describe "Aquarium::DSL" do
       PC2::POINTCUT.join_points_not_matched.should == pointcut2.join_points_not_matched
     end
   end
-  
-  class OldDSLClass
-    include Aquarium::Aspects::DSL::AspectDSL
-  end
-  describe "DSL methods available through the old package Aquarium::Aspects::DSL::AspectDSL" do    
-    before :each do
-      @dsl = OldDSLClass.new
-      @advice = proc {|jp, obj, *args| "advice"}
-      @aspects = []
-    end
-    after :each do
-      @aspects.each {|a| a.unadvise}
-    end
+end
 
-    it "should be equivalent to advice kind :around." do
-      @aspects << OldDSLClass.advise(:around, :noop => true, :pointcut => @pointcut_opts, &@advice)
-      @aspects << OldDSLClass.around(         :noop => true, :pointcut => @pointcut_opts, &@advice)
-      @aspects[1].should == @aspects[0]
-    end
+class OldDSLClass
+  include Aquarium::Aspects::DSL::AspectDSL
+end
+describe "DSL methods available through the old package Aquarium::Aspects::DSL::AspectDSL" do    
+  before :each do
+    @dsl = OldDSLClass.new
+    @advice = proc {|jp, obj, *args| "advice"}
+    @aspects = []
+  end
+  after :each do
+    @aspects.each {|a| a.unadvise}
+  end
+
+  it "should be equivalent to advice kind :around." do
+    @aspects << OldDSLClass.advise(:around, :noop => true, :pointcut => @pointcut_opts, &@advice)
+    @aspects << OldDSLClass.around(         :noop => true, :pointcut => @pointcut_opts, &@advice)
+    @aspects[1].should == @aspects[0]
   end
 end
 
