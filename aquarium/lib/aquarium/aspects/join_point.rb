@@ -6,6 +6,7 @@ end
 
 module Aquarium
   module Aspects
+    # A Join Point that might be advised.
     class JoinPoint
 
       class ProceedMethodNotAvailable < Exception; end
@@ -31,6 +32,8 @@ module Aquarium
         #
         # <tt>(:class_method | :instance_method) => (true | false)</tt>::
         #   Is the method a class or instance method? Defaults to <tt>:instance_method => true</tt>.
+        # Note: The range of options is not as rich as for Pointcut, because it is expected that JoinPoint objects
+        # will be explicitly created only rarely by users of Aquarium. Most of the time, Pointcuts will be created.
         def initialize options
           update options
           assert_valid options
