@@ -3,11 +3,13 @@ require File.dirname(__FILE__) + '/../spec_example_types'
 require 'aquarium/aspects/aspect'
 require 'aquarium/aspects/dsl'
 require 'aquarium/utils/array_utils'
+require File.dirname(__FILE__) + '/../finders/pointcut_finder_spec_test_classes'
 
 require 'profiler'
 
 include Aquarium::Aspects
 include Aquarium::Utils::ArrayUtils
+include Aquarium::PointcutFinderTestClasses 
 
 
 def aspects_should_be_equal num_jps, aspect1, aspect2
@@ -132,18 +134,18 @@ describe Aspect, "methods" do
     it "should reject the :exceptions argument unless specified with :after_raising." do
       lambda { Aspect.new :before, :after, :exceptions => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.should raise_error(Aquarium::Utils::InvalidOptions)
     end
-end
+  end
 
   describe Aspect, ".new (parameters that specify pointcuts)" do
     before :all do
       @pointcut_opts = {:type => Aquarium::AspectInvocationTestClass}
     end
     
-    it "should contain at least one of :method(s), :pointcut(s), :type(s), or :object(s)." do
+    it "should contain at least one of :method(s), :pointcut(s), :named_pointcut(s), :type(s), or :object(s)." do
       lambda {Aspect.new(:after, :ignore_no_matching_join_points => true) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
     end
 
-    it "should contain at least one of :pointcut(s), :type(s), or :object(s) unless :default_objects => object is given." do
+    it "should contain at least one of :pointcut(s), :named_pointcut(s), :type(s), or :object(s) unless :default_objects => object is given." do
       aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method, :noop => true) {true}
     end
 
@@ -163,7 +165,7 @@ end
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
     end
 
-    it "should ignore the :default_objects if at least one :pointcut is given and the :default_objects are objects." do
+    it "should ignore the :default_objects if at least one :pointcut is given even if the :default_objects => object are given." do
       object = Aquarium::AspectInvocationTestClass.new
       aspect = Aspect.new(:after, :default_objects => object, 
         :pointcut => {:type => Aquarium::AspectInvocationTestClass2, :method => :public_test_method}, :method => :public_test_method) {true}
@@ -171,7 +173,7 @@ end
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
     end
 
-    it "should ignore the :default_objects if at least one :pointcut is given and the :default_objects are types." do
+    it "should ignore the :default_objects if at least one :pointcut is given even if the :default_objects => type are given." do
       aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, 
         :pointcut => {:type => Aquarium::AspectInvocationTestClass2, :method => :public_test_method}, :method => :public_test_method) {true}
       aspect.join_points_matched.size.should == 1
@@ -220,7 +222,37 @@ end
     end
   end
 
+  describe Aspect, ".new (parameters that specify named constant and/or class variable pointcuts)" do
+    it "should contain at least one :types or TypeFinder synonym for :types." do
+      lambda {Aspect.new(:after, :named_pointcuts => {}, :noop => true) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :named_pointcuts => {:types => all_pointcut_classes}, :noop => true) {true}}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    end
 
+    it "should ignore the :default_objects if at least one :named_pointcut is given even if the :default_objects => object are given." do
+      object = Aquarium::AspectInvocationTestClass.new
+      aspect = Aspect.new(:after, :default_objects => object, :named_pointcut => {:types => PointcutConstantHolder1}) {true}
+      aspect.join_points_matched.size.should == 1
+      aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
+    end
+
+    it "should ignore the :default_objects if at least one :named_pointcut is given even if the :default_objects => type are given." do
+      aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, :named_pointcut => {:types => PointcutConstantHolder1}) {true}
+      aspect.join_points_matched.size.should == 1
+      aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+    end
+
+    Aspect::CANONICAL_OPTIONS["named_pointcuts"].each do |key|
+      it "should accept :#{key} as a synonym for :named_pointcuts." do
+        lambda { Aspect.new :before, key.intern => {:types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes}, :noop => true do; end }.should_not raise_error
+      end
+    end
+
+    it "should not contain :named_pointcut(s) and either :type(s) or :object(s)." do
+      lambda {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutConstantHolder1}, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      lambda {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutConstantHolder1}, :object => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+    end
+  end
+  
   describe Aspect, ".new with :types parameter" do
     it "should advise the specified types." do
       @advice_called = false

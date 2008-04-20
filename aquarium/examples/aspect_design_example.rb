@@ -34,8 +34,20 @@ end
 include Aquarium::Aspects
 
 # Observe state changes in the class, using the class-defined pointcut.
+# Two ways of referencing the pointcut are shown. The first assumes you know the particular
+# pointcuts you care about. The second is more general; it uses the recently-introduced
+# :named_pointcut feature to search for all pointcuts matching a name in a set of types.
 
-observer = Aspect.new :after, :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, obj, *args|
+observer1 = Aspect.new :after, 
+  :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, obj, *args|
+  p "State has changed. "
+  state = obj.state
+  p "  New state is #{state.nil? ? 'nil' : state.inspect}"
+  p "  Equivalent to *args: #{args.inspect}"
+end  
+
+observer2 = Aspect.new :after, :named_pointcuts => {:matching => /CHANGE/, 
+    :within_types => Aquarium::ClassWithStateAndBehavior} do |jp, obj, *args|
   p "State has changed. "
   state = obj.state
   p "  New state is #{state.nil? ? 'nil' : state.inspect}"

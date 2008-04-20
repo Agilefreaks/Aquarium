@@ -7,7 +7,7 @@ include Aquarium::Utils
 def purge_actuals actuals
   # Remove extra stuff inserted by RSpec, Aquarium, and "pretty printer" (rake?), possibly in other specs! (TODO undo those when finished...)
   actuals.matched_keys.reject do |t2| 
-    t2.name.include?("Spec::") or t2.name =~ /Aquarium::(Utils|Extras|Examples|Aspects)/ or t2.name =~ /^PP/
+    t2.name.include?("Spec::") or t2.name =~ /Aquarium::(Utils|Extras|Examples|Aspects|PointcutFinderTestClasses)/ or t2.name =~ /^PP/
   end
 end
 

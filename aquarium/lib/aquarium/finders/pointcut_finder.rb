@@ -19,12 +19,22 @@ module Aquarium
       # Usage:
       #  finder_result = PointcutFinder.new.find [:option1 => [...] ]
       # where the allowed options include all the options supported by TypeFinder for locating
-      # types and one of the following options for specifying the name(s) of the pointcuts.
+      # types and one or more of the following options for specifying the name(s) of the pointcuts.
       #
       # <tt>:matching => a variable/constant name, regular expression, or array of the same</tt>::
       # <tt>:with_names_matching => same</tt>::
       # <tt>:named => same</tt>::
-      #   The name(s) of the pointcuts to find, either constants or class variables.
+      #   The name(s) of the pointcuts to find, returning any matching class constants and class variables.
+      #
+      # <tt>:constants_matching => a variable/constant name, regular expression, or array of the same</tt>::
+      # <tt>:constants_with_names_matching => same</tt>::
+      # <tt>:constants_named => same</tt>::
+      #   The name(s) of the pointcuts to find, returning any matching class constants.
+      #
+      # <tt>:class_variables_matching => a variable/constant name, regular expression, or array of the same</tt>::
+      # <tt>:class_variables_with_names_matching => same</tt>::
+      # <tt>:class_variables_named => same</tt>::
+      #   The name(s) of the pointcuts to find, returning any matching class variables.
       #
       def find options = {}
         init_specification options, CANONICAL_OPTIONS do 

@@ -31,10 +31,28 @@ end
 
 include Aquarium::Aspects
 
-describe "An example of an aspect using a class-defined pointcut." do
+# Two ways of referencing the pointcut are shown. The first assumes you know the particular
+# pointcuts you care about. The second is more general; it uses the recently-introduced
+# :named_pointcut feature to search for all pointcuts matching a name in a set of types.
+describe "An example of an aspect referencing a particular class-defined pointcut." do
   it "should observe state changes in the class." do
     @new_state = nil
-    observer = Aspect.new :after, :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, obj, *args|
+    observer = Aspect.new :after, 
+      :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, obj, *args|
+      @new_state = obj.state
+      @new_state.should be_eql(*args)
+    end
+    object = Aquarium::ClassWithStateAndBehavior.new(:a1, :a2, :a3)
+    object.state = [:b1, :b2]
+    @new_state.should == [:b1, :b2]
+    observer.unadvise
+  end
+end
+describe "An example of an aspect searching for class-defined pointcuts." do
+  it "should observe state changes in the class." do
+    @new_state = nil
+    observer = Aspect.new :after, 
+      :named_pointcuts => {:matching => /CHANGE/, :within_types => Aquarium::ClassWithStateAndBehavior} do |jp, obj, *args|
       @new_state = obj.state
       @new_state.should be_eql(*args)
     end

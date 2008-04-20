@@ -81,8 +81,8 @@ module Aquarium
       #    
       # <tt>:default_objects => object || [object_list]</tt>::
       # <tt>:default_object => object || [object_list]</tt>::
-      #   An "internal" flag used by AspectDSL#pointcut when no object or type is specified, 
-      #   the value of :default_objects will be used, if defined. AspectDSL#pointcut sets the 
+      #   An "internal" flag used by Aspect::DSL#pointcut when no object or type is specified, 
+      #   the value of :default_objects will be used, if defined. Aspect::DSL#pointcut sets the 
       #   value to self, so that the user doesn't have to in the appropriate contexts.
       #   This flag is subject to change, so don't use it explicitly!
       #

@@ -1,5 +1,5 @@
 require 'aquarium/extensions'
-require 'aquarium/finders/type_finder'
+require 'aquarium/finders'
 require 'aquarium/utils'
 require 'aquarium/aspects/advice'
 require 'aquarium/aspects/exclusion_handler'
@@ -35,6 +35,7 @@ module Aquarium
       ASPECT_CANONICAL_OPTIONS = {
         "advice"            => %w[action do_action use_advice advise_with invoke call],
         "pointcuts"         => %w[pointcut],
+        "named_pointcuts"   => %w[named_pointcut],
         "exceptions"        => %w[exception],
         "ignore_no_matching_join_points" => %[ignore_no_jps]
       }
@@ -46,7 +47,7 @@ module Aquarium
 
 
       # Aspect.new (:around | :before | :after | :after_returning | :after_raising ) \
-      #   (:pointcuts => [...]), | \
+      #   (:pointcuts => [...]), :named_pointcuts => [...] | \
       #    ((:types => [...] | :types_and_ancestors => [...] | :types_and_descendents => [...] \
       #     :objects => [...]), 
       #     :methods => [], :method_options => [...], \
@@ -94,6 +95,11 @@ module Aquarium
       # <tt>:within_pointcuts => pointcut || [pointcut_list]</tt>::
       #   One or an array of Pointcut or JoinPoint objects. Mutually-exclusive with the :types, :objects,
       #   :methods, :attributes, :method_options, and :attribute_options parameters.
+      #
+      # <tt>:named_pointcuts => {PointcutFinder options}</tt>::
+      # <tt>:named_pointcut  => {PointcutFinder options}</tt>::
+      #   Search for class constant and/or class variable "named" pointcuts, as specified using the options
+      #   documented for PointcutFinder#find.
       #
       # <tt>:ignore_no_matching_join_points => true | false</tt>
       # <tt>ignore_no_jps => true | false</tt>::
@@ -221,17 +227,20 @@ module Aquarium
       
       def init_pointcuts
         pointcuts = []
-        if pointcuts_given?
-          pointcuts_given.each do |pointcut|
-            if pointcut.kind_of? Pointcut
-              pointcuts << pointcut 
-            elsif pointcut.kind_of? JoinPoint
-              pointcuts << Pointcut.new(:join_point => pointcut) 
-            else  # a hash of Pointcut.new options?
-              pointcuts << Pointcut.new(pointcut) 
-            end
+        pointcuts_given.each do |pointcut|
+          if pointcut.kind_of? Pointcut
+            pointcuts << pointcut 
+          elsif pointcut.kind_of? JoinPoint
+            pointcuts << Pointcut.new(:join_point => pointcut) 
+          else  # a hash of Pointcut.new options?
+            pointcuts << Pointcut.new(pointcut) 
           end
-        else
+        end
+        named_pointcuts_given.each do |pointcut_spec|
+          found_pointcuts_results = Aquarium::Finders::PointcutFinder.new.find(pointcut_spec) 
+          pointcuts += found_pointcuts_results.found_pointcuts
+        end
+        if pointcuts.empty?
           pc_options = {}
           Pointcut::CANONICAL_OPTIONS.keys.each do |pc_option|
             pco_sym = pc_option.intern
@@ -481,7 +490,7 @@ module Aquarium
       end
   
       def some_type_object_join_point_or_pc_option_given?
-        pointcuts_given? or join_points_given? or some_type_option_given? or objects_given? 
+        pointcuts_given? or named_pointcuts_given? or join_points_given? or some_type_option_given? or objects_given? 
       end
       
       def some_type_option_given?
@@ -515,10 +524,10 @@ module Aquarium
         bad_options(":after_returning can't be used with :after_raising.") if options_given? :after_returning, :after_raising
         bad_options(":exceptions can't be specified except with :after_raising.") if exceptions_given? and not specified_advice_kinds.include?(:after_raising)
         unless some_type_object_join_point_or_pc_option_given? or default_objects_given?
-          bad_options("At least one of :pointcut(s), :join_point(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, or :object(s) is required.") 
+          bad_options("At least one of :pointcut(s), :named_pointcut(s), :join_point(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, or :object(s) is required.") 
         end
-        if pointcuts_given? and (some_type_option_given? or objects_given?)
-          bad_options("Can't specify both :pointcut(s) and one or more of :type(s), and/or :object(s).") 
+        if (pointcuts_given? or named_pointcuts_given?) and (some_type_option_given? or objects_given?)
+          bad_options("Can't specify both :pointcut(s) or :named_pointcut(s) and one or more of :type(s), and/or :object(s).") 
         end
         unless noop
           if (not @specification[:advice].nil?) && @specification[:advice].size > 1
