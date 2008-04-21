@@ -8,7 +8,7 @@ module Aquarium
       # Return an array containing the input item or list of items. If the input
       # is an array, it is returned. In all cases, the constructed array is a
       # flattened version of the input and any nil elements are removed by #strip_array_nils.
-      # Note that this behavior effectively converts +nil+ to +[]+.
+      # Note that this behavior effectively converts <tt>nil</tt> to <tt>[]</tt>.
       def make_array *value_or_enum
         ArrayUtils.make_array value_or_enum
       end

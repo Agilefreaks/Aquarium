@@ -10,6 +10,8 @@ require File.dirname(__FILE__) + '/finder_result'
 # Finds types known to the runtime environment.
 module Aquarium
   module Finders
+    # == TypeFinder
+    # Locate types.
     class TypeFinder
       include Aquarium::Utils::ArrayUtils
       include Aquarium::Utils::TypeUtils
@@ -39,61 +41,65 @@ module Aquarium
       canonical_options_given_methods CANONICAL_OPTIONS
       canonical_option_accessor CANONICAL_OPTIONS
       
-      # Usage:
-      #  finder_result = TypeFinder.new.find [:option1 => [...] ]
-      # where the allowed options are
-      # <tt>:types => types_and_type_names_and_regexps</tt>::
-      # <tt>:names => types_and_type_names_and_regexps</tt>::
-      # <tt>:type  => types_and_type_names_and_regexps</tt>::
-      # <tt>:name  => types_and_type_names_and_regexps</tt>::
-      #   A single type or array of types, specified using any combination of the type 
-      #   name strings, the type "constants" and/or regular expessions. The four different
-      #   flags are just "sugar" for each other. 
+      # Returns a Aquarium::Finders::FinderResult, where the "matched" keys are the input 
+      # types, type names, and/or regular expressions, and objects for which matches were found and the 
+      # corresponding values are the class constant or variable pointcuts that were found.
+      # The keys in the "not_matched" part of the FinderResult are the specified types and objects
+      # for which no matches were found.
       #
-      # <tt>:types_and_descendents => types_and_type_names_and_regexps</tt>::
-      # <tt>:names_and_descendents => types_and_type_names_and_regexps</tt>::
-      # <tt>:type_and_descendents  => types_and_type_names_and_regexps</tt>::
-      # <tt>:name_and_descendents  => types_and_type_names_and_regexps</tt>::
+      # The options are as follows:
       #
-      # Same as for <tt>:types</tt> <i>etc.</i>, but also match their descendents.
+      # ==== Types
+      # A single type, type name, name regular expression, or an array of the same. (Mixed allowed.)
+      # * <tt>:types => types_and_type_names_and_regexps</tt>
+      # * <tt>:names => types_and_type_names_and_regexps</tt>
+      # * <tt>:type  => types_and_type_names_and_regexps</tt>
+      # * <tt>:name  => types_and_type_names_and_regexps</tt>
       #
-      # <tt>:types_and_ancestors => types_and_type_names_and_regexps</tt>::
-      # <tt>:names_and_ancestors => types_and_type_names_and_regexps</tt>::
-      # <tt>:type_and_ancestors  => types_and_type_names_and_regexps</tt>::
-      # <tt>:name_and_ancestors  => types_and_type_names_and_regexps</tt>::
+      # ==== Types and Descendents
+      # A single type, type name, name regular expression, or an array of the same. (Mixed allowed.)
+      # Matching types and their descendents will be found. A type that includes a module is considered
+      # a descendent, since the module would show up in that type's ancestors.
+      # * <tt>:types_and_descendents => types_and_type_names_and_regexps</tt>
+      # * <tt>:names_and_descendents => types_and_type_names_and_regexps</tt>
+      # * <tt>:type_and_descendents  => types_and_type_names_and_regexps</tt>
+      # * <tt>:name_and_descendents  => types_and_type_names_and_regexps</tt>
       #
-      # Same as for <tt>:types</tt> <i>etc.</i>, but also match their ancestors.
-      # This option will also match <tt>Class</tt>, <tt>Module</tt>, <i>etc.</>, 
+      # ==== Types and Ancestors
+      # A single type, type name, name regular expression, or an array of the same. (Mixed allowed.)
+      # Matching types and their ancestors will be found.
+      # * <tt>:types_and_ancestors => types_and_type_names_and_regexps</tt>
+      # * <tt>:names_and_ancestors => types_and_type_names_and_regexps</tt>
+      # * <tt>:type_and_ancestors  => types_and_type_names_and_regexps</tt>
+      # * <tt>:name_and_ancestors  => types_and_type_names_and_regexps</tt>
+      #
+      # Note: This option will also match <tt>Class</tt>, <tt>Module</tt>, <i>etc.</>, 
       # so use with caution!
       #
       # To get both descendents and ancestors, use both options with the same type
       # specification.
       #
-      # The "other options" include the following:
+      # ==== Exclude Types
+      # Exclude the specified type(s) from the list of matched types. 
+      # Note: These excluded types <i>won't</i> appear in the FinderResult#not_matched. 
+      # * <tt>:exclude_type  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_types => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_name  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_names => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_types_and_descendents => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_names_and_descendents => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_type_and_descendents  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_name_and_descendents  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_types_and_ancestors => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_names_and_ancestors => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_type_and_ancestors  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_name_and_ancestors  => types_and_type_names_and_regexps</tt>
       #
-      #
-      # <tt>:exclude_type  => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_types => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_name  => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_names => types_and_type_names_and_regexps</tt>::
-      #   Exclude the specified type or list of types from the list of matched types. 
-      #   These excluded types <b>won't</b> appear in the FinderResult#not_matched. 
-      #
-      # <tt>:exclude_types_and_descendents => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_names_and_descendents => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_type_and_descendents  => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_name_and_descendents  => types_and_type_names_and_regexps</tt>::
-      #
-      # <tt>:exclude_types_and_ancestors => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_names_and_ancestors => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_type_and_ancestors  => types_and_type_names_and_regexps</tt>::
-      # <tt>:exclude_name_and_ancestors  => types_and_type_names_and_regexps</tt>::
-      #
-      # Exclude the descendents or ancestors, as well.
-      #
+      # ==== Namespaces (Modules) and Regular Expressions
       # Because of the special sigificance of the module ("namespace") separator "::", the rules
       # for the regular expressions are as follows. Assume that "subexp" is a "sub regular
       # expression" that results if you split on the separator "::".
+      # (Feature Request 13403 should simplify this issue, when implemented.)
       #
       # A full regexp with no "::"::
       #   Allow partial matches, <i>i.e.</i>, as if you wrote <tt>/^.*#{regexp}.*$/.</tt>
@@ -121,8 +127,7 @@ module Aquarium
         result 
       end
   
-      
-      protected
+      private
 
       # Hack. Since the finder could be reused, unset the specification created by #find.
       def unset_specification

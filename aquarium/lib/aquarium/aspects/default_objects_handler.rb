@@ -3,10 +3,12 @@ require 'set'
 
 module Aquarium
   module Aspects
-    # Some classes and modules support a :default_objects flag and use it if no type or
-    # object is specified. For "convenience", requires that classes and modules including
-    # this module have a hash @specification defined with keys :default_objects, :types,
-    # and :objects.
+    # Some classes support a <tt>:default_objects</tt> option and use it if no type or
+    # object is specified. In other words, the <tt>:default_objects</tt> option is ignored
+    # if  <tt>:types</tt> or <tt>:objects</tt> is present.
+    # This module handles this behavior for all the classes that include it. These classes 
+    # are assumed to have <tt>@specification</tt> defined with keys 
+    # <tt>:default_objects</tt>, <tt>:types</tt>, and <tt>:objects</tt>.
     module DefaultObjectsHandler
       include Aquarium::Utils::ArrayUtils
       

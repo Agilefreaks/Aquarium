@@ -7,7 +7,7 @@ module Aquarium
       # Return a set containing the input item or list of items. If the input
       # is a set or an array, it is returned. In all cases, the constructed set is a
       # flattened version of the input and any nil elements are removed by #strip_set_nils.
-      # Note that this behavior effectively converts +nil+ to +[]+.
+      # Note that this behavior effectively converts <tt>nil</tt> to <tt>[]</tt>.
       def make_set *value_or_set_or_array
         strip_set_nils(convert_to_set(*value_or_set_or_array))
       end

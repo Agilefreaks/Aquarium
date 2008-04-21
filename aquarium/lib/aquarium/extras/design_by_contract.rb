@@ -1,12 +1,16 @@
-# A simple Design by Contract module. Adds advice to test that the contract, which is specified with
-# a block passes. Note that it doesn't attempt to handle the correct behavior under contract 
-# inheritance.
-# Warning: This module automatically includes Aquarium::DSL into the class with 
-# the contract and it adds the :precondition, :postcondition, and the :invariant methods to Object! 
 require 'aquarium'
 
 module Aquarium
+  # == Extras
+  # These modules are <i>not</i> included automatically when you <tt>require 'aquarium'</tt>. You have to
+  # include them explicitly.
   module Extras
+    # A simple Design by Contract module. Adds advice to test that the contract, which is specified with
+    # a block passes. Note that it doesn't attempt to handle the correct behavior under contract 
+    # inheritance. A usage example is included in the Examples as part of the distribution and it is also
+    # shown on the web site.
+    # *Warning*: This module automatically includes Aquarium::DSL into the class with 
+    # the contract and it adds the :precondition, :postcondition, and the :invariant methods to Object! 
     module DesignByContract
       include Aquarium::Aspects
             

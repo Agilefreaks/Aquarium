@@ -26,139 +26,144 @@ module Aquarium
       attr_reader :specification
 
       # Construct a Pointcut for methods in types or objects.
-      #   Pointcut.new :join_points => [...] | :type{s} => [...] | :object{s} => [...] \
-      #      {, :method{s} => [], :method_options => [...], \
+      #   Pointcut.new :join_points => [...] | :type{s} => [...] | :object{s} => [...]
+      #      {, :method{s} => [], :method_options => [...],
       #      :attribute{s} => [...], :attribute_options[...]}
       # where the "{}" indicate optional elements. Most of the arguments have many
       # synonyms, shown below, to promote an English-like DSL.
       #
-      # <tt>:join_points => join_point || [join_point_list]</tt>::
-      # <tt>:join_point  => join_point || [join_point_list]</tt>::
-      # <tt>:for_join_points => join_point || [join_point_list]</tt>::
-      # <tt>:for_join_point  => join_point || [join_point_list]</tt>::
-      # <tt>:on_join_points => join_point || [join_point_list]</tt>::
-      # <tt>:on_join_point  => join_point || [join_point_list]</tt>::
-      # <tt>:within_join_points => join_point || [join_point_list]</tt>::
-      # <tt>:within_join_point  => join_point || [join_point_list]</tt>::
-      #   One or an array of join_points.
+      # The options include the following.
+      # ==== Join Points
+      # Specify one or an array of join_points.
+      # * <tt>:join_points => join_point || [join_point_list]</tt>
+      # * <tt>:join_point  => join_point || [join_point_list]</tt>
+      # * <tt>:for_join_points => join_point || [join_point_list]</tt>
+      # * <tt>:for_join_point  => join_point || [join_point_list]</tt>
+      # * <tt>:on_join_points => join_point || [join_point_list]</tt>
+      # * <tt>:on_join_point  => join_point || [join_point_list]</tt>
+      # * <tt>:within_join_points => join_point || [join_point_list]</tt>
+      # * <tt>:within_join_point  => join_point || [join_point_list]</tt>
       #
-      # <tt>:types => type || [type_list]</tt>::
-      # <tt>:type  => type || [type_list]</tt>::
-      # <tt>:for_types => type || [type_list]</tt>::
-      # <tt>:for_type  => type || [type_list]</tt>::
-      # <tt>:on_types => type || [type_list]</tt>::
-      # <tt>:on_type  => type || [type_list]</tt>::
-      # <tt>:within_types => type || [type_list]</tt>::
-      # <tt>:within_type  => type || [type_list]</tt>::
-      #   One or an array of types, type names and/or type regular expessions to match. 
+      # ===== Types
+      # Specify a type, type name, type name regular expression or an array of the same. (Mixed is allowed.)
+      # * <tt>:types => type || [type_list]</tt>
+      # * <tt>:type  => type || [type_list]</tt>
+      # * <tt>:for_types => type || [type_list]</tt>
+      # * <tt>:for_type  => type || [type_list]</tt>
+      # * <tt>:on_types => type || [type_list]</tt>
+      # * <tt>:on_type  => type || [type_list]</tt>
+      # * <tt>:within_types => type || [type_list]</tt>
+      # * <tt>:within_type  => type || [type_list]</tt>
       #
-      # <tt>:types_and_descendents => type || [type_list]</tt>::
-      # <tt>:type_and_descendents  => type || [type_list]</tt>::
-      # <tt>:types_and_ancestors   => type || [type_list]</tt>::
-      # <tt>:type_and_ancestors    => type || [type_list]</tt>::
-      # <tt>:for_types_and_ancestors   => type || [type_list]</tt>::
-      # <tt>:for_type_and_ancestors    => type || [type_list]</tt>::
-      # <tt>:on_types_and_descendents => type || [type_list]</tt>::
-      # <tt>:on_type_and_descendents  => type || [type_list]</tt>::
-      # <tt>:on_types_and_ancestors   => type || [type_list]</tt>::
-      # <tt>:on_type_and_ancestors    => type || [type_list]</tt>::
-      # <tt>:within_types_and_descendents => type || [type_list]</tt>::
-      # <tt>:within_type_and_descendents  => type || [type_list]</tt>::
-      # <tt>:within_types_and_ancestors   => type || [type_list]</tt>::
-      # <tt>:within_type_and_ancestors    => type || [type_list]</tt>::
-      #   One or an array of types and either their descendents or ancestors. 
-      #   If you want both the descendents _and_ ancestors, use both options.
+      # ===== Types and Ancestors or Descendents
+      # Specify a type, type name, type name regular expression or an array of the same. (Mixed is allowed.)
+      # The ancestors or descendents will be found. To find <i>both</i> ancestors and descendents, use
+      # both options.
+      # * <tt>:types_and_descendents => type || [type_list]</tt>
+      # * <tt>:type_and_descendents  => type || [type_list]</tt>
+      # * <tt>:types_and_ancestors   => type || [type_list]</tt>
+      # * <tt>:type_and_ancestors    => type || [type_list]</tt>
+      # * <tt>:for_types_and_ancestors   => type || [type_list]</tt>
+      # * <tt>:for_type_and_ancestors    => type || [type_list]</tt>
+      # * <tt>:on_types_and_descendents => type || [type_list]</tt>
+      # * <tt>:on_type_and_descendents  => type || [type_list]</tt>
+      # * <tt>:on_types_and_ancestors   => type || [type_list]</tt>
+      # * <tt>:on_type_and_ancestors    => type || [type_list]</tt>
+      # * <tt>:within_types_and_descendents => type || [type_list]</tt>
+      # * <tt>:within_type_and_descendents  => type || [type_list]</tt>
+      # * <tt>:within_types_and_ancestors   => type || [type_list]</tt>
+      # * <tt>:within_type_and_ancestors    => type || [type_list]</tt>
       #
-      # <tt>:objects => object || [object_list]</tt>::
-      # <tt>:object  => object || [object_list]</tt>::
-      # <tt>:for_objects => object || [object_list]</tt>::
-      # <tt>:for_object  => object || [object_list]</tt>::
-      # <tt>:on_objects => object || [object_list]</tt>::
-      # <tt>:on_object  => object || [object_list]</tt>::
-      # <tt>:within_objects => object || [object_list]</tt>::
-      # <tt>:within_object  => object || [object_list]</tt>::
-      #   Objects to match.
+      # ===== Objects
+      # * <tt>:objects => object || [object_list]</tt>
+      # * <tt>:object  => object || [object_list]</tt>
+      # * <tt>:for_objects => object || [object_list]</tt>
+      # * <tt>:for_object  => object || [object_list]</tt>
+      # * <tt>:on_objects => object || [object_list]</tt>
+      # * <tt>:on_object  => object || [object_list]</tt>
+      # * <tt>:within_objects => object || [object_list]</tt>
+      # * <tt>:within_object  => object || [object_list]</tt>
       #    
-      # <tt>:default_objects => object || [object_list]</tt>::
-      # <tt>:default_object => object || [object_list]</tt>::
-      #   An "internal" flag used by Aspect::DSL#pointcut when no object or type is specified, 
-      #   the value of :default_objects will be used, if defined. Aspect::DSL#pointcut sets the 
-      #   value to self, so that the user doesn't have to in the appropriate contexts.
-      #   This flag is subject to change, so don't use it explicitly!
+      # ===== "Default" Objects
+      # An "internal" flag used by Aspect::DSL#pointcut. When no object or type is specified 
+      # explicitly, the value of :default_objects will be used, if defined. Aspect::DSL#pointcut
+      # sets the value to +self+, so the user doesn't have to specify a type or object in the
+      # contexts where that would be useful, <i>e.g.,</i> pointcuts defined within a type for join points
+      # within itself. *WARNING*: This flag is subject to change, so don't use it explicitly!
+      # * <tt>:default_objects => object || [object_list]</tt>
+      # * <tt>:default_object => object || [object_list]</tt>
       #
-      # <tt>:methods => method || [method_list]</tt>::
-      # <tt>:method  => method || [method_list]</tt>::
-      # <tt>:within_methods => method || [method_list]</tt>::
-      # <tt>:within_method  => method || [method_list]</tt>::
-      # <tt>:calling  => method || [method_list]</tt>::
-      # <tt>:calls_to  => method || [method_list]</tt>::
-      # <tt>:invoking  => method || [method_list]</tt>::
-      # <tt>:invocations_of  => method || [method_list]</tt>::
-      # <tt>:sending_message_to  => method || [method_list]</tt>::
-      #   One or an array of methods, method names and/or method regular expessions to match. 
-      #   By default, unless :attributes are specified, searches for public instance methods
-      #   with the method option :exclude_ancestor_methods implied, unless explicit method 
-      #   options are given.
+      # ===== Methods
+      # A method name, name regular expession or an array of the same. 
+      # By default, if neither <tt>:methods</tt> nor <tt>:attributes</tt> are specified, all public instance methods
+      # will be found, with the method option <tt>:exclude_ancestor_methods</tt> implied, unless explicit method 
+      # options are given.
+      # * <tt>:methods => method || [method_list]</tt>
+      # * <tt>:method  => method || [method_list]</tt>
+      # * <tt>:within_methods => method || [method_list]</tt>
+      # * <tt>:within_method  => method || [method_list]</tt>
+      # * <tt>:calling  => method || [method_list]</tt>
+      # * <tt>:calls_to  => method || [method_list]</tt>
+      # * <tt>:invoking  => method || [method_list]</tt>
+      # * <tt>:invocations_of  => method || [method_list]</tt>
+      # * <tt>:sending_message_to  => method || [method_list]</tt>
       #
-      # <tt>:method_options => [options]</tt>::
-      #   One or more options supported by Aquarium::Finders::MethodFinder. The :exclude_ancestor_methods
-      #   option is most useful.
+      # ===== Method Options
+      # One or more options supported by Aquarium::Finders::MethodFinder. The <tt>:exclude_ancestor_methods</tt>
+      # option is most useful.
+      # * <tt>:method_options => [options]</tt>
       #
-      # <tt>:reading   => attribute || [attribute_list]</tt>::
-      # <tt>:writing   => attribute || [attribute_list]</tt>::
-      # <tt>:changing => attribute || [attribute_list]</tt>::
-      # <tt>:accessing => attribute || [attribute_list]</tt>::
-      #   One or an array of attribute names and/or regular expessions to match. 
-      #   This is syntactic sugar for the corresponding attribute readers and/or writers
-      #   methods. 
-      #   If <tt>:reading</tt> is specified, just attribute readers are matched.
-      #   If <tt>:writing</tt> is specified, just attribute writers are matched.
-      #   If <tt>:accessing</tt> is specified, both readers and writers are matched.
-      #   Any matches will be joined with the matched <tt>:methods.</tt>.
+      # ===== Attributes
+      # An attribute name, regular expession or array of the same. 
+      # *WARNING* This is syntactic sugar for the corresponding attribute readers and/or writers
+      # methods. The actual attribute accesses are not advised, which can lead to unexpected
+      # behavior. A goal before V1.0 is to support actual attribute accesses, if possible.  
+      # * <tt>:attributes => attribute || [attribute_list]</tt>
+      # * <tt>:attribute  => attribute || [attribute_list]</tt>
+      # * <tt>:reading   => attribute || [attribute_list]</tt>
+      # * <tt>:writing   => attribute || [attribute_list]</tt>
+      # * <tt>:changing => attribute || [attribute_list]</tt>
+      # * <tt>:accessing => attribute || [attribute_list]</tt>
+      # If <tt>:reading</tt> is specified, just attribute readers are matched.
+      # If <tt>:writing</tt> is specified, just attribute writers are matched.
+      # If <tt>:accessing</tt> is specified, both readers and writers are matched.
+      # Any matches will be joined with the matched <tt>:methods.</tt>.
       #
-      # <tt>:attributes => attribute || [attribute_list]</tt>::
-      # <tt>:attribute  => attribute || [attribute_list]</tt>::
-      #   One or an array of attribute names and/or regular expessions to match. 
-      #   This is syntactic sugar for the corresponding attribute readers and/or writers
-      #   methods, as specified using the <tt>:attrbute_options</tt>. Any matches will be
-      #   joined with the matched <tt>:methods.</tt>.
+      # ===== Attribute Options
+      # One or more of <tt>:readers</tt>, <tt>:reader</tt> (synonymous), 
+      # <tt>:writers</tt>, and/or <tt>:writer</tt> (synonymous). By default, both
+      # readers and writers are matched. 
+      # <tt>:reading => ...</tt> is synonymous with <tt>:attributes => ..., 
+      # :attribute_options => [:readers]</tt>.
+      # <tt>:writing => ...</tt> and <tt>:changing => ...</tt> are synonymous with <tt>:attributes => ..., 
+      # :attribute_options => [:writers]</tt>.
+      # <tt>:accessing => ...</tt> is synonymous with <tt>:attributes => ...</tt>.
+      # * <tt>:attribute_options => [options]</tt>
       #
-      # <tt>:attribute_options => [options]</tt>::
-      #   One or more of <tt>:readers</tt>, <tt>:reader</tt> (synonymous), 
-      #   <tt>:writers</tt>, and/or <tt>:writer</tt> (synonymous). By default, both
-      #   readers and writers are matched. 
-      #   <tt>:reading => ...</tt> is synonymous with <tt>:attributes => ..., 
-      #   :attribute_options => [:readers]</tt>.
-      #   <tt>:writing => ...</tt> and <tt>:changing => ...</tt> are synonymous with <tt>:attributes => ..., 
-      #   :attribute_options => [:writers]</tt>.
-      #   <tt>:accessing => ...</tt> is synonymous with <tt>:attributes => ...</tt>.
+      # ==== Exclusion Options
+      # Exclude the specified "things" from the matched join points. If pointcuts are
+      # excluded, they should be subsets of the matched pointcuts. Otherwise, the
+      # resulting pointcut will be empty!
+      # * <tt>:exclude_pointcuts   => pc || [pc_list]</tt>
+      # * <tt>:exclude_pointcut    => pc || [pc_list]</tt>
+      # * <tt>:exclude_join_points => jp || [jp_list]</tt>
+      # * <tt>:exclude_join_point  => jp || [jp_list]</tt>
+      # * <tt>:exclude_types       => type || [type_list]</tt>
+      # * <tt>:exclude_types       => type || [type_list]</tt>
+      # * <tt>:exclude_type        => type || [type_list]</tt>
+      # * <tt>:exclude_types_and_descendents => type || [type_list]</tt>
+      # * <tt>:exclude_type_and_descendents  => type || [type_list]</tt>
+      # * <tt>:exclude_types_and_ancestors   => type || [type_list]</tt>
+      # * <tt>:exclude_type_and_ancestors    => type || [type_list]</tt>
+      # * <tt>:exclude_objects     => object || [object_list]</tt>
+      # * <tt>:exclude_object      => object || [object_list]</tt>
+      # * <tt>:exclude_methods     => method || [method_list]</tt>
+      # * <tt>:exclude_method      => method || [method_list]</tt>
+      # * <tt>:exclude_attributes  => attribute || [attribute_list]</tt>
+      # * <tt>:exclude_attribute   => attribute || [attribute_list]</tt>
+      # The <tt>exclude_</tt> prefix works with the synonyms of the options shown.
       #
-      # <tt>:exclude_pointcuts   => pc || [pc_list]</tt>::
-      # <tt>:exclude_pointcut    => pc || [pc_list]</tt>::
-      # <tt>:exclude_join_points => jp || [jp_list]</tt>::
-      # <tt>:exclude_join_point  => jp || [jp_list]</tt>::
-      # <tt>:exclude_types       => type || [type_list]</tt>::
-      # <tt>:exclude_types       => type || [type_list]</tt>::
-      # <tt>:exclude_type        => type || [type_list]</tt>::
-      # <tt>:exclude_objects     => object || [object_list]</tt>::
-      # <tt>:exclude_object      => object || [object_list]</tt>::
-      # <tt>:exclude_methods     => method || [method_list]</tt>::
-      # <tt>:exclude_method      => method || [method_list]</tt>::
-      # <tt>:exclude_attributes  => attribute || [attribute_list]</tt>::
-      # <tt>:exclude_attribute   => attribute || [attribute_list]</tt>::
-      #   Also <tt>exclude_{synonyms}</tt> of the same options...
-      #   Exclude the specified "things" from the matched join points. If pointcuts are
-      #   excluded, they should be subsets of the matched pointcuts. Otherwise, the
-      #   resulting pointcut will be empty!
-      #
-      # <tt>:exclude_types_and_descendents => type || [type_list]</tt>::
-      # <tt>:exclude_type_and_descendents  => type || [type_list]</tt>::
-      # <tt>:exclude_types_and_ancestors   => type || [type_list]</tt>::
-      # <tt>:exclude_type_and_ancestors    => type || [type_list]</tt>::
-      #   Exclude the specified types and their descendents, ancestors.
-      #   If you want to exclude both the descendents _and_ ancestors, use both options.
-      #
-      # Pointcut.new also accepts all the "universal" options documented in OptionsUtils.
+      # Pointcut.new also accepts all the "universal" options documented in Aquarium::Utils::OptionsUtils.
       def initialize options = {} 
         init_specification options, CANONICAL_OPTIONS, (ATTRIBUTE_OPTIONS_VALUES + Advice::KINDS_IN_PRIORITY_ORDER) do 
           finish_specification_initialization

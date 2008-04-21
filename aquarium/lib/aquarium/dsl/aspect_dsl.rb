@@ -1,10 +1,6 @@
 require 'aquarium/aspects/aspect'
 require 'aquarium/utils/type_utils'
 
-# Convenience methods added to the current type to provide a low-level AOP DSL. 
-# If you don't want these methods added to a type, then only require aspect.rb
-# and create instances of Aspect.
-
 module Aquarium
   module DSLMethods
         
@@ -54,6 +50,18 @@ module Aquarium
     end
   end
 
+  # Include this module to add convenience class-level methods to a type, which provide 
+  # a low-level AOP DSL. For example, instead of writing
+  #
+  #   Aspect.new :around, :calls_to => ...
+  #
+  # You can write the following instead.
+  #
+  #   include Aspect::DSL
+  #   ...
+  #   around :calls_to => ... 
+  # If you don't want these methods added to a type, then only require aspect.rb
+  # and create instances of Aspect, as in the first example.
   module DSL
     include Aquarium::DSLMethods
     # Add the methods as class, not instance, methods.
@@ -62,7 +70,7 @@ module Aquarium
     end
   end
 
-  # Backwards compatibility with old name.
+  # Backwards compatibility with old name. (Deprecated)
   module Aspects
     module DSL
       module AspectDSL

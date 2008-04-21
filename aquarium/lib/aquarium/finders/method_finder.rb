@@ -9,86 +9,86 @@ require File.dirname(__FILE__) + '/finder_result'
 # Find methods and types and objects.
 module Aquarium
   module Finders
+    # == MethodFinder
+    # Locate methods in specified types or objects.
     class MethodFinder
       include Aquarium::Utils::ArrayUtils
       include Aquarium::Utils::OptionsUtils
   
-      # Returns a Aquarium::Finders::FinderResult for the hash of types, type names, and/or regular expressions
-      # and the corresponding method name <b>symbols</b> found.
+      # Returns a Aquarium::Finders::FinderResult, where the "matched" keys are the input 
+      # types, type names, and/or regular expressions, and objects for which matches were found and the 
+      # corresponding values are the method name <i>symbols</i> that were found.
       # Method names, not method objects, are always returned, because we can only get
       # method objects for instance methods if we have an instance!
+      # The keys in the "not_matched" part of the FinderResult are the specified types and objects
+      # for which no matches were found.
       #
-      # finder_result = MethodFinder.new.find :types => ... {, :methods => ..., :method_options => [...]}
-      # where
-      # "{}" indicate optional arguments
+      # The options are as follows:
+      # ==== Types
+      # All the options supported by TypeFinder#find.
       #
-      # <tt>:types => types_and_type_names_and_regexps</tt>::
-      # <tt>:type  => types_and_type_names_and_regexps</tt>::
-      # <tt>:for_types => types_and_type_names_and_regexps</tt>::
-      # <tt>:for_type  => types_and_type_names_and_regexps</tt>::
-      # <tt>:on_types => types_and_type_names_and_regexps</tt>::
-      # <tt>:on_type  => types_and_type_names_and_regexps</tt>::
-      # <tt>:in_types => types_and_type_names_and_regexps</tt>::
-      # <tt>:in_type  => types_and_type_names_and_regexps</tt>::
-      # <tt>:within_types => types_and_type_names_and_regexps</tt>::
-      # <tt>:within_type  => types_and_type_names_and_regexps</tt>::
-      #   One or more types, type names and/or regular expessions to match. 
-      #   Specify one or an array of values.
+      # ==== Objects
+      # One or more objects to match. 
+      # Specify one or an array of values.
+      # *Note*: String or symbol objects will be treated as type names!
+      # * <tt>:objects => objects</tt>
+      # * <tt>:object  => objects</tt>
+      # * <tt>:for_objects => objects</tt>
+      # * <tt>:for_object  => objects</tt>
+      # * <tt>:on_objects => objects</tt>
+      # * <tt>:on_object  => objects</tt>
+      # * <tt>:in_objects => objects</tt>
+      # * <tt>:in_object  => objects</tt>
+      # * <tt>:within_objects => objects</tt>
+      # * <tt>:within_object  => objects</tt>
       #
-      # <tt>:objects => objects</tt>::
-      # <tt>:object  => objects</tt>::
-      # <tt>:for_objects => objects</tt>::
-      # <tt>:for_object  => objects</tt>::
-      # <tt>:on_objects => objects</tt>::
-      # <tt>:on_object  => objects</tt>::
-      # <tt>:in_objects => objects</tt>::
-      # <tt>:in_object  => objects</tt>::
-      # <tt>:within_objects => objects</tt>::
-      # <tt>:within_object  => objects</tt>::
-      #   One or more objects to match. 
-      #   Specify one or an array of values.
-      #   Note: Currently, string or symbol objects will be misinterpreted as type names!
+      # ==== Methods
+      # One or more method names and/or regular expressions to match.
+      # Specify one or an array of values. If <tt>:all</tt> or <tt>:all_methods</tt>
+      # is specified, all methods in the types or objects will be matched, subject
+      # to the search options described below. That is, <tt>:all</tt> is equivalent 
+      # to the regular expression /.+/. 
+      # * <tt>:methods => method_names_and_regexps</tt>
+      # * <tt>:method  => method_names_and_regexps</tt>
+      # * <tt>:within_methods => method_names_and_regexps</tt>
+      # * <tt>:within_method  => method_names_and_regexps</tt>
+      # * <tt>:calling   => method_names_and_regexps</tt>
+      # * <tt>:invoking  => method_names_and_regexps</tt>
+      # * <tt>:calls_to  => method_names_and_regexps</tt>
+      # * <tt>:sending_message_to  => method_names_and_regexps</tt>
+      # * <tt>:sending_messages_to => method_names_and_regexps</tt>
       #
-      # <tt>:methods => method_names_and_regexps</tt>::
-      # <tt>:method  => method_names_and_regexps</tt>::
-      # <tt>:within_methods => method_names_and_regexps</tt>::
-      # <tt>:within_method  => method_names_and_regexps</tt>::
-      # <tt>:calling   => method_names_and_regexps</tt>::
-      # <tt>:invoking  => method_names_and_regexps</tt>::
-      # <tt>:calls_to  => method_names_and_regexps</tt>::
-      # <tt>:sending_message_to  => method_names_and_regexps</tt>::
-      # <tt>:sending_messages_to => method_names_and_regexps</tt>::
-      #   One or more method names and regular expressions to match.
-      #   Specify one or an array of values. If :all or :all_methods is specified, all
-      #   methods will be matched. That is, these special values are equivalent to the
-      #   the regular expression /.+/. 
-      #
-      # <tt>:exclude_methods => method_names_and_regexps</tt>::
-      # <tt>:exclude_method  => method_names_and_regexps</tt>::
-      # <tt>:exclude_&lt;other_method_synonyms&gt; => method_names_and_regexps</tt>::
-      #   One or more method names and regular expressions to exclude from the match.
-      #   Specify one or an array of values.
-      #
-      # <tt>:method_options => options</tt>::
-      # <tt>:method_option => options</tt>::
-      # <tt>:options  => options</tt>::
-      # <tt>:restricting_methods_to => options</tt>::
-      #   By default, searches for public instance methods. Specify one or more
-      #   of the following options for alternatives. You can combine any of the
-      #   <tt>:public</tt>, <tt>:protected</tt>, and <tt>:private</tt>, as well as
-      #   <tt>:instance</tt> and <tt>:class</tt>.
+      # ==== Methods Options
+      # By default, the searches are restricted to public instance methods. 
+      # * <tt>:method_options => options</tt>
+      # * <tt>:method_option => options</tt>
+      # * <tt>:options  => options</tt>
+      # * <tt>:restricting_methods_to => options</tt>
       #     
-      # <tt>:public</tt> or <tt>:public_methods</tt>::    Search for public methods (default).
-      # <tt>:private</tt> or <tt>:private_methods</tt>::   Search for private methods. 
+      # Note, the <tt>:options</tt> synonym is deprecated.
+      #
+      # Here are the allowed "options". Specify one or more of them. Any combination is allowed.
+      # <tt>:public</tt> or <tt>:public_methods</tt>::       Search for public methods (default).
+      # <tt>:private</tt> or <tt>:private_methods</tt>::     Search for private methods. 
       # <tt>:protected</tt> or <tt>:protected_methods</tt>:: Search for protected methods.
-      # <tt>:instance</tt> or <tt>:instance_methods</tt>::  Search for instance methods.
-      # <tt>:class</tt> or <tt>:class_methods</tt>::     Search for class methods.
-      # <tt>:singleton</tt> or <tt>:singleton_methods</tt>:: Search for singleton methods. (Using :class for objects 
-      # won't work and :class, :public, :protected, and :private are ignored when 
-      # looking for singleton methods.)
-      # <tt>:exclude_ancestor_methods</tt>:: Suppress "ancestor" methods. This
-      # means that if you search for a override method +foo+ in a
-      # +Derived+ class that is defined in the +Base+ class, you won't find it!
+      # <tt>:instance</tt> or <tt>:instance_methods</tt>::   Search for instance methods.
+      # <tt>:class</tt> or <tt>:class_methods</tt>::         Search for class methods.
+      # <tt>:singleton</tt> or <tt>:singleton_methods</tt>:: Search for singleton methods. 
+      # 
+      # Note: specifying <tt>:class</tt> when objects are specified won't work. 
+      # Also, <tt>:class</tt>, <tt>:public</tt>, <tt>:protected</tt>, and <tt>:private</tt>
+      # are ignored when looking for singleton methods.
+      #
+      # ==== Excluded Types, Objects, or Methods
+      # Exclude one or more types, objects, or methods from the match.
+      # Specify one or an array of values.
+      # * <tt>:exclude_methods => method_names_and_regexps</tt>
+      # * <tt>:exclude_method  => method_names_and_regexps</tt>
+      # * <tt>:exclude_ancestor_methods</tt> - Suppress "ancestor" methods. 
+      # The <tt>exclude_</tt> prefix can be used with any of the synonyms for the other options. 
+      # *WARNING*: the <tt>:exclude_ancestor_methods</tt> option means that
+      # if you search for a override method +foo+ in a derived class and +foo+ is
+      # defined in the base class, you won't find it!
       #
       def find options = {}
         init_specification options, CANONICAL_OPTIONS do
@@ -171,7 +171,7 @@ module Aquarium
         all_recognized_method_option_symbols.include? sym
       end
   
-      protected
+      private
   
       def do_find_all_by types_and_objects, method_names_or_regexps
         types_and_objects = make_array types_and_objects

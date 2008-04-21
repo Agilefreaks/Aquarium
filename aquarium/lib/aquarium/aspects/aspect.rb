@@ -12,14 +12,14 @@ module Aquarium
   module Aspects
     
     # == Aspect
-    # Aspects "advise" one or more method invocations for one or more types or objects
+    # Aspect "advises" one or more method invocations for one or more types or objects
     # (including class methods on types). The corresponding advice is a Proc that is
     # invoked either before the join point, after it returns, after it raises an exception, 
     # after either event, or around the join point, meaning the advice runs and it decides 
     # when and if to invoke the advised method. (Hence, around advice can run code before 
     # and after the join point call and it can "veto" the actual join point call).
     #  
-    # See also Aquarium::Aspects::DSL::AspectDsl for more information.
+    # See also Aquarium::DSL for more information.
     class Aspect
       include Advice
       include ExclusionHandler
@@ -48,17 +48,18 @@ module Aquarium
       canonical_options_given_methods CANONICAL_OPTIONS
 
 
-      # Aspect.new (:around | :before | :after | :after_returning | :after_raising ) \
-      #   (:pointcuts => [...]), :named_pointcuts => [...] | \
-      #    ((:types => [...] | :types_and_ancestors => [...] | :types_and_descendents => [...] \
+      # Aspect.new (:around | :before | :after | :after_returning | :after_raising )
+      #   (:pointcuts => [...]), :named_pointcuts => [...] |
+      #    ((:types => [...] | :types_and_ancestors => [...] | :types_and_descendents => [...]
       #     :objects => [...]), 
-      #     :methods => [], :method_options => [...], \
-      #     :attributes => [...], :attribute_options[...]), \
+      #     :methods => [], :method_options => [...],
+      #     :attributes => [...], :attribute_options[...]),
       #    (:advice = advice | do |join_point, obj, *args| ...; end)
       # 
       # where the parameters often have many synonyms (mostly to support a "humane
       # interface") and they are interpreted as followed:
       #
+      # ==== Type of Advice
       # <tt>:around</tt>::
       #   Invoke the specified advice "around" the join points. It is up to the advice
       #   itself to call <tt>join_point.proceed</tt> (where <tt>join_point</tt> is the
@@ -76,56 +77,64 @@ module Aquarium
       #   Invoke the specified advice after the join point returns successfully.
       #
       # <tt>:after_raising [=> exception || [exception_list]]</tt>::
-      # <tt>:after_raising, :exceptions => (exception || [exception_list])</tt>::
-      # <tt>:after_raising, :exception  => (exception || [exception_list])</tt>::
       #   Invoke the specified advice after the join point raises one of the specified exceptions.
-      #   If no exceptions are specified, the advice is invoked after any exception is raised. 
+      #   If no exceptions are specified, the advice is invoked after any exception is raised. An
+      #   alternative syntax is <tt>:after_raising, :exception[s] => (exception || [exception_list])</tt>.
       #
-      # <tt>:advice => proc</tt>::
-      # <tt>:action => proc</tt>::
-      # <tt>:do_action => proc</tt>::
-      # <tt>:use_advice => proc</tt>::
-      # <tt>:advise_with => proc</tt>::
-      # <tt>:invoke => proc</tt>::
-      # <tt>:call => proc</tt>::
-      #   The specified advice to be invoked. Only one advice may be specified. If a block is
-      #   specified, it is used instead.
+      # ==== Advice
+      # The advice to invoke before, after, or around the join points. Only one advice may be specified. 
+      # If a block is specified, the following options are ignored.
+      # * <tt>:advice => proc</tt>
+      # * <tt>:action => proc</tt>
+      # * <tt>:do_action => proc</tt>
+      # * <tt>:use_advice => proc</tt>
+      # * <tt>:advise_with => proc</tt>
+      # * <tt>:invoke => proc</tt>
+      # * <tt>:call => proc</tt>
       #
-      # <tt>:pointcuts => pointcut || [pointcut_list]</tt>::
-      # <tt>:pointcut  => pointcut || [pointcut_list]</tt>::
-      # <tt>:on_pointcut  => pointcut || [pointcut_list]</tt>::
-      # <tt>:on_pointcuts => pointcut || [pointcut_list]</tt>::
-      # <tt>:in_pointcut  => pointcut || [pointcut_list]</tt>::
-      # <tt>:in_pointcuts => pointcut || [pointcut_list]</tt>::
-      # <tt>:within_pointcut  => pointcut || [pointcut_list]</tt>::
-      # <tt>:within_pointcuts => pointcut || [pointcut_list]</tt>::
-      #   One or an array of Pointcut or JoinPoint objects. Mutually-exclusive with the :types, :objects,
-      #   :methods, :attributes, :method_options, and :attribute_options parameters.
+      # ==== Pointcuts
+      # A Pointcut, JoinPoint, or array of the same (Mixed is allowed.). Specifying pointcuts
+      # is mutually-exclusive with specifying them "indirectly" through :types, :objects,
+      # :methods, :attributes, :method_options, and :attribute_options parameters.
+      # * <tt>:pointcuts => pointcut || [pointcut_list]</tt>
+      # * <tt>:pointcut  => pointcut || [pointcut_list]</tt>
+      # * <tt>:on_pointcut  => pointcut || [pointcut_list]</tt>
+      # * <tt>:on_pointcuts => pointcut || [pointcut_list]</tt>
+      # * <tt>:in_pointcut  => pointcut || [pointcut_list]</tt>
+      # * <tt>:in_pointcuts => pointcut || [pointcut_list]</tt>
+      # * <tt>:within_pointcut  => pointcut || [pointcut_list]</tt>
+      # * <tt>:within_pointcuts => pointcut || [pointcut_list]</tt>
       #
-      # <tt>:named_pointcuts => {PointcutFinder options}</tt>::
-      # <tt>:named_pointcut  => {PointcutFinder options}</tt>::
-      # <tt>:on_named_pointcuts => {PointcutFinder options}</tt>::
-      # <tt>:on_named_pointcut  => {PointcutFinder options}</tt>::
-      # <tt>:in_named_pointcuts => {PointcutFinder options}</tt>::
-      # <tt>:in_named_pointcut  => {PointcutFinder options}</tt>::
-      # <tt>:within_named_pointcuts => {PointcutFinder options}</tt>::
-      # <tt>:within_named_pointcut  => {PointcutFinder options}</tt>::
-      #   Search for class constant and/or class variable "named" pointcuts, as specified using the options
-      #   documented for PointcutFinder#find.
+      # ==== Named Pointcuts
+      # Specify search criteria to locate Pointcuts defined as class constants and/or class variables.
+      # The options for the <tt>named_pointcuts</tt> parameter must form a hash and satisfy the
+      # requirements documented for Aquarium::Finders::PointcutFinder#find.
+      # Specifying named pointcuts is also mutually-exclusive with specifying Pointcuts "indirectly"
+      # through :types, :objects, :methods, :attributes, :method_options, and :attribute_options parameters.
+      # * <tt>:named_pointcuts => {PointcutFinder options}</tt>
+      # * <tt>:named_pointcut  => {PointcutFinder options}</tt>
+      # * <tt>:on_named_pointcuts => {PointcutFinder options}</tt>
+      # * <tt>:on_named_pointcut  => {PointcutFinder options}</tt>
+      # * <tt>:in_named_pointcuts => {PointcutFinder options}</tt>
+      # * <tt>:in_named_pointcut  => {PointcutFinder options}</tt>
+      # * <tt>:within_named_pointcuts => {PointcutFinder options}</tt>
+      # * <tt>:within_named_pointcut  => {PointcutFinder options}</tt>
       #
-      # <tt>:exclude_pointcuts => pointcut || [pointcut_list]</tt>::
-      # <tt>:exclude_named_pointcuts => {PointcutFinder options}</tt>::
-      #   Exclude the pointcuts. The "exclude_" prefix can be used with any of the :pointcuts and
-      #   :named_pointcuts synonyms. 
+      # ==== Exclude Pointcuts
+      # Exclude the specified pointcuts. The <tt>exclude_</tt> prefix can be used with any of the 
+      # <tt>:pointcuts</tt> and <tt>:named_pointcuts</tt> synonyms. 
+      # * <tt>:exclude_pointcuts => pointcut || [pointcut_list]</tt>
+      # * <tt>:exclude_named_pointcuts => {PointcutFinder options}</tt>
       #
-      # <tt>:ignore_no_matching_join_points => true | false</tt>
-      # <tt>ignore_no_jps => true | false</tt>::
+      # ==== Miscellaneous Options
+      # <tt>:ignore_no_matching_join_points => true | false</tt>::
       #   Do not issue a warning if no join points are actually matched by the aspect. By default, the value
       #   is false, meaning that a WARN-level message will be written to the log. It is usually very helpful
-      #   to be warned when no matches occurred, for diagnostic purposes!
+      #   to be warned when no matches occurred, for debugging purposes! A synonym for this option is
+      #   <tt>ignore_no_jps => true | false</tt>.
       #
-      # Aspect.new also accepts all the same options that Pointcut accepts, including the synonyms for :types,
-      # :methods, etc. It also accepts the "universal" options documented in OptionsUtils.
+      # For the options <i>e.g.,</i> <tt>:types</tt>, <tt>:methods</tt>, Aspect#new accepts all the options 
+      # that Pointcut#new accepts. It also accepts the "universal" options documented in Aquarium::Utils::OptionsUtils.
       def initialize *options, &block
         @first_option_that_was_method = []
         opts = rationalize options
@@ -172,7 +181,7 @@ module Aquarium
 
       alias :== :eql?
   
-      protected
+      private
 
       def rationalize options 
         return {} if options.nil? or options.empty?

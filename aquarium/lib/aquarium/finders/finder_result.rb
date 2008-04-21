@@ -3,6 +3,9 @@ require 'aquarium/extensions'
 
 module Aquarium
   module Finders
+    # == FinderResult
+    # Wraps hashes that hold the results of various *Finder utilities. The #not_matched method returns specified
+    # inputs that did not result in a successful find.
     class FinderResult
       include Aquarium::Utils::HashUtils
       include Aquarium::Utils::SetUtils
@@ -32,12 +35,12 @@ module Aquarium
   
       NIL_OBJECT = FinderResult.new unless const_defined?(:NIL_OBJECT)
   
-      # Convenience method to get the keys for the matched.
+      # Convenience method to get the keys for the matches.
       def matched_keys
         @matched.keys
       end    
   
-      # Convenience method to get the keys for the items that did not match.
+      # Convenience method to get the keys for the items that did not result in matches.
       def not_matched_keys
         @not_matched.keys
       end    
@@ -101,6 +104,7 @@ module Aquarium
   
       alias :to_s :inspect
   
+      # Were there no matches?
       def empty?
         matched.empty?
       end

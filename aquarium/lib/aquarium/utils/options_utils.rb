@@ -4,54 +4,64 @@ require 'aquarium/utils/default_logger'
 module Aquarium
   module Utils
 
+    # == OptionsUtils
     # Support parsing and processing of key-value pairs of options, where the values are always converted
-    # to sets.
+    # to Sets.
     # Types including this module should have their <tt>initialize</tt> methods call this module's
-    #   <tt>init_specification</tt> 
-    # to do the options processing. See its documentation for more details.
+    # #init_specification to do the options processing. See its documentation for more details.
     #
-    # Several class methods are included in including types for defining convenience instance methods.
-    # for options +:foo+ and +:bar+, calling:
-    #   <tt>canonical_options_given_methods :foo, :bar</tt>
+    # Several <i>class</i> methods are included for defining convenience <i>instance</i> methods.
+    # For example, for options <tt>:foo</tt> and <tt>:bar</tt>, calling:
+    #
+    #   canonical_options_given_methods :foo, :bar
+    #
     # will define several methods for each option specified, e.g.,:
-    #   <tt>foo_given? # => returns true if a value was specified for the :foo option</tt>
-    #   <tt>foo_given  # => returns the value of @specification[:foo]</tt>
-    #   <tt>bar_given? # etc.
-    #   <tt>bar_given
+    #
+    #   foo_given    # => returns the value of @specification[:foo]
+    #   foo_given?   # => returns true "foo_given" is not nil or empty.
+    #   bar_given    # etc...
+    #   bar_given?
+    #
     # If you would like corresponding reader and writer methods, pass a list of the keys for which you want these
-    # methods defined to
-    #   <tt>canonical_option_reader   :foo, :bar   # analogous to attr_reader
-    #   <tt>canonical_option_writer   :foo, :bar   # analogous to attr_writer
-    #   <tt>canonical_option_accessor :foo, :bar   # analogous to attr_accessor
-    # For all of these methods, you can also pass CANONICAL_OPTIONS (discussed below) to define methods
-    # for all of the "canonical" options. _E.g.,_
-    #   <tt>canonical_option_accessor CANONICAL_OPTIONS
+    # methods defined to one of the following methods:
+    #
+    #   canonical_option_reader   :foo, :bar   # analogous to attr_reader
+    #   canonical_option_writer   :foo, :bar   # analogous to attr_writer
+    #   canonical_option_accessor :foo, :bar   # analogous to attr_accessor
+    #
+    # For all of these methods, you can also pass <tt>CANONICAL_OPTIONS</tt> (discussed below) to define methods
+    # for all of the "canonical" options, <i>e.g.,</i>
+    #
+    #   canonical_option_accessor CANONICAL_OPTIONS
     #
     # These methods are not defined by default to prevent accidentally overriding other methods that you might
     # have defined with the same names. Also, note that the writer methods will convert the inputs to sets,
     # following the conventions for the options and the readers will return the sets. If you want different handling,
-    # you'll have to provide custom implementations. Note that special-case accessor methods are already defined 
-    # for the :noop and :logger options (discussed below) where the writers expect single values, not sets, and the
-    # readers return the single values.
-    # Finally, these +canonical_option_*+ methods should only be called with the *keys* for the +CANONICAL_OPTIONS+.
+    # you'll have to provide custom implementations. 
+    #
+    # Note that special-case accessor methods are already defined for the <tt>:noop</tt> and <tt>:logger</tt>
+    # options (discussed below) where the writers expect single values, not sets, and the
+    # readers return the single values. (Yea, it's a bit inconsistent...)
+    #
+    # Finally, these <tt>canonical_option_*</tt> methods should only be called with the *keys* for the +CANONICAL_OPTIONS+.
     # The keys are considered the "canonical options", while the values for the keys are synonyms that can be used instead.
     #
     # This module also defines several universal options that will be available to all types that include this module:
-    # <tt>:logger</tt>
+    # <tt>:logger</tt>::
     #   A Ruby standard library Logger used for any messages. A default system-wide logger is used otherwise.
     #   The corresponding <tt>logger</tt> and <tt>logger=</tt> accessors are defined.
     #
-    # <tt>:logger_stream</tt>
+    # <tt>:logger_stream</tt>::
     #   An an alternative to defining the logger, you can define just the output stream where log output will be written.
     #   If this option is specified, a new logger will be created for the instance with this output stream.
     #   There are no corresponding accessors; use the appropriate methods on the <tt>logger</tt> object instead.
     #
-    # <tt>:severity</tt>
+    # <tt>:severity</tt>::
     #   The logging severity level, one of the Logger::Severity values or a corresponding integer value.
     #   If this option is specified, a new logger will be created for the instance with this output stream.
     #   There are no corresponding accessors; use the corresponding methods on the <tt>logger</tt> object instead.
     #
-    # <tt>:noop => options_hash[:noop] || false</tt>
+    # <tt>:noop => options_hash[:noop] || false</tt>::
     #   If true, don't do "anything", the interpretation of which will vary with the type receiving the option.
     #   For example, a type might go through some initialization, such as parsng its options, but
     #   do nothing after that. Primarily useful for debugging and testing.    
@@ -199,7 +209,8 @@ module Aquarium
           end
         end
 
-        protected
+        private
+        
         def determine_options_for_accessors canonical_option_key_list
           keys = canonical_option_key_list
           if canonical_option_key_list.kind_of?(Array) and canonical_option_key_list.size == 1
@@ -217,7 +228,7 @@ module Aquarium
         ClassMethods.send :append_features, (class << clazz; self; end)
       end
   
-      protected
+      private
     
       def all_allowed_option_symbols
         @canonical_options.to_a.flatten.map {|o| o.intern} + @additional_allowed_options

@@ -2,7 +2,7 @@ require 'aquarium/aspects/pointcut'
 require 'aquarium/utils/array_utils'
 
 # == Pointcut (composition)
-# Since Pointcuts are queries, they can be composed, _i.e.,_ unions and intersections of
+# Since Pointcuts are queries, they can be composed, <i>i.e.,</i> unions and intersections of
 # them can be computed, yielding new Pointcuts.
 class Aquarium::Aspects::Pointcut
   

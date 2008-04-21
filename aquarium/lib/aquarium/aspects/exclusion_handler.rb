@@ -3,7 +3,7 @@ require 'aquarium/utils/set_utils'
 module Aquarium
   module Aspects
     
-    # Defines methods shared by several classes that take :exclude_* arguments.
+    # Defines methods shared by several classes that take <tt>:exclude_*</tt> arguments.
     module ExclusionHandler
       include Aquarium::Utils::HashUtils
       

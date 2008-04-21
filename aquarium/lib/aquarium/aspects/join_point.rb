@@ -6,34 +6,22 @@ end
 
 module Aquarium
   module Aspects
-    # A Join Point that might be advised.
+    # == JoinPoint
+    # Encapsulates information about a Join Point that might be advised.
     class JoinPoint
 
       class ProceedMethodNotAvailable < Exception; end
       class ContextNotDefined < Exception; end
       
+      # == JoinPoint::Context
+      # Encapsulates current runtime context information for a join point, such as the values of method parameters, a raised 
+      # exception (for <tt>:after</tt> or <tt>after_raising</tt> advice), <i>etc.</i>
       class Context
         attr_accessor :advice_kind, :advised_object, :parameters, :block_for_method, :returned_value, :raised_exception, :proceed_proc, :current_advice_node
 
         alias :target_object  :advised_object
         alias :target_object= :advised_object=
         
-        # Create a join point object. It must have one and only type _or_ object and one method or the special keywords <tt>:all</tt>.
-        # Usage:
-        #  join_point = JoinPoint.new.find :type => ..., :method_name => ... [, (:class_method | :instance_method) => (true | false) ]
-        # where
-        # <tt>:type => type_or_type_name_or_regexp</tt>::
-        #   A single type, type name or regular expression matching only one type. One and only one
-        #   type _or_ object is required. An error is raised otherwise.
-        #
-        # <tt>:method_name => method_name_or_sym</tt>::
-        # <tt>:method => method_name_or_sym</tt>::
-        #   A single method name or symbol. Only one is allowed, although the special flag <tt>:all</tt> is allowed.
-        #
-        # <tt>(:class_method | :instance_method) => (true | false)</tt>::
-        #   Is the method a class or instance method? Defaults to <tt>:instance_method => true</tt>.
-        # Note: The range of options is not as rich as for Pointcut, because it is expected that JoinPoint objects
-        # will be explicitly created only rarely by users of Aquarium. Most of the time, Pointcuts will be created.
         def initialize options
           update options
           assert_valid options
@@ -107,6 +95,23 @@ module Aquarium
         !@instance_method
       end
       
+      # Create a join point object, specifying either one type or one object and a method. 
+      # Only method join points are currently supported by Aquarium.
+      # 
+      # The supported options are
+      # <tt>:type => type | type_name | type_name_regexp</tt>::
+      #   A single type, type name or regular expression matching only one type. One and only one
+      #   type _or_ object is required. An error is raised otherwise.
+      # <tt>:object => object</tt>::
+      #   A single object. One and only one type _or_ object is required. An error is raised otherwise.
+      # <tt>:method_name | :method => method_name_or_symbol</tt>::
+      #   A single method name or symbol. Only one is allowed, although the special flag <tt>:all</tt> 
+      #   is allowed, as long as only one method will be found, subject to the next option.
+      # <tt>:class_method | :instance_method => true | false</tt>::
+      #   Is the method a class or instance method? Defaults to <tt>:instance_method => true</tt>.
+      # 
+      # Note: The range of options is not as rich as for Pointcut, because it is expected that JoinPoint objects
+      # will be explicitly created only rarely by users of Aquarium. Most of the time, Pointcuts will be created.
       def initialize options = {}
         @target_type     = resolve_type options
         @target_object   = options[:object]
@@ -133,7 +138,7 @@ module Aquarium
         return results.matched.size == 1 ? true : false
       end
       
-      # Invoke the "enclosed" join point, which could be aspect advice wrapping the original runtime join point.
+      # Invoke the join point itself (which could actually be aspect advice wrapping the original join point...).
       # This method can only be called if the join point has a context object defined that represents an actual
       # runtime "state".
       def proceed *args, &block
@@ -141,14 +146,17 @@ module Aquarium
         context.proceed self, *args, &block
       end
 
-      # Invoke the actual runtime join point, skipping any intermediate advice.
+      # Invoke the join point itself, skipping any intermediate advice.
       # This method can only be called if the join point has a context object defined that represents an actual
       # runtime "state".
+      # Use this method cautiously, at it could be "surprising" if some advice is not executed!
       def invoke_original_join_point *args, &block
         raise ContextNotDefined.new(":invoke_original_join_point can't be called unless the join point has a context object.") if context.nil?
         context.invoke_original_join_point self, *args, &block
       end
       
+      # Construct a copy of this join point with a JoinPoint::Context object representing the current execution state
+      # of the program, <i>e.g.,</i> the values of method parameters. 
       def make_current_context_join_point context_options
         new_jp = dup
         if new_jp.context.nil?
@@ -241,6 +249,7 @@ module Aquarium
     
       public
   
+      # A "convenience" JoinPoint supporting the "Null Object Pattern."
       NIL_OBJECT = Aquarium::Utils::NilObject.new  
     end
   end
