@@ -1,9 +1,10 @@
 require 'aquarium/utils/type_utils'
 
-# Convert various strings, symbols, object ids, etc. into valid "names" that
-# can be used as method names, etc.
 module Aquarium
   module Utils
+    # == NameUtils
+    # Convert various strings, symbols, object ids, etc. into valid "names" that
+    # can be used as method names, etc.
     module NameUtils
 
       @@char_expr_map = {
