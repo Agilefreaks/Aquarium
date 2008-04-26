@@ -8,6 +8,7 @@ N.A.
 Enhancements:
 18537	Provide a search for all pointcut constants
 19666	Improve the RDoc output
+19119	Provide an "after_raising" type of advice that lets you handle the exception.
 
 I've provided an example of the design approach where you define pointcuts in a class, as a kind
 of "aspect interface" and write aspects that specify those pointcuts. The problem has been that 
@@ -17,6 +18,20 @@ Aspect.new to specify a search for pointcuts in a set of types matching a name s
 Either constants or class variables will be matched (or both).
 
 The rdoc for the key classes was cleaned up so it "renders" better. Feedback is welcome.
+
+For #19119, I finished the previously-incomplete support for allowing advice to change the raised
+exception, in both after and after_raising advice. This means you can use either advice type to wrap
+one exception in another, for example. A common scenario is to wrap a low-level, service-specific 
+exception in a higher-level, more global application exception. 
+
+You still can't rescue the exception completely; the what exception is still in 
+  joinpoint.context.raised_exception
+when the advice returns will be raised by Aquarium. I believe permitting after_raising or after advice
+to stop the raise operation would cause subtle issues with scope and variable binding. It would probably
+also violate the "principle of least surprise"; the advice code that rescues the exception would not be
+as clear as the rescue clauses we are accustomed to seeing. Therefore, use rescue clauses in around 
+advice when you want to recover completely from an exception.
+
 
 == Version 0.4.1
 
