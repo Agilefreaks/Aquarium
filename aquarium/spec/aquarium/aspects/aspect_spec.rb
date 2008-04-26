@@ -10,13 +10,13 @@ class MyError1 < StandardError; end
 class MyError2 < StandardError; end
 class MyError3 < StandardError; end
 class ClassThatRaises
-  class CTRException < Exception; end
+  class CTRException < StandardError; end
   def raises
     raise CTRException
   end
 end
 class ClassThatRaisesString
-  class CTRException < Exception; end
+  class CTRException < StandardError; end
   def raises
     raise "A string exception."
   end
@@ -324,6 +324,14 @@ describe Aspect, " with :after_raising advice" do
     lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_true
     block_invoked.should be_true
+  end
+  
+  it "should invoke advice when an exception that subclasses a specified exception type is raised" do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new(:after_raising => StandardError, :pointcut => {:type => ClassThatRaises, :methods => :raises}) {|jp, obj, *args| aspect_advice_invoked = true}
+    ctr = ClassThatRaises.new
+    lambda {ctr.raises}.should raise_error(ClassThatRaises::CTRException)
+    aspect_advice_invoked.should be_true
   end
   
   it "should not invoke advice when exceptions of types that don't match the specified list of exception types are raised" do
