@@ -38,13 +38,9 @@ module Aquarium
           EOF
         end
         
+        # Bug #19262 workaround: need to only pass jp argument if arity is 1.
         def call_advice jp, obj, *args
-          case advice.arity
-          when 0 then advice.call
-          when 1 then advice.call jp
-          when 2 then advice.call jp, obj
-          else        advice.call jp, obj, *args
-          end
+          advice.arity == 1 ? advice.call(jp) : advice.call(jp, obj, *args)
         end
       end
   
