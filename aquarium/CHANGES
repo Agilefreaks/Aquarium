@@ -20,17 +20,18 @@ Either constants or class variables will be matched (or both).
 The rdoc for the key classes was cleaned up so it "renders" better. Feedback is welcome.
 
 For #19119, I finished the previously-incomplete support for allowing advice to change the raised
-exception, in both after and after_raising advice. This means you can use either advice type to wrap
-one exception in another, for example. A common scenario is to wrap a low-level, service-specific 
-exception in a higher-level, more global application exception. 
+exception, in both after and after_raising advice. A common scenario is to wrap the thrown
+exception in another. For example, a low-level, service-specific exception (like a database
+error) in a higher-level, more generic application exception. 
 
-You still can't rescue the exception completely; the what exception is still in 
+You still can't rescue the exception completely; the exception in 
   joinpoint.context.raised_exception
-when the advice returns will be raised by Aquarium. I believe permitting after_raising or after advice
-to stop the raise operation would cause subtle issues with scope and variable binding. It would probably
-also violate the "principle of least surprise"; the advice code that rescues the exception would not be
-as clear as the rescue clauses we are accustomed to seeing. Therefore, use rescue clauses in around 
-advice when you want to recover completely from an exception.
+when the advice returns will be raised by Aquarium. I think that permitting after_raising or 
+after advice to "eat" the exception could cause subtle issues with scope and variable binding. 
+It would also probably violate the "principle of least surprise"; the advice code that rescues 
+the exception would not be as "obvious" as the familiar idiom of rescue clauses that we are
+accustomed to seeing. Therefore, use rescue clauses in around advice when you want to recover 
+completely from an exception.
 
 
 == Version 0.4.1
