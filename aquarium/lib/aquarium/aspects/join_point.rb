@@ -7,7 +7,9 @@ end
 module Aquarium
   module Aspects
     # == JoinPoint
-    # Encapsulates information about a Join Point that might be advised.
+    # Encapsulates information about a Join Point that might be advised. JoinPoint objects are <i>almost</i> 
+    # value objects; you can change the context object.
+    # TODO Separate out the read-only part from the variable part.
     class JoinPoint
 
       class ProceedMethodNotAvailable < Exception; end
@@ -16,17 +18,20 @@ module Aquarium
       # == JoinPoint::Context
       # Encapsulates current runtime context information for a join point, such as the values of method parameters, a raised 
       # exception (for <tt>:after</tt> or <tt>after_raising</tt> advice), <i>etc.</i>
+      # Context objects are <i>almost</i> value objects. Currently, advice can change the returned_value, the
+      # raised_exception, and the block_for_method.
       class Context
-        attr_accessor :advice_kind, :advised_object, :parameters, :block_for_method, :returned_value, :raised_exception, :proceed_proc, :current_advice_node
+        attr_reader :advice_kind, :advised_object, :parameters, :proceed_proc, :current_advice_node
+        attr_accessor :returned_value, :raised_exception, :block_for_method
 
         alias :target_object  :advised_object
-        alias :target_object= :advised_object=
         
         def initialize options
           update options
           assert_valid options
         end
 
+        # TODO eliminate!
         def update options
           options.each do |key, value|
             instance_variable_set "@#{key}", value
@@ -84,8 +89,8 @@ module Aquarium
         end    
       end
 
-      attr_accessor :target_type, :target_object, :method_name, :visibility, :context
-      attr_reader   :instance_or_class_method
+      attr_accessor :context
+      attr_reader   :target_type, :target_object, :method_name, :visibility, :instance_or_class_method
       
       def instance_method?
         @instance_method

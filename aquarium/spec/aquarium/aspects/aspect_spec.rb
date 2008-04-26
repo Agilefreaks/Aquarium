@@ -6,6 +6,22 @@ require 'logger'
 
 include Aquarium::Aspects
 
+class MyError1 < StandardError; end
+class MyError2 < StandardError; end
+class MyError3 < StandardError; end
+class ClassThatRaises
+  class CTRException < Exception; end
+  def raises
+    raise CTRException
+  end
+end
+class ClassThatRaisesString
+  class CTRException < Exception; end
+  def raises
+    raise "A string exception."
+  end
+end
+
 
 describe Aspect, " cannot advise the private implementation methods inserted by other aspects" do  
   it "should have no affect." do
@@ -161,6 +177,18 @@ describe Aspect, " with :after advice" do
     end 
     ReturningValue.new.doit(ary).should == %w[aa a b c d e]
   end
+
+  it "should allow advice to change the exception raised" do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new :after, :pointcut => {:type => ClassThatRaises, :methods => :raises} do |jp, obj, *args|
+      aspect_advice_invoked = true
+      jp.context.raised_exception = MyError1
+    end 
+    aspect_advice_invoked.should be_false
+    ctr = ClassThatRaises.new
+    lambda {ctr.raises}.should raise_error(MyError1)
+    aspect_advice_invoked.should be_true
+  end
 end
 
 describe Aspect, " with :after_returning advice" do  
@@ -205,7 +233,7 @@ describe Aspect, " with :after_returning advice" do
     ReturningValue.new.doit(ary).should == %w[a b c d]
   end
 
-  it "should all the advice to assign a new return value" do
+  it "should allow the advice to change the returned value" do
     class ReturningValue
       def doit args
         args + ["d"]
@@ -219,10 +247,6 @@ describe Aspect, " with :after_returning advice" do
     ReturningValue.new.doit(ary).should == %w[aa a b c d e]
   end
 end
-
-class MyError1 < StandardError; end
-class MyError2 < StandardError; end
-class MyError3 < StandardError; end
 
 describe Aspect, " with :after_raising advice" do  
   after(:each) do
@@ -339,12 +363,6 @@ describe Aspect, " with :after_raising advice" do
   end
   
   it "should advise all methods that raise exceptions when no specific exceptions are specified" do
-    class ClassThatRaises
-      class CTRException < Exception; end
-      def raises
-        raise CTRException
-      end
-    end
     aspect_advice_invoked = false
     @aspect = Aspect.new :after_raising, :pointcut => {:type => ClassThatRaises, :methods => :raises} do |jp, obj, *args|
       aspect_advice_invoked = true
@@ -356,12 +374,6 @@ describe Aspect, " with :after_raising advice" do
   end
 
   it "should advise all methods that raise strings (which are converted to RuntimeError) when no specific exceptions are specified" do
-    class ClassThatRaisesString
-      class CTRException < Exception; end
-      def raises
-        raise "A string exception."
-      end
-    end
     aspect_advice_invoked = false
     @aspect = Aspect.new :after_raising, :pointcut => {:type => ClassThatRaisesString, :methods => :raises} do |jp, obj, *args|
       aspect_advice_invoked = true
@@ -369,6 +381,18 @@ describe Aspect, " with :after_raising advice" do
     aspect_advice_invoked.should be_false
     ctr = ClassThatRaisesString.new
     lambda {ctr.raises}.should raise_error(RuntimeError)
+    aspect_advice_invoked.should be_true
+  end
+
+  it "should allow advice to change the exception raised" do
+    aspect_advice_invoked = false
+    @aspect = Aspect.new :after_raising, :pointcut => {:type => ClassThatRaises, :methods => :raises} do |jp, obj, *args|
+      aspect_advice_invoked = true
+      jp.context.raised_exception = MyError1
+    end 
+    aspect_advice_invoked.should be_false
+    ctr = ClassThatRaises.new
+    lambda {ctr.raises}.should raise_error(MyError1)
     aspect_advice_invoked.should be_true
   end
 end

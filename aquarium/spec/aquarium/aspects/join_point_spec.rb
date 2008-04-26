@@ -550,18 +550,6 @@ describe Aquarium::Aspects::JoinPoint::Context, "#target_object" do
   end
 end
 
-describe Aquarium::Aspects::JoinPoint::Context, "#target_object=" do
-  it "should be a synonym for #advised_object=." do
-    @object = "12,34"
-    @object2 = "12,34,56"
-    @jp  = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
-    @jp_with_context = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => @object,  :parameters => [","], :returned_value => ["12", "34"]
-    @jp_with_context.context.target_object = @object2
-    @jp_with_context.context.target_object.should == @object2
-    @jp_with_context.context.advised_object.should == @object2
-  end
-end
-
 def do_common_eql_setup
   @object = "12,34"
   @object2 = "12,34,56"

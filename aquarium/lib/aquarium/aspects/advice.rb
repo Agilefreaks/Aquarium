@@ -47,24 +47,10 @@ module Aquarium
       def call jp, obj, *args
         do_call @proc, "", jp, obj, *args
       end
-
+      
       def invoke_original_join_point current_jp, obj, *args
         do_call last, "While executing the original join_point: ", current_jp, obj, *args
       end
-      
-      def do_call proc_to, error_message_prefix, jp, obj, *args
-        begin
-          proc_to.call jp, obj, *args
-        rescue => e
-          class_or_instance_method_separater = jp.instance_method? ? "#" : "."
-          context_message = error_message_prefix + "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
-          backtrace = e.backtrace
-          e2 = e.exception(context_message + e.message + " (join_point = #{jp.inspect})")
-          e2.set_backtrace backtrace
-          raise e2
-        end
-      end
-      protected :do_call
       
       # Supports Enumerable
       def each 
@@ -100,6 +86,25 @@ module Aquarium
       def invoking_object join_point
         join_point.instance_method? ? join_point.context.advised_object : join_point.target_type
       end
+
+      def make_current_context_join_point jp, hash
+        return jp if advice.arity == 0
+        hash[:current_advice_node] = self
+        jp.make_current_context_join_point hash
+      end
+
+      def do_call proc_to, error_message_prefix, jp, obj, *args
+        begin
+          proc_to.call jp, obj, *args
+        rescue => e
+          class_or_instance_method_separater = jp.instance_method? ? "#" : "."
+          context_message = error_message_prefix + "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
+          backtrace = e.backtrace
+          e2 = e.exception(context_message + e.message + " (join_point = #{jp.inspect})")
+          e2.set_backtrace backtrace
+          raise e2
+        end
+      end
     end
 
     # When invoking the original method, we use object.send(original_method_name, *args)
@@ -121,7 +126,7 @@ module Aquarium
     class BeforeAdviceChainNode < AdviceChainNode
       def initialize options = {}
         super(options) { |jp, obj, *args| 
-          before_jp = jp.make_current_context_join_point :advice_kind => :before, :current_advice_node => self
+          before_jp = make_current_context_join_point jp, :advice_kind => :before, :current_advice_node => self
           call_advice(before_jp, obj, *args)
           next_node.call(jp, obj, *args)
         }
@@ -132,7 +137,7 @@ module Aquarium
       def initialize options = {}
         super(options) { |jp, obj, *args| 
           returned_value = next_node.call(jp, obj, *args)
-          next_jp = jp.make_current_context_join_point :advice_kind => :after_returning, :returned_value => returned_value, :current_advice_node => self
+          next_jp = make_current_context_join_point jp, :advice_kind => :after_returning, :returned_value => returned_value, :current_advice_node => self
           call_advice(next_jp, obj, *args)
           next_jp.context.returned_value   # allow advice to modify the returned value
         }
@@ -149,7 +154,7 @@ module Aquarium
             next_node.call(jp, obj, *args)
           rescue Object => raised_exception
             if after_raising_exceptions_list_includes raised_exception
-              next_jp = jp.make_current_context_join_point :advice_kind => :after_raising, :raised_exception => raised_exception, :current_advice_node => self
+              next_jp = make_current_context_join_point jp, :advice_kind => :after_raising, :raised_exception => raised_exception, :current_advice_node => self
               call_advice(next_jp, obj, *args)
               raised_exception = next_jp.context.raised_exception   # allow advice to modify raised exception
             end
@@ -176,11 +181,11 @@ module Aquarium
           # can allow the advice to change the exception that will be raised.
           begin
             returned_value = next_node.call(jp, obj, *args)
-            next_jp = jp.make_current_context_join_point :advice_kind => :after, :returned_value => returned_value, :current_advice_node => self
+            next_jp = make_current_context_join_point jp, :advice_kind => :after, :returned_value => returned_value, :current_advice_node => self
             call_advice(next_jp, obj, *args)
             next_jp.context.returned_value   # allow advice to modify the returned value
           rescue Object => raised_exception
-            next_jp = jp.make_current_context_join_point :advice_kind => :after, :raised_exception => raised_exception, :current_advice_node => self
+            next_jp = make_current_context_join_point jp, :advice_kind => :after, :raised_exception => raised_exception, :current_advice_node => self
             call_advice(next_jp, obj, *args)
             raise next_jp.context.raised_exception
           end
@@ -191,7 +196,7 @@ module Aquarium
     class AroundAdviceChainNode < AdviceChainNode
       def initialize options = {}
         super(options) { |jp, obj, *args| 
-          around_jp = jp.make_current_context_join_point :advice_kind => :around, :proceed_proc => next_node, :current_advice_node => self
+          around_jp = make_current_context_join_point jp, :advice_kind => :around, :proceed_proc => next_node, :current_advice_node => self
           call_advice(around_jp, obj, *args)
         }
       end
