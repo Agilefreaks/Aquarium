@@ -499,7 +499,6 @@ module Aquarium
         EOF
       end
       
-      # TODO optimize calls to these *_advice_chain methods from other private methods.
       def self.advice_chain_exists? join_point
         advice_chain_attr_sym = self.make_advice_chain_attr_sym join_point
         type_to_advise_for(join_point).class_variable_defined? advice_chain_attr_sym

@@ -102,8 +102,12 @@ module Aquarium
         join_point.instance_method? ? join_point.context.advised_object : join_point.target_type
       end
 
-      # For performance reasons, we don't clone the context, which raises potential concurrency issues!
-      # TODO clean up 
+      #--
+      # For performance reasons, we don't clone the context. 
+      # There are potential concurrency issues, but note that the join point and its context object
+      # are cloned at the start of the advice invocation, so concurrency problems should be rare, if
+      # nonexistent.
+      #++
       def update_current_context jp
         return if advice.arity == 0
         @last_advice_kind = jp.context.advice_kind
@@ -139,10 +143,9 @@ module Aquarium
       def initialize options = {}
         super(options) { |jp, obj, *args| 
           block_for_method = jp.context.block_for_method
-          # TODO replace invoking_object(jp) with obj!
           block_for_method.nil? ? 
-            invoking_object(jp).send(@alias_method_name, *args) : 
-            invoking_object(jp).send(@alias_method_name, *args, &block_for_method)
+            obj.send(@alias_method_name, *args) : 
+            obj.send(@alias_method_name, *args, &block_for_method)
         }
       end
     end

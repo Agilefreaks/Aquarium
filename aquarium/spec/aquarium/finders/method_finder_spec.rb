@@ -79,6 +79,7 @@ end
 
 describe Aquarium::Finders::MethodFinder, "#find (synonymous input parameters)" do
   before(:each) do
+    @logger_stream = StringIO.new
     before_method_finder_spec
   end
   
@@ -109,10 +110,15 @@ describe Aquarium::Finders::MethodFinder, "#find (synonymous input parameters)" 
   
   Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["method_options"].each do |key|
     it "should accept :#{key} as a synonym for :method_options." do
-      expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :method_options => [:exclude_ancestor_methods]
-      actual   = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], key.intern => [:exclude_ancestor_methods]
+      expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :method_options => [:exclude_ancestor_methods], :logger_stream => @logger_stream
+      actual   = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], key.intern => [:exclude_ancestor_methods], :logger_stream => @logger_stream
       actual.should == expected
     end
+  end
+
+  it "should warn that :options as a synonym for :method_options is deprecated." do
+    expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :options => [:exclude_ancestor_methods], :logger_stream => @logger_stream
+    @logger_stream.to_s.grep(/WARN.*deprecated/).should_not be_nil
   end
   
 end
