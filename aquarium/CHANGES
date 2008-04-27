@@ -3,35 +3,40 @@
 V0.4.2 adds a few enhancements, greatly improved RDoc output, and internal refactorings to improve performance.
 
 Bug fixes:
-N.A.
+19321	Advice overhead is too high (ongoing improvements)
 
 Enhancements:
 18537	Provide a search for all pointcut constants
 19666	Improve the RDoc output
 19119	Provide an "after_raising" type of advice that lets you handle the exception.
 
-I've provided an example of the design approach where you define pointcuts in a class, as a kind
-of "aspect interface" and write aspects that specify those pointcuts. The problem has been that 
-you had to name every single such pointcut explicitly. There was no "finder" option, as for types,
-methods, etc. Now there is a pointcut finder option with a new option ":named_pointcuts" for 
-Aspect.new to specify a search for pointcuts in a set of types matching a name specification.
-Either constants or class variables will be matched (or both).
+#19321: I removed some of the wasted object creation and initialization in advice invocation, 
+improving the overhead by about 40%. However, it is still at least 10x higher than simple method
+aliasing, so I want to make more improvements.
 
-The rdoc for the key classes was cleaned up so it "renders" better. Feedback is welcome.
+#18537: I've provided an example of the design approach where you define pointcuts in a class,
+as a kind of "aspect interface" and write aspects that specify those pointcuts. The problem has
+been that you had to name every single such pointcut explicitly. There was no "finder" option,
+as for types, methods, etc. Now there is a pointcut finder option with a new option 
+":named_pointcuts" for Aspect.new to specify a search for pointcuts in a set of types matching
+a name specification. Either constants or class variables will be matched (or both).
 
-For #19119, I finished the previously-incomplete support for allowing advice to change the raised
+#19666: The rdoc for the key classes was cleaned up so it "renders" better. Feedback is welcome.
+
+#19119: I finished the previously-incomplete support for allowing advice to change the raised
 exception, in both after and after_raising advice. A common scenario is to wrap the thrown
 exception in another. For example, a low-level, service-specific exception (like a database
 error) in a higher-level, more generic application exception. 
 
-You still can't rescue the exception completely; the exception in 
+You still can't rescue the exception completely in after_raising and after advice; the value
+for the exception in 
   joinpoint.context.raised_exception
 when the advice returns will be raised by Aquarium. I think that permitting after_raising or 
 after advice to "eat" the exception could cause subtle issues with scope and variable binding. 
 It would also probably violate the "principle of least surprise"; the advice code that rescues 
-the exception would not be as "obvious" as the familiar idiom of rescue clauses that we are
-accustomed to seeing. Therefore, use rescue clauses in around advice when you want to recover 
-completely from an exception.
+the exception would not be as "obvious" to the reader as the familiar idiom of rescue clauses
+that we are accustomed to using. Therefore, if you want to recover completely from an exception,
+use rescue clauses in around advice.
 
 
 == Version 0.4.1
