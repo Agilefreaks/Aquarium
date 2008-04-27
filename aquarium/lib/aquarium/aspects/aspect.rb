@@ -345,13 +345,15 @@ module Aquarium
       end
       
       def add_advice_to_chain join_point, advice_kind, advice
+        # Note that we use the same static join point object throughout the chain. It is
+        # equal to the passed-in join_point, except for additional context information.
         start_of_advice_chain = Aspect.get_advice_chain join_point
         options = @specification.merge({
           :aspect => self,
           :advice_kind => advice_kind, 
           :advice => advice, 
           :next_node => start_of_advice_chain,
-          :static_join_point => join_point})
+          :static_join_point => start_of_advice_chain.static_join_point})
         # New node is new start of chain.
         Aspect.set_advice_chain(join_point, AdviceChainNodeFactory.make_node(options))
       end
@@ -382,20 +384,29 @@ module Aquarium
         type_to_advise = Aspect.type_to_advise_for join_point
         # Note: Must set advice chain, a class variable on the type we're advising, FIRST. 
         # Otherwise the class_eval that follows will assume the @@ advice chain belongs to Aspect!
-        Aspect.set_advice_chain join_point, AdviceChainNodeFactory.make_node(
+        static_join_point = make_static_join_point join_point
+        advice_chain = AdviceChainNodeFactory.make_node(
           :aspect => nil,  # Belongs to all aspects that might advise this join point!
           :advice_kind => :none, 
           :alias_method_name => alias_method_name,
-          :static_join_point => join_point)
-        type_being_advised_text = join_point.instance_method? ? "self.class" : "self"
-        unless Aspect.is_type_join_point?(join_point) 
+          :static_join_point => static_join_point)
+        advice_chain_attr_sym = Aspect.make_advice_chain_attr_sym join_point
+        Aspect.set_advice_chain static_join_point, advice_chain
+        type_being_advised_text = static_join_point.instance_method? ? "self.class" : "self"
+        unless Aspect.is_type_join_point?(static_join_point) 
           type_being_advised_text = "(class << self; self; end)"
         end
-        type_to_advise2 = join_point.instance_method? ? type_to_advise : (class << type_to_advise; self; end)
+        type_to_advise2 = static_join_point.instance_method? ? type_to_advise : (class << type_to_advise; self; end)
         type_to_advise2.class_eval(<<-EOF, __FILE__, __LINE__)
-          #{def_eigenclass_method_text join_point}
-          #{alias_original_method_text alias_method_name, join_point, type_being_advised_text}
+          #{def_eigenclass_method_text static_join_point}
+          #{alias_original_method_text alias_method_name, static_join_point, type_being_advised_text}
         EOF
+      end
+      
+      def make_static_join_point join_point
+        static_jp = join_point.dup
+        static_jp.context.advice_kind = advice_kinds_given
+        static_jp
       end
       
       # When advising an instance, create an override method that gets advised instead of the types method.
@@ -420,6 +431,7 @@ module Aquarium
         join_point.target_type ? join_point.target_type : (class << join_point.target_object; self; end)
       end
 
+      # We dup the join_point for thread safety
       def alias_original_method_text alias_method_name, join_point, type_being_advised_text
         target_self = join_point.instance_method? ? "self" : join_point.target_type.name
         advice_chain_attr_sym = Aspect.make_advice_chain_attr_sym join_point
@@ -427,13 +439,11 @@ module Aquarium
         alias_method :#{alias_method_name}, :#{join_point.method_name}
         def #{join_point.method_name} *args, &block_for_method
           advice_chain = #{type_being_advised_text}.send :class_variable_get, "#{advice_chain_attr_sym}"
-          static_join_point = advice_chain.static_join_point
-          advice_join_point = static_join_point.make_current_context_join_point(
-            :advice_kind => #{advice_kinds_given.inspect}, 
-            :advised_object => #{target_self}, 
-            :parameters => args, 
-            :block_for_method => block_for_method)
-          advice_chain.call advice_join_point, #{target_self}, *args
+          join_point = advice_chain.static_join_point.dup
+          join_point.context.parameters = args
+          join_point.context.block_for_method = block_for_method
+          join_point.context.advised_object = #{target_self}
+          advice_chain.call join_point, #{target_self}, *args
         end
         #{join_point.visibility.to_s} :#{join_point.method_name}
         private :#{alias_method_name}

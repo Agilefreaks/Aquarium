@@ -2,7 +2,9 @@ require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../spec_example_types'
 
 require 'aquarium/extensions/hash'
+require 'aquarium/utils/nil_object'
 require 'aquarium/aspects/join_point'
+require 'aquarium/aspects/advice'
 
 class Dummy
   def eql?; false; end
@@ -20,187 +22,189 @@ class ProtectionExample
   private_class_method :private_class_m
 end
 
-describe Aquarium::Aspects::JoinPoint, "#initialize with invalid parameters" do
+include Aquarium::Aspects
+
+describe JoinPoint, "#initialize with invalid parameters" do
   
   it "should require either a :type or an :object parameter, but not both." do
-    lambda { Aquarium::Aspects::JoinPoint.new :method_name => :count }.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aquarium::Aspects::JoinPoint.new :type => String, :object => "", :method_name => :count }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :method_name => :count }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => String, :object => "", :method_name => :count }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
   
   it "should require a :method_name." do
-    lambda { Aquarium::Aspects::JoinPoint.new :type => String }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => String }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should except :method as a synonym for :method_name." do
-    lambda { Aquarium::Aspects::JoinPoint.new :type => String, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => String, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should require a valid type name if a name is specified." do
-    lambda { Aquarium::Aspects::JoinPoint.new :type => "String", :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aquarium::Aspects::JoinPoint.new :type => "Stringgy", :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => "String", :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => "Stringgy", :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should require a valid type name symbol if a name is specified." do
-    lambda { Aquarium::Aspects::JoinPoint.new :type => :String, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aquarium::Aspects::JoinPoint.new :type => :Stringgy, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => :String, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => :Stringgy, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should require a valid type name regular expression if one is specified." do
-    lambda { Aquarium::Aspects::JoinPoint.new :type => /^String$/, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aquarium::Aspects::JoinPoint.new :type => /^Stringgy$/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => /^String$/, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => /^Stringgy$/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should reject a regular expression that matches no types." do
-    lambda { Aquarium::Aspects::JoinPoint.new :type => /^Stringgy$/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => /^Stringgy$/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should reject a regular expression that matches more than one type." do
-    lambda { Aquarium::Aspects::JoinPoint.new :type => /^M/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint.new :type => /^M/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
   
-describe Aquarium::Aspects::JoinPoint, "#initialize with parameters that specify class vs. instance methods" do
+describe JoinPoint, "#initialize with parameters that specify class vs. instance methods" do
   it "should assume the :method_name refers to an instance method, by default." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split
+    jp = JoinPoint.new :type => String, :method => :split
     jp.instance_method?.should be_true
     jp.class_method?.should be_false
   end
   
   it "should treat the :method_name as refering to an instance method if :instance_method is specified as true." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => true
+    jp = JoinPoint.new :type => String, :method => :split, :instance_method => true
     jp.instance_method?.should be_true
     jp.class_method?.should be_false
   end
   
   it "should treat the :method_name as refering to a class method if :instance_method is specified as false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => false
+    jp = JoinPoint.new :type => String, :method => :split, :instance_method => false
     jp.instance_method?.should be_false
     jp.class_method?.should be_true
   end
 
   it "should treat the :method_name as refering to an instance method if :class_method is specified as false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :class_method => false
+    jp = JoinPoint.new :type => String, :method => :split, :class_method => false
     jp.instance_method?.should be_true
     jp.class_method?.should be_false
   end
   
   it "should treat the :method_name as refering to a class method if :class_method is specified as true." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :class_method => true
+    jp = JoinPoint.new :type => String, :method => :split, :class_method => true
     jp.instance_method?.should be_false
     jp.class_method?.should be_true
   end
   
   it "should treat give precedence to :instance_method if appears with :class_method." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => false, :class_method => true
+    jp = JoinPoint.new :type => String, :method => :split, :instance_method => false, :class_method => true
     jp.instance_method?.should be_false
     jp.class_method?.should be_true
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method => :split, :instance_method => true, :class_method => false
+    jp = JoinPoint.new :type => String, :method => :split, :instance_method => true, :class_method => false
     jp.instance_method?.should be_true
     jp.class_method?.should be_false
   end
 end
   
-describe Aquarium::Aspects::JoinPoint, "#visibility" do
+describe JoinPoint, "#visibility" do
   it "should return :public for public instance methods." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_m
+    jp = JoinPoint.new :type => ProtectionExample, :method => :public_instance_m
     jp.visibility.should == :public
   end
   
   it "should return :public for public instance methods, when only instance methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_m, :instance_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method => :public_instance_m, :instance_method => true
     jp.visibility.should == :public
   end
   
   it "should return :public for public class methods, when only class methods are specified using :instance_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_class_m, :instance_method => false
+    jp = JoinPoint.new :type => ProtectionExample, :method => :public_class_m, :instance_method => false
     jp.visibility.should == :public
   end
 
   it "should return :public for public instance methods, when only instance methods are specified using :class_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_instance_m, :class_method => false
+    jp = JoinPoint.new :type => ProtectionExample, :method => :public_instance_m, :class_method => false
     jp.visibility.should == :public
   end
   
   it "should return :public for public class methods, when only class methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :public_class_m, :class_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method => :public_class_m, :class_method => true
     jp.visibility.should == :public
   end
 
   it "should return :protected for protected instance methods." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m
+    jp = JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m
     jp.visibility.should == :protected
   end
   
   it "should return :protected for protected instance methods, when only instance methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m, :instance_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m, :instance_method => true
     jp.visibility.should == :protected
   end
   
   it "should return nil for protected class methods, when only class methods are specified using :instance_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_class_method, :instance_method => false
+    jp = JoinPoint.new :type => ProtectionExample, :method => :protected_class_method, :instance_method => false
     jp.visibility.should == nil
   end
 
   it "should return :protected for protected instance methods, when only instance methods are specified using :class_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m, :class_method => false
+    jp = JoinPoint.new :type => ProtectionExample, :method => :protected_instance_m, :class_method => false
     jp.visibility.should == :protected
   end
   
   it "should return nil for protected class methods, when only class methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :protected_class_method, :class_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method => :protected_class_method, :class_method => true
     jp.visibility.should == nil
   end
 
   it "should return :private for private instance methods." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_m
+    jp = JoinPoint.new :type => ProtectionExample, :method => :private_instance_m
     jp.visibility.should == :private
   end
   
   it "should return :private for private instance methods, when only instance methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_m, :instance_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method => :private_instance_m, :instance_method => true
     jp.visibility.should == :private
   end
   
   it "should return :private for private class methods, when only class methods are specified using :instance_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_class_m, :instance_method => false
+    jp = JoinPoint.new :type => ProtectionExample, :method => :private_class_m, :instance_method => false
     jp.visibility.should == :private
   end
 
   it "should return :private for private instance methods, when only instance methods are specified using :class_method => false." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_instance_m, :class_method => false
+    jp = JoinPoint.new :type => ProtectionExample, :method => :private_instance_m, :class_method => false
     jp.visibility.should == :private
   end
   
   it "should return :private for private class methods, when only class methods are specified." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :private_class_m, :class_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method => :private_class_m, :class_method => true
     jp.visibility.should == :private
   end
   
   it "should return nil for non-existent methods." do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo
+    jp = JoinPoint.new :type => ProtectionExample, :method => :foo
     jp.visibility.should == nil
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo, :instance_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method => :foo, :instance_method => true
     jp.visibility.should == nil
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo, :instance_method => false
+    jp = JoinPoint.new :type => ProtectionExample, :method => :foo, :instance_method => false
     jp.visibility.should == nil
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo, :class_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method => :foo, :class_method => true
     jp.visibility.should == nil
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo, :class_method => false
+    jp = JoinPoint.new :type => ProtectionExample, :method => :foo, :class_method => false
     jp.visibility.should == nil
   end
 end
 
-describe Aquarium::Aspects::JoinPoint, "#target_type" do
+describe JoinPoint, "#target_type" do
   it "should return the type at the JoinPoint" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method => :foo
+    jp = JoinPoint.new :type => ProtectionExample, :method => :foo
     jp.target_type.should be_eql(ProtectionExample)
   end
 end
   
-describe Aquarium::Aspects::JoinPoint, "#target_object" do
+describe JoinPoint, "#target_object" do
   it "should return the object at the JoinPoint" do
     example = ProtectionExample.new
-    jp = Aquarium::Aspects::JoinPoint.new :object => example, :method => :foo
+    jp = JoinPoint.new :object => example, :method => :foo
     jp.target_object.should be_eql(example)
   end
 end
@@ -210,49 +214,35 @@ class InvokeOriginalClass
   def called; @called; end
 end
 
-describe Aquarium::Aspects::JoinPoint, "#proceed" do
-  it "should raise when the join point doesn't have a context" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
-    lambda { jp.proceed }.should raise_error(Aquarium::Aspects::JoinPoint::ContextNotDefined)
-  end
-  
+describe JoinPoint, "#proceed" do
   it "should raise when the the context object doesn't have a 'proceed proc'" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    jp = JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
     ioc = InvokeOriginalClass.new
-    context_opts = {
-      :advice_kind => :around, 
-      :advised_object => ioc, 
-      :parameters => [],
-      :proceed_proc => nil
-    }
-    jp2 = jp.make_current_context_join_point context_opts
-    lambda { jp2.proceed }.should raise_error(Aquarium::Aspects::JoinPoint::ProceedMethodNotAvailable)
+    jp.context.advice_kind = :around
+    jp.context.advised_object = ioc
+    jp.context.parameters = []
+    jp.context.proceed_proc = nil
+    lambda { jp.proceed }.should raise_error(JoinPoint::ProceedMethodNotAvailable)
   end
 
   it "should not raise when the advice is :around advice" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    jp = JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
     ioc = InvokeOriginalClass.new
-    context_opts = {
-      :advice_kind => :around, 
-      :advised_object => ioc, 
-      :parameters => [],
-      :proceed_proc => Aquarium::Aspects::NoAdviceChainNode.new({:alias_method_name => :invoke})
-    }
-    jp2 = jp.make_current_context_join_point context_opts
-    lambda { jp2.proceed }.should_not raise_error(Aquarium::Aspects::JoinPoint::ProceedMethodNotAvailable)
+    jp.context.advice_kind = :around 
+    jp.context.advised_object = ioc 
+    jp.context.parameters = []
+    jp.context.proceed_proc = Aquarium::Aspects::NoAdviceChainNode.new(:alias_method_name => :invoke)
+    lambda { jp.proceed }.should_not raise_error(JoinPoint::ProceedMethodNotAvailable)
   end
   
   it "should invoke the actual join point" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    jp = JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
     ioc = InvokeOriginalClass.new
-    context_opts = {
-      :advice_kind => :around, 
-      :advised_object => ioc, 
-      :parameters => [],
-      :proceed_proc => Aquarium::Aspects::NoAdviceChainNode.new({:alias_method_name => :invoke})
-    }
-    jp2 = jp.make_current_context_join_point context_opts
-    jp2.proceed
+    jp.context.advice_kind = :around
+    jp.context.advised_object = ioc
+    jp.context.parameters = []
+    jp.context.proceed_proc = Aquarium::Aspects::NoAdviceChainNode.new(:alias_method_name => :invoke)
+    jp.proceed
     ioc.called.should be_true
   end
 end
@@ -262,43 +252,40 @@ class InvokeOriginalClass
   def called; @called; end
 end
 
-describe Aquarium::Aspects::JoinPoint, "#invoke_original_join_point" do
-  it "should raise when the join point doesn't have a context" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
-    lambda { jp.invoke_original_join_point }.should raise_error(Aquarium::Aspects::JoinPoint::ContextNotDefined)
+describe JoinPoint, "#invoke_original_join_point" do
+  it "should raise when the join point has an empty context" do
+    jp = JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    lambda { jp.invoke_original_join_point }.should raise_error(JoinPoint::ContextNotCorrectlyDefined)
   end
 
   it "should invoke the original join point" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
+    jp = JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
     ioc = InvokeOriginalClass.new
-    context_opts = {
-      :advice_kind => :around, 
-      :advised_object => ioc, 
-      :parameters => [],
-      :current_advice_node => Aquarium::Aspects::NoAdviceChainNode.new({:alias_method_name => :invoke})
-    }
-    jp2 = jp.make_current_context_join_point context_opts
-    jp2.invoke_original_join_point
+    jp.context.advice_kind = :around 
+    jp.context.advised_object = ioc 
+    jp.context.parameters = []
+    jp.context.current_advice_node = Aquarium::Aspects::NoAdviceChainNode.new(:alias_method_name => :invoke)
+    jp.invoke_original_join_point
     ioc.called.should be_true
   end
 end
 
   
-describe Aquarium::Aspects::JoinPoint, "#dup" do
+describe JoinPoint, "#dup" do
   it "should duplicate the fields in the join point." do
-    jp  = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :count
+    jp  = JoinPoint.new :type => String, :method_name => :count
     jp2 = jp.dup
     jp2.should eql(jp)
   end
 end
 
-describe Aquarium::Aspects::JoinPoint, "#eql?" do
+describe JoinPoint, "#eql?" do
   setup do
-    @jp1 = Aquarium::Aspects::JoinPoint.new :type => Dummy, :method_name => :count
-    @jp2 = Aquarium::Aspects::JoinPoint.new :type => Dummy, :method_name => :count
-    @jp3 = Aquarium::Aspects::JoinPoint.new :type => Array, :method_name => :size
-    @jp4 = Aquarium::Aspects::JoinPoint.new :object => [],  :method_name => :size
-    @jp5 = Aquarium::Aspects::JoinPoint.new :object => [],  :method_name => :size
+    @jp1 = JoinPoint.new :type => Dummy, :method_name => :count
+    @jp2 = JoinPoint.new :type => Dummy, :method_name => :count
+    @jp3 = JoinPoint.new :type => Array, :method_name => :size
+    @jp4 = JoinPoint.new :object => [],  :method_name => :size
+    @jp5 = JoinPoint.new :object => [],  :method_name => :size
   end
   
   it "should return true for the same join point." do
@@ -326,13 +313,13 @@ describe Aquarium::Aspects::JoinPoint, "#eql?" do
   end
 end
 
-describe Aquarium::Aspects::JoinPoint, "#==" do
+describe JoinPoint, "#==" do
   setup do
-    @jp1 = Aquarium::Aspects::JoinPoint.new :type => Dummy, :method_name => :count
-    @jp2 = Aquarium::Aspects::JoinPoint.new :type => Dummy, :method_name => :count
-    @jp3 = Aquarium::Aspects::JoinPoint.new :type => Array, :method_name => :size
-    @jp4 = Aquarium::Aspects::JoinPoint.new :object => [],  :method_name => :size
-    @jp5 = Aquarium::Aspects::JoinPoint.new :object => [],  :method_name => :size
+    @jp1 = JoinPoint.new :type => Dummy, :method_name => :count
+    @jp2 = JoinPoint.new :type => Dummy, :method_name => :count
+    @jp3 = JoinPoint.new :type => Array, :method_name => :size
+    @jp4 = JoinPoint.new :object => [],  :method_name => :size
+    @jp5 = JoinPoint.new :object => [],  :method_name => :size
   end
   
   it "should return true for the same join point." do
@@ -360,29 +347,29 @@ describe Aquarium::Aspects::JoinPoint, "#==" do
   end
 end
 
-describe Aquarium::Aspects::JoinPoint, "#<=>" do
+describe JoinPoint, "#<=>" do
   setup do
-    @jp1 = Aquarium::Aspects::JoinPoint.new :type => Dummy, :method_name => :count
-    @jp2 = Aquarium::Aspects::JoinPoint.new :type => Dummy, :method_name => :count
-    @jp3 = Aquarium::Aspects::JoinPoint.new :type => Array, :method_name => :size
-    @jp4 = Aquarium::Aspects::JoinPoint.new :object => [],  :method_name => :size
-    @jp5 = Aquarium::Aspects::JoinPoint.new :object => [],  :method_name => :size
-    dummy = Dummy.new
-    @jp6 = Aquarium::Aspects::JoinPoint.new :object => dummy,  :method_name => :size
-    @jp7 = Aquarium::Aspects::JoinPoint.new :object => dummy,  :method_name => :size
-    context_opts = {
-      :advice_kind => :before, 
-      :advised_object => dummy, 
-      :parameters => [], 
-      :block_for_method => nil, 
-      :returned_value => nil, 
-      :raised_exception => nil, 
-      :proceed_proc => nil
-    }
-    @jp1b = @jp1.make_current_context_join_point context_opts
-    @jp2b = @jp2.make_current_context_join_point context_opts
-    @jp6b = @jp6.make_current_context_join_point context_opts
-    @jp7b = @jp7.make_current_context_join_point context_opts
+    @jp1   = JoinPoint.new :type => Dummy, :method_name => :count
+    @jp1nc = JoinPoint.new :type => Dummy, :method_name => :count
+    @jp2   = JoinPoint.new :type => Dummy, :method_name => :count
+    @jp2nc = JoinPoint.new :type => Dummy, :method_name => :count
+    @jp3   = JoinPoint.new :type => Array, :method_name => :size
+    @jp4   = JoinPoint.new :object => [],  :method_name => :size
+    @jp5   = JoinPoint.new :object => [],  :method_name => :size
+    dummy  = Dummy.new
+    @jp6   = JoinPoint.new :object => dummy,  :method_name => :size
+    @jp6nc = JoinPoint.new :object => dummy,  :method_name => :size
+    @jp7   = JoinPoint.new :object => dummy,  :method_name => :size
+    @jp7nc = JoinPoint.new :object => dummy,  :method_name => :size
+    [@jp1, @jp2, @jp6, @jp7].each do |jp|
+      jp.context.advice_kind = :before
+      jp.context.advised_object = dummy
+      jp.context.parameters = []
+      jp.context.block_for_method = nil
+      jp.context.returned_value = nil
+      jp.context.raised_exception = nil
+      jp.context.proceed_proc = nil
+    end
   end
   
   it "should return 1 of the second object is nil" do
@@ -390,101 +377,84 @@ describe Aquarium::Aspects::JoinPoint, "#<=>" do
   end
   
   it "should return 0 for the same join point with no context" do
+    (@jp1nc <=> @jp1nc).should == 0
+    (@jp6nc <=> @jp6nc).should == 0
+  end
+  
+  it "should return 0 for the same join point with equivalent contexts" do
     (@jp1 <=> @jp1).should == 0
     (@jp6 <=> @jp6).should == 0
   end
   
-  it "should return 0 for the same join point with equivalent contexts" do
-    (@jp1b <=> @jp1b).should == 0
-    (@jp6b <=> @jp6b).should == 0
-  end
-  
   it "should return 0 for equivalent join points with no context" do
-    (@jp1 <=>@jp2).should == 0
-    (@jp6 <=>@jp7).should == 0
+    (@jp1nc <=>@jp2nc).should == 0
+    (@jp6nc <=>@jp7nc).should == 0
   end
   
   it "should return 0 for equivalent join points with equivalent contexts" do
-    (@jp1b <=> @jp2b).should == 0
-    (@jp6b <=> @jp7b).should == 0
+    (@jp1 <=> @jp2).should == 0
+    (@jp6 <=> @jp7).should == 0
   end
   
-  it "should return +1 for join points that equivalent except for the context, where the first join point has a context and the second does not" do
-    (@jp1b <=> @jp2).should == 1
-    (@jp6b <=> @jp7).should == 1
+  it "should return +1 for join points that are equivalent except for the context, where the first join point has a context and the second has an 'empty' context" do
+    (@jp1 <=> @jp2nc).should == 1
+    (@jp6 <=> @jp7nc).should == 1
   end
   
-  it "should return -1 for join points that equivalent except for the context, where the second join point has a context and the first does not" do
-    (@jp1 <=> @jp2b).should == -1
-    (@jp6 <=> @jp6b).should == -1
+  it "should return -1 for join points that are equivalent except for the context, where the second join point has a context and the first has an 'empty' context" do
+    (@jp1nc <=> @jp2).should == -1
+    (@jp6nc <=> @jp6).should == -1
   end
   
   it "should sort by type name first" do
   end
 end
 
-describe Aquarium::Aspects::JoinPoint, "#make_current_context_join_point when the Aquarium::Aspects::JoinPoint::Context object is nil" do
-  it "should return a new join_point that contains the non-context information of the advised_object plus a new Aquarium::Aspects::JoinPoint::Context with the specified context information." do
-    jp  = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
-    jp.context.should be_nil
-    object = "12,34"
-    jp_with_context = jp.make_current_context_join_point :advice_kind => :before, :advised_object => object, :parameters => [","], :returned_value => ["12", "34"]
-    jp_with_context.object_id.should_not == jp.object_id
-    jp.context.should be_nil
-    jp_with_context.context.should_not be_nil
-    jp_with_context.context.advice_kind.should       == :before
-    jp_with_context.context.advised_object.should    == object
-    jp_with_context.context.parameters.should        == [","]
-    jp_with_context.context.returned_value.should    == ["12", "34"]
-    jp_with_context.context.raised_exception.should be_nil
-  end
-end
-
-describe Aquarium::Aspects::JoinPoint, "#type_or_object" do
+describe JoinPoint, "#type_or_object" do
   it "should return the type if the object is nil" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
+    jp = JoinPoint.new :type => String, :method_name => :split
     jp.type_or_object.should eql(String)
   end
 
   it "should return the object if the type is nil" do
-    jp = Aquarium::Aspects::JoinPoint.new :object => String.new, :method_name => :split
+    jp = JoinPoint.new :object => String.new, :method_name => :split
     jp.type_or_object.should eql("")
   end
 end
 
-describe Aquarium::Aspects::JoinPoint, "#exists?" do
+describe JoinPoint, "#exists?" do
   it "should return false if the join point represents a non-existent join point for an instance method in the runtime environment" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :foo
+    jp = JoinPoint.new :type => ProtectionExample, :method_name => :foo
     jp.exists?.should be_false
   end
 
   it "should return false if the join point represents a non-existent join point for a class method in the runtime environment" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :foo, :class_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method_name => :foo, :class_method => true
     jp.exists?.should be_false
   end
 
   it "should return true if the join point represents a real join point for a public instance method in the runtime environment" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :public_instance_m
+    jp = JoinPoint.new :type => ProtectionExample, :method_name => :public_instance_m
     jp.exists?.should be_true
   end
 
   it "should return true if the join point represents a real join point for a protected instance method in the runtime environment" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :protected_instance_m
+    jp = JoinPoint.new :type => ProtectionExample, :method_name => :protected_instance_m
     jp.exists?.should be_true
   end
 
   it "should return true if the join point represents a real join point for a private instance method in the runtime environment" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :private_instance_m
+    jp = JoinPoint.new :type => ProtectionExample, :method_name => :private_instance_m
     jp.exists?.should be_true
   end
 
   it "should return true if the join point represents a real join point for a public class method in the runtime environment" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :public_class_m, :class_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method_name => :public_class_m, :class_method => true
     jp.exists?.should be_true
   end
 
   it "should return true if the join point represents a real join point for a private class method in the runtime environment" do
-    jp = Aquarium::Aspects::JoinPoint.new :type => ProtectionExample, :method_name => :private_class_m, :class_method => true
+    jp = JoinPoint.new :type => ProtectionExample, :method_name => :private_class_m, :class_method => true
     jp.exists?.should be_true
   end
 
@@ -501,67 +471,72 @@ describe Aquarium::Aspects::JoinPoint, "#exists?" do
   
 end
 
-describe Aquarium::Aspects::JoinPoint, "#make_current_context_join_point when the Aquarium::Aspects::JoinPoint::Context object is not nil" do
-  it "should return a new join_point that contains the non-context information of the advised_object plus an updated Aquarium::Aspects::JoinPoint::Context with the specified context information." do
-    jp  = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
-    object = "12,34"
-    jp.context = Aquarium::Aspects::JoinPoint::Context.new :advice_kind => :before, :advised_object => object, :parameters => [","], :returned_value => ["12", "34"]
-    exception = RuntimeError.new
-    jp_after = jp.make_current_context_join_point :advice_kind => :after, :returned_value => ["12", "34", "56"], :raised_exception => exception
-    jp_after.object_id.should_not == jp.object_id
-    jp_after.context.should_not eql(jp.context)
-    jp.context.advice_kind.should       == :before
-    jp.context.advised_object.should    == object
-    jp.context.parameters.should        == [","]
-    jp.context.returned_value.should    == ["12", "34"]
-    jp.context.raised_exception.should be_nil
-    jp_after.context.advice_kind.should       == :after
-    jp_after.context.advised_object.should    == object
-    jp_after.context.parameters.should        == [","]
-    jp_after.context.returned_value.should    == ["12", "34", "56"]
-    jp_after.context.raised_exception.should  == exception
+describe JoinPoint::Context, "#initialize" do
+  it "should initialize :advice_kind to Advice::UNKNOWN_ADVICE_KIND if not specified." do
+    context = JoinPoint::Context.new 
+    context.advice_kind.should equal(Advice::UNKNOWN_ADVICE_KIND)
   end
-end
 
-describe Aquarium::Aspects::JoinPoint::Context, "#initialize" do
-  it "should require :advice_kind, :advised_object and :parameters arguments." do
-    lambda { Aquarium::Aspects::JoinPoint::Context.new :advised_object => "object", :parameters => [","]}.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aquarium::Aspects::JoinPoint::Context.new :advice_kind => :before, :parameters => [","]}.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aquarium::Aspects::JoinPoint::Context.new :advice_kind => :before, :advised_object => "object"}.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { Aquarium::Aspects::JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","]}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+  it "should initialize :advised_object to equal a NilObject if not specified." do
+    context = JoinPoint::Context.new 
+    context.advised_object.should eql(Aquarium::Utils::NilObject.new)
+  end
+
+  it "should initialize :parameters to [] if not specified." do
+    context = JoinPoint::Context.new
+    context.parameters.should eql([])
   end
 
   it "should accept a :returned_value argument." do
-    lambda { Aquarium::Aspects::JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","], :returned_value => ["12", "34"]}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","], :returned_value => ["12", "34"]}.should_not raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should accept a :raised_exception argument." do
-    lambda { Aquarium::Aspects::JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","], :raised_exception => NameError.new}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    lambda { JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","], :raised_exception => NameError.new}.should_not raise_error(Aquarium::Utils::InvalidOptions)
   end
   
 end
 
-describe Aquarium::Aspects::JoinPoint::Context, "#target_object" do
+describe JoinPoint::Context, "#target_object" do
   it "should be a synonym for #advised_object." do
-    @object = "12,34"
-    @jp  = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
-    @jp_with_context = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => @object,  :parameters => [","], :returned_value => ["12", "34"]
-    @jp_with_context.context.target_object.should == @jp_with_context.context.advised_object
+    object = "12,34"
+    jp  = JoinPoint.new :type => String, :method_name => :split
+    jp.context.advised_object = @object
+    jp.context.target_object.should == jp.context.advised_object
   end
 end
 
 def do_common_eql_setup
   @object = "12,34"
   @object2 = "12,34,56"
-  @jp  = Aquarium::Aspects::JoinPoint.new :type => String, :method_name => :split
-  @jp_with_context1  = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => @object,  :parameters => [","], :returned_value => ["12", "34"]
-  @jp_with_context2  = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => @object,  :parameters => [","], :returned_value => ["12", "34"]
-  @jp_with_context2b = @jp.make_current_context_join_point :advice_kind => :after,  :advised_object => @object,  :parameters => [","], :returned_value => ["12", "34"]
-  @jp_with_context2c = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => @object2, :parameters => [","], :returned_value => ["12", "34"]
-  @jp_with_context2d = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => @object,  :parameters => ["2"], :returned_value => ["1",  ",34"]
+  @jp_with_context1 = JoinPoint.new :type => String, :method_name => :split
+  @jp_with_context2 = JoinPoint.new :type => String, :method_name => :split
+  @jp_with_context2b = JoinPoint.new :type => String, :method_name => :split
+  @jp_with_context2c = JoinPoint.new :type => String, :method_name => :split
+  @jp_with_context2d = JoinPoint.new :type => String, :method_name => :split
+  @jp_with_context1.context.advice_kind = :before
+  @jp_with_context1.context.advised_object = @object
+  @jp_with_context1.context.parameters = [","]
+  @jp_with_context1.context.returned_value = ["12", "34"]
+  @jp_with_context2.context.advice_kind = :before
+  @jp_with_context2.context.advised_object = @object
+  @jp_with_context2.context.parameters = [","]
+  @jp_with_context2.context.returned_value = ["12", "34"]
+  @jp_with_context2b.context.advice_kind = :after
+  @jp_with_context2b.context.advised_object = @object
+  @jp_with_context2b.context.parameters = [","]
+  @jp_with_context2b.context.returned_value = ["12", "34"]
+  @jp_with_context2c.context.advice_kind = :before
+  @jp_with_context2c.context.advised_object = @object2
+  @jp_with_context2c.context.parameters = [","]
+  @jp_with_context2c.context.returned_value = ["12", "34"]
+  @jp_with_context2d.context.advice_kind = :before
+  @jp_with_context2d.context.advised_object = @object
+  @jp_with_context2d.context.parameters = ["2"]
+  @jp_with_context2d.context.returned_value = ["1",  ",34"]
 end
 
-describe Aquarium::Aspects::JoinPoint::Context, "#eql?" do
+describe JoinPoint::Context, "#eql?" do
   setup do
     do_common_eql_setup
   end
@@ -577,13 +552,13 @@ describe Aquarium::Aspects::JoinPoint::Context, "#eql?" do
   end
   
   it "should return false if two equal but different objects are specified." do
-    @jp_with_context1   = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => @object,  :parameters => [","], :returned_value => ["12", "34"]
-    jp_with_diff_object = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => "12,34",  :parameters => [","], :returned_value => ["12", "34"]
+    jp_with_diff_object = JoinPoint.new :type => String, :method_name => :split
+    jp_with_diff_object.context.advised_object = "12,34"
     @jp_with_context1.context.should_not eql(jp_with_diff_object.context)
   end
 end
 
-describe Aquarium::Aspects::JoinPoint::Context, "#==" do
+describe JoinPoint::Context, "#==" do
   setup do
     do_common_eql_setup
   end
@@ -599,8 +574,8 @@ describe Aquarium::Aspects::JoinPoint::Context, "#==" do
   end
   
   it "should return false if two equal but different objects are specified." do
-    @jp_with_context1   = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => @object,  :parameters => [","], :returned_value => ["12", "34"]
-    jp_with_diff_object = @jp.make_current_context_join_point :advice_kind => :before, :advised_object => "12,34",  :parameters => [","], :returned_value => ["12", "34"]
+    jp_with_diff_object = JoinPoint.new :type => String, :method_name => :split
+    jp_with_diff_object.context.advised_object = "12,34"
     @jp_with_context1.context.should_not == jp_with_diff_object.context
   end
 end

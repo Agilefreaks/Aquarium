@@ -1,4 +1,5 @@
 require 'aquarium/utils'
+require 'aquarium/aspects/advice'
   
 def bad_attributes message, options
   raise Aquarium::Utils::InvalidOptions.new("Invalid attributes. " + message + ". Options were: #{options.inspect}")
@@ -9,41 +10,45 @@ module Aquarium
     # == JoinPoint
     # Encapsulates information about a Join Point that might be advised. JoinPoint objects are <i>almost</i> 
     # value objects; you can change the context object.
-    # TODO Separate out the read-only part from the variable part.
+    # TODO Separate out the read-only part from the variable part. This might require an API change!
     class JoinPoint
 
       class ProceedMethodNotAvailable < Exception; end
-      class ContextNotDefined < Exception; end
+      class ContextNotCorrectlyDefined < Exception; end
       
       # == JoinPoint::Context
       # Encapsulates current runtime context information for a join point, such as the values of method parameters, a raised 
       # exception (for <tt>:after</tt> or <tt>after_raising</tt> advice), <i>etc.</i>
-      # Context objects are <i>almost</i> value objects. Currently, advice can change the returned_value, the
-      # raised_exception, and the block_for_method.
+      # Context objects are <i>partly</i> value objects. 
+      # TODO Separate out the read-only part from the variable part. This might require an API change!
       class Context
-        attr_reader :advice_kind, :advised_object, :parameters, :proceed_proc, :current_advice_node
+        attr_accessor :advice_kind, :advised_object, :parameters, :proceed_proc, :current_advice_node
         attr_accessor :returned_value, :raised_exception, :block_for_method
 
         alias :target_object  :advised_object
         
-        def initialize options
+        NIL_OBJECT = Aquarium::Utils::NilObject.new
+        
+        def initialize options = {}
           update options
-          assert_valid options
         end
 
-        # TODO eliminate!
         def update options
           options.each do |key, value|
             instance_variable_set "@#{key}", value
           end
+          @advice_kind    ||= Advice::UNKNOWN_ADVICE_KIND
+          @advised_object ||= NIL_OBJECT
+          @parameters     ||= []
         end
-    
+        
         def proceed enclosing_join_point, *args, &block
-          raise ProceedMethodNotAvailable.new("It looks like you tried to call \"JoinPoint#proceed\" (or \"JoinPoint::Context#proceed\") from within advice that isn't \"around\" advice. Only around advice can call proceed. (Specific error: JoinPoint#proceed cannot be called because no \"@proceed_proc\" attribute was set on the corresponding JoinPoint::Context object.)") if @proceed_proc.nil?
+          raise ProceedMethodNotAvailable.new("It looks like you tried to call \"JoinPoint#proceed\" (or \"JoinPoint::Context#proceed\") from within advice that isn't \"around\" advice. Only around advice can call proceed. (Specific error: JoinPoint#proceed cannot be invoked because no \"@proceed_proc\" attribute was set on the corresponding JoinPoint::Context object.)") if @proceed_proc.nil?
           do_invoke proceed_proc, :call, enclosing_join_point, *args, &block
         end
         
         def invoke_original_join_point enclosing_join_point, *args, &block
+          raise ContextNotCorrectlyDefined.new("It looks like you tried to call \"JoinPoint#invoke_original_join_point\" (or \"JoinPoint::Context#invoke_original_join_point\") using a join point without a completely formed context object. (Specific error: The original join point cannot be invoked because no \"@current_advice_node\" attribute was set on the corresponding JoinPoint::Context object.)") if @current_advice_node.nil?
           do_invoke current_advice_node, :invoke_original_join_point, enclosing_join_point, *args, &block
         end
         
@@ -62,7 +67,7 @@ module Aquarium
           return 1 if other.nil?
           result = self.class <=> other.class 
           return result unless result == 0
-          result = (self.advice_kind.nil? and other.advice_kind.nil?) ? 0 : self.advice_kind <=> other.advice_kind 
+          result = Advice.compare_advice_kinds self.advice_kind, other.advice_kind
           return result unless result == 0
           result = (self.advised_object.object_id.nil? and other.advised_object.object_id.nil?) ? 0 : self.advised_object.object_id <=> other.advised_object.object_id 
           return result unless result == 0
@@ -80,13 +85,6 @@ module Aquarium
         alias :==  :eql?
         alias :=== :eql?
     
-        protected
-    
-        def assert_valid options
-          bad_attributes("Must specify an :advice_kind", options)    unless advice_kind
-          bad_attributes("Must specify an :advised_object", options) unless advised_object
-          bad_attributes("Must specify a :parameters", options)      unless parameters
-        end    
       end
 
       attr_accessor :context
@@ -125,9 +123,16 @@ module Aquarium
         @instance_method = options[:instance_method].nil? ? (!class_method) : options[:instance_method]
         @instance_or_class_method  = @instance_method ? :instance : :class
         @visibility = Aquarium::Utils::MethodUtils.visibility(type_or_object, @method_name, class_or_instance_method_flag)
+        @context = options[:context] || JoinPoint::Context.new
         assert_valid options
       end
   
+      def dup
+        jp = super
+        jp.context = @context.dup unless @context.nil?
+        jp
+      end
+      
       def type_or_object
         target_type || target_object
       end
@@ -147,7 +152,7 @@ module Aquarium
       # This method can only be called if the join point has a context object defined that represents an actual
       # runtime "state".
       def proceed *args, &block
-        raise ContextNotDefined.new(":proceed can't be called unless the join point has a context object.") if context.nil?
+        raise ContextNotCorrectlyDefined.new(":proceed can't be called unless the join point has a context object.") if context.nil?
         context.proceed self, *args, &block
       end
 
@@ -156,24 +161,10 @@ module Aquarium
       # runtime "state".
       # Use this method cautiously, at it could be "surprising" if some advice is not executed!
       def invoke_original_join_point *args, &block
-        raise ContextNotDefined.new(":invoke_original_join_point can't be called unless the join point has a context object.") if context.nil?
+        raise ContextNotCorrectlyDefined.new(":invoke_original_join_point can't be called unless the join point has a context object.") if context.nil?
         context.invoke_original_join_point self, *args, &block
       end
       
-      # Construct a copy of this join point with a JoinPoint::Context object representing the current execution state
-      # of the program, <i>e.g.,</i> the values of method parameters. 
-      def make_current_context_join_point context_options
-        new_jp = dup
-        if new_jp.context.nil?
-          new_jp.context = JoinPoint::Context.new context_options
-        else
-          new_jp.context = context.dup
-          new_jp.context.update context_options
-        end
-        new_jp
-      end
-
-      # Needed for comparing this field in #compare_field
       def instance_method
         @instance_method
       end

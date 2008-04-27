@@ -6,15 +6,15 @@ include Aquarium::Aspects
 
 describe Advice, "#sort_by_priority_order" do
   it "should return an empty array for empty input" do
-    Aquarium::Aspects::Advice.sort_by_priority_order([]).should == []
+    Advice.sort_by_priority_order([]).should == []
   end
   
   it "should return a properly-sorted array for arbitrary input of valid advice kind symbols" do
-    Aquarium::Aspects::Advice.sort_by_priority_order([:after_raising, :after_returning, :before, :after, :around]).should == [:around, :before, :after, :after_returning, :after_raising]
+    Advice.sort_by_priority_order([:after_raising, :after_returning, :before, :after, :around]).should == [:around, :before, :after, :after_returning, :after_raising]
   end
   
   it "should accept strings for the advice kinds, but return sorted symbols" do
-    Aquarium::Aspects::Advice.sort_by_priority_order(["after_raising", "after_returning", "before", "after", "around"]).should == [:around, :before, :after, :after_returning, :after_raising]
+    Advice.sort_by_priority_order(["after_raising", "after_returning", "before", "after", "around"]).should == [:around, :before, :after, :after_returning, :after_raising]
   end
 end
 
@@ -120,19 +120,56 @@ describe Advice, "that raises an exception" do
   end
 end
 
+describe Advice, ".compare_advice_kinds with nil or UNKNOWN_ADVICE_KIND" do
+  it "should return 0 when comparing nil to nil" do
+    Advice.compare_advice_kinds(nil, nil).should == 0
+  end
+  it "should return 0 when comparing UNKNOWN_ADVICE_KIND to UNKNOWN_ADVICE_KIND" do
+    Advice.compare_advice_kinds(Advice::UNKNOWN_ADVICE_KIND, Advice::UNKNOWN_ADVICE_KIND).should == 0
+  end
+  it "should return 1 when comparing UNKNOWN_ADVICE_KIND to nil" do
+    Advice.compare_advice_kinds(Advice::UNKNOWN_ADVICE_KIND, nil).should == 1
+  end
+  it "should return -1 when comparing nil to UNKNOWN_ADVICE_KIND" do
+    Advice.compare_advice_kinds(nil, Advice::UNKNOWN_ADVICE_KIND).should == -1
+  end
+
+  Advice::KINDS_IN_PRIORITY_ORDER.each do |kind|
+    it "should return 1 when comparing :#{kind} to UNKNOWN_ADVICE_KIND" do
+      Advice.compare_advice_kinds(kind, Advice::UNKNOWN_ADVICE_KIND).should == 1
+    end
+  end
+  Advice::KINDS_IN_PRIORITY_ORDER.each do |kind|
+    it "should return -1 when comparing UNKNOWN_ADVICE_KIND to :#{kind}" do
+      Advice.compare_advice_kinds(Advice::UNKNOWN_ADVICE_KIND, kind).should == -1
+    end
+  end
+end
+  
+describe Advice, ".compare_advice_kinds between 'real' advice kinds" do
+  Advice::KINDS_IN_PRIORITY_ORDER.each do |kind1|
+    Advice::KINDS_IN_PRIORITY_ORDER.each do |kind2|
+      expected = Advice::KINDS_IN_PRIORITY_ORDER.index(kind1) <=> Advice::KINDS_IN_PRIORITY_ORDER.index(kind2)
+      it "should return #{expected} when comparing :#{kind1} to :#{kind2} (using priority order)" do
+        Advice.compare_advice_kinds(kind1, kind2).should == expected
+      end
+    end
+  end
+end
+
 describe AdviceChainNodeFactory, "#make_node" do
   it "should raise if an unknown advice kind is specified" do
-    lambda {Aquarium::Aspects::AdviceChainNodeFactory.make_node :advice_kind => :foo}.should raise_error(Aquarium::Utils::InvalidOptions)    
+    lambda {AdviceChainNodeFactory.make_node :advice_kind => :foo}.should raise_error(Aquarium::Utils::InvalidOptions)    
   end
 
   it "should return a node of the type corresponding to the input advice kind" do
-    Aquarium::Aspects::AdviceChainNodeFactory.make_node(:advice_kind => :no).kind_of?(Aquarium::Aspects::NoAdviceChainNode).should be_true
-    Aquarium::Aspects::AdviceChainNodeFactory.make_node(:advice_kind => :none).kind_of?(Aquarium::Aspects::NoAdviceChainNode).should be_true
-    Aquarium::Aspects::AdviceChainNodeFactory.make_node(:advice_kind => :before).kind_of?(Aquarium::Aspects::BeforeAdviceChainNode).should be_true
-    Aquarium::Aspects::AdviceChainNodeFactory.make_node(:advice_kind => :after).kind_of?(Aquarium::Aspects::AfterAdviceChainNode).should be_true
-    Aquarium::Aspects::AdviceChainNodeFactory.make_node(:advice_kind => :after_raising).kind_of?(Aquarium::Aspects::AfterRaisingAdviceChainNode).should be_true
-    Aquarium::Aspects::AdviceChainNodeFactory.make_node(:advice_kind => :after_returning).kind_of?(Aquarium::Aspects::AfterReturningAdviceChainNode).should be_true
-    Aquarium::Aspects::AdviceChainNodeFactory.make_node(:advice_kind => :around).kind_of?(Aquarium::Aspects::AroundAdviceChainNode).should be_true
+    AdviceChainNodeFactory.make_node(:advice_kind => :no).kind_of?(NoAdviceChainNode).should be_true
+    AdviceChainNodeFactory.make_node(:advice_kind => :none).kind_of?(NoAdviceChainNode).should be_true
+    AdviceChainNodeFactory.make_node(:advice_kind => :before).kind_of?(BeforeAdviceChainNode).should be_true
+    AdviceChainNodeFactory.make_node(:advice_kind => :after).kind_of?(AfterAdviceChainNode).should be_true
+    AdviceChainNodeFactory.make_node(:advice_kind => :after_raising).kind_of?(AfterRaisingAdviceChainNode).should be_true
+    AdviceChainNodeFactory.make_node(:advice_kind => :after_returning).kind_of?(AfterReturningAdviceChainNode).should be_true
+    AdviceChainNodeFactory.make_node(:advice_kind => :around).kind_of?(AroundAdviceChainNode).should be_true
   end
 end
 

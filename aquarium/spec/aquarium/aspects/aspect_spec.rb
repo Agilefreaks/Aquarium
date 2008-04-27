@@ -85,18 +85,19 @@ describe Aspect, " with :before advice" do
 
   it "should pass the context information to the advice, including self and the method parameters." do
     watchful = Watchful.new
-    context = nil
+    advice_called = false
     @aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
-      context = jp.context
+      advice_called = true
+      jp.context.advice_kind.should == :before
+      jp.context.advised_object.should == watchful
+      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+      jp.context.returned_value.should == nil
+      jp.context.raised_exception.should == nil
     end 
     block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    context.advice_kind.should == :before
-    context.advised_object.should == watchful
-    context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    context.returned_value.should == nil
-    context.raised_exception.should == nil
+    advice_called.should be_true
   end
 
   it "should evaluate the advice before the method body and its block (if any)." do
@@ -114,18 +115,19 @@ describe Aspect, " with :after advice" do
 
   it "should pass the context information to the advice, including self, the method parameters, and the return value when the method returns normally." do
     watchful = Watchful.new
-    context = nil
+    advice_called = false
     @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
-      context = jp.context
+      advice_called = true
+      jp.context.advice_kind.should == :after
+      jp.context.advised_object.should == watchful
+      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+      jp.context.returned_value.should == 1
+      jp.context.raised_exception.should == nil
     end 
     block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    context.advice_kind.should == :after
-    context.advised_object.should == watchful
-    context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    context.returned_value.should == block_called
-    context.raised_exception.should == nil
+    advice_called.should be_true
   end
 
   it "should pass the context information to the advice, including self, the method parameters, and the rescued exception when an exception is raised." do
@@ -198,18 +200,19 @@ describe Aspect, " with :after_returning advice" do
 
   it "should pass the context information to the advice, including self, the method parameters, and the return value." do
     watchful = Watchful.new
-    context = nil
+    advice_called = false
     @aspect = Aspect.new :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
-      context = jp.context
+      advice_called = true
+      jp.context.advice_kind.should == :after_returning
+      jp.context.advised_object.should == watchful
+      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+      jp.context.returned_value.should == 1
+      jp.context.raised_exception.should == nil
     end 
     block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    context.advice_kind.should == :after_returning
-    context.advised_object.should == watchful
-    context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    context.returned_value.should == block_called
-    context.raised_exception.should == nil
+    advice_called.should be_true
   end
 
   it "should evaluate the advice after the method body and its block (if any)." do
@@ -255,18 +258,19 @@ describe Aspect, " with :after_raising advice" do
 
   it "should pass the context information to the advice, including self, the method parameters, and the rescued exception." do
     watchful = Watchful.new
-    context = nil
+    advice_called = false
     @aspect = Aspect.new :after_raising, :pointcut => {:type => Watchful, :methods => /public_watchful_method/} do |jp, obj, *args|
-      context = jp.context
+      advice_called = true
+      jp.context.advised_object.should == watchful
+      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+      jp.context.advice_kind.should == :after_raising
+      jp.context.returned_value.should == nil
+      jp.context.raised_exception.kind_of?(Watchful::WatchfulError).should be_true
     end 
     block_called = 0
     lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.should raise_error(Watchful::WatchfulError)
     block_called.should == 1
-    context.advised_object.should == watchful
-    context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    context.advice_kind.should == :after_raising
-    context.returned_value.should == nil
-    context.raised_exception.kind_of?(Watchful::WatchfulError).should be_true
+    advice_called.should be_true
   end
 
   it "should evaluate the advice after the method body and its block (if any)." do
@@ -411,19 +415,25 @@ describe Aspect, " with :before and :after advice" do
   end
 
   it "should pass the context information to the advice, including self and the method parameters, plus the return value for the after-advice case." do
+    # We record the contexts seen and the volatile advice kinds and returned values separately, as those values will have been
+    # reset in the contexts by the time we return from the advised method. 
     contexts = []
+    advice_kinds = []
+    returned_values = []
     @aspect = Aspect.new :before, :after, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, obj, *args|
       contexts << jp.context
+      advice_kinds << jp.context.advice_kind
+      returned_values << jp.context.returned_value
     end 
     watchful = Watchful.new
     public_block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| public_block_called += 1 }
     public_block_called.should == 1
     contexts.size.should == 2
-    contexts[0].advice_kind.should == :before
-    contexts[1].advice_kind.should == :after
-    contexts[0].returned_value.should == nil
-    contexts[1].returned_value.should == 1
+    advice_kinds[0].should == :before
+    advice_kinds[1].should == :after
+    returned_values[0].should == nil
+    returned_values[1].should == 1
     contexts.each do |context|
       context.advised_object.should == watchful
       context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
@@ -453,18 +463,24 @@ describe Aspect, " with :before and :after_returning advice" do
 
   it "should pass the context information to the advice, including self and the method parameters, plus the return value for the after-advice case." do
     watchful = Watchful.new
+    # We record the contexts seen and the volatile advice kinds and returned values separately, as those values will have been
+    # reset in the contexts by the time we return from the advised method. 
     contexts = []
+    advice_kinds = []
+    returned_values = []
     @aspect = Aspect.new :before, :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       contexts << jp.context
+      advice_kinds << jp.context.advice_kind
+      returned_values << jp.context.returned_value
     end 
     block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
     contexts.size.should == 2
-    contexts[0].advice_kind.should == :before
-    contexts[1].advice_kind.should == :after_returning
-    contexts[0].returned_value.should == nil
-    contexts[1].returned_value.should == block_called
+    advice_kinds[0].should == :before
+    advice_kinds[1].should == :after_returning
+    returned_values[0].should == nil
+    returned_values[1].should == 1
     contexts.each do |context|
       context.advised_object.should == watchful
       context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
@@ -487,18 +503,24 @@ describe Aspect, " with :before and :after_raising advice" do
 
   it "should pass the context information to the advice, including self and the method parameters, plus the raised exception for the after-advice case." do
     watchful = Watchful.new
+    # We record the contexts seen and the volatile advice kinds and raised exceptions separately, as those values will have been
+    # reset in the contexts by the time we return from the advised method. 
     contexts = []
+    advice_kinds = []
+    raised_exceptions = []
     @aspect = Aspect.new :before, :after_raising, :pointcut => {:type => Watchful, :methods => :public_watchful_method_that_raises} do |jp, obj, *args|
       contexts << jp.context
+      advice_kinds << jp.context.advice_kind
+      raised_exceptions << jp.context.raised_exception
     end 
     block_called = 0
     lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.should raise_error(Watchful::WatchfulError)
     block_called.should == 1
     contexts.size.should == 2
-    contexts[0].advice_kind.should == :before
-    contexts[1].advice_kind.should == :after_raising
-    contexts[0].raised_exception.should == nil
-    contexts[1].raised_exception.kind_of?(Watchful::WatchfulError).should be_true
+    advice_kinds[0].should == :before
+    advice_kinds[1].should == :after_raising
+    raised_exceptions[0].should == nil
+    raised_exceptions[1].kind_of?(Watchful::WatchfulError).should be_true
     contexts.each do |context|
       context.advised_object.should == watchful
       context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
@@ -520,11 +542,16 @@ describe Aspect, " with :around advice" do
   end
 
   it "should pass the context information to the advice, including the object, advice kind, the method invocation parameters, etc." do
-    contexts = []
-    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, obj, *args|
-      contexts << jp.context
-    end 
     watchful = Watchful.new
+    advice_called = false
+    @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, obj, *args|
+      advice_called = true
+      jp.context.advised_object.should == watchful
+      jp.context.advice_kind.should == :around
+      jp.context.returned_value.should == nil
+      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+      jp.context.raised_exception.should == nil
+    end 
     public_block_called = false
     protected_block_called = false
     private_block_called = false
@@ -534,12 +561,7 @@ describe Aspect, " with :around advice" do
     public_block_called.should be_false  # proceed is never called!
     protected_block_called.should be_true
     private_block_called.should be_true
-    contexts.size.should == 1
-    contexts[0].advised_object.should == watchful
-    contexts[0].advice_kind.should == :around
-    contexts[0].returned_value.should == nil
-    contexts[0].parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    contexts[0].raised_exception.should == nil
+    advice_called.should be_true
   end
 
   it "should advise subclass invocations of methods advised in the superclass." do
@@ -561,11 +583,16 @@ describe Aspect, " with :around advice" do
       end
     end
     
-    context = nil
-    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSuperClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
-      context = jp.context
-    end 
     child = AdvisingSuperClass::SubClass.new
+    advice_called = false
+    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSuperClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
+      advice_called = true
+      jp.context.advised_object.should == child
+      jp.context.advice_kind.should == :around
+      jp.context.returned_value.should == nil
+      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+      jp.context.raised_exception.should == nil
+    end 
     public_block_called = false
     protected_block_called = false
     private_block_called = false
@@ -575,11 +602,7 @@ describe Aspect, " with :around advice" do
     public_block_called.should be_false  # proceed is never called!
     protected_block_called.should be_true
     private_block_called.should be_true
-    context.advised_object.should == child
-    context.advice_kind.should == :around
-    context.returned_value.should == nil
-    context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    context.raised_exception.should == nil
+    advice_called.should be_true
   end
 
   it "should advise subclass invocations of methods advised in the subclass that are defined in the superclass." do
@@ -601,11 +624,16 @@ describe Aspect, " with :around advice" do
       end
     end
     
-    context = nil
-    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSubClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
-      context = jp.context
-    end 
     child = AdvisingSubClass::SubClass.new
+    advice_called = false
+    @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSubClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
+      advice_called = true
+      jp.context.advised_object.should == child
+      jp.context.advice_kind.should == :around
+      jp.context.returned_value.should == nil
+      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+      jp.context.raised_exception.should == nil
+    end 
     public_block_called = false
     protected_block_called = false
     private_block_called = false
@@ -615,11 +643,7 @@ describe Aspect, " with :around advice" do
     public_block_called.should be_false  # proceed is never called!
     protected_block_called.should be_true
     private_block_called.should be_true
-    context.advised_object.should == child
-    context.advice_kind.should == :around
-    context.returned_value.should == nil
-    context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    context.raised_exception.should == nil
+    advice_called.should be_true
   end
 
   it "should not advise subclass overrides of superclass methods, when advising superclasses (but calls to superclass methods are advised)." do
