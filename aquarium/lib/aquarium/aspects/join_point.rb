@@ -44,18 +44,24 @@ module Aquarium
         
         def proceed enclosing_join_point, *args, &block
           raise ProceedMethodNotAvailable.new("It looks like you tried to call \"JoinPoint#proceed\" (or \"JoinPoint::Context#proceed\") from within advice that isn't \"around\" advice. Only around advice can call proceed. (Specific error: JoinPoint#proceed cannot be invoked because no \"@proceed_proc\" attribute was set on the corresponding JoinPoint::Context object.)") if @proceed_proc.nil?
-          do_invoke proceed_proc, :call, enclosing_join_point, *args, &block
+          # do_invoke proceed_proc, :call, enclosing_join_point, *args, &block
+          args = parameters if (args.nil? or args.size == 0)
+          enclosing_join_point.context.block_for_method = block if block 
+          proceed_proc.call enclosing_join_point, advised_object, *args, &block
         end
         
         def invoke_original_join_point enclosing_join_point, *args, &block
           raise ContextNotCorrectlyDefined.new("It looks like you tried to call \"JoinPoint#invoke_original_join_point\" (or \"JoinPoint::Context#invoke_original_join_point\") using a join point without a completely formed context object. (Specific error: The original join point cannot be invoked because no \"@current_advice_node\" attribute was set on the corresponding JoinPoint::Context object.)") if @current_advice_node.nil?
-          do_invoke current_advice_node, :invoke_original_join_point, enclosing_join_point, *args, &block
+          # do_invoke current_advice_node, :invoke_original_join_point, enclosing_join_point, *args, &block
+          args = parameters if (args.nil? or args.size == 0)
+          enclosing_join_point.context.block_for_method = block if block 
+          current_advice_node.invoke_original_join_point enclosing_join_point, advised_object, *args, &block
         end
         
         def do_invoke proc_to_send, method, enclosing_join_point, *args, &block
           args = parameters if (args.nil? or args.size == 0)
           enclosing_join_point.context.block_for_method = block if block 
-          proc_to_send.send method, enclosing_join_point, advised_object, *args
+          proc_to_send.send method, enclosing_join_point, advised_object, *args, &block
         end
         protected :do_invoke
         

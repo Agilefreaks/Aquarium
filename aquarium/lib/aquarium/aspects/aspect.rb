@@ -431,9 +431,13 @@ module Aquarium
         join_point.target_type ? join_point.target_type : (class << join_point.target_object; self; end)
       end
 
+      #--
       # By NOT dup'ing the join_point, we save about 25% on the overhead! However, we
       # compromise thread safety, primarily because the join_point's context object will be changed.
       # TODO Refactor context out of static join point part.
+      # Note that we have to assign the parameters and block to the context object in case
+      # the advice calls "proceed" or "invoke_original_join_point" without arguments.
+      #++
       def alias_original_method_text alias_method_name, join_point, type_being_advised_text
         target_self = join_point.instance_method? ? "self" : join_point.target_type.name
         advice_chain_attr_sym = Aspect.make_advice_chain_attr_sym join_point
@@ -445,7 +449,7 @@ module Aquarium
           join_point.context.parameters = args
           join_point.context.block_for_method = block_for_method
           join_point.context.advised_object = #{target_self}
-          advice_chain.call join_point, #{target_self}, *args
+          advice_chain.call join_point, #{target_self}, *args, &block_for_method
         end
         #{join_point.visibility.to_s} :#{join_point.method_name}
         private :#{alias_method_name}
