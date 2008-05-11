@@ -431,7 +431,9 @@ module Aquarium
         join_point.target_type ? join_point.target_type : (class << join_point.target_object; self; end)
       end
 
-      # We dup the join_point for thread safety
+      # By NOT dup'ing the join_point, we save about 25% on the overhead! However, we
+      # compromise thread safety, primarily because the join_point's context object will be changed.
+      # TODO Refactor context out of static join point part.
       def alias_original_method_text alias_method_name, join_point, type_being_advised_text
         target_self = join_point.instance_method? ? "self" : join_point.target_type.name
         advice_chain_attr_sym = Aspect.make_advice_chain_attr_sym join_point
@@ -439,7 +441,7 @@ module Aquarium
         alias_method :#{alias_method_name}, :#{join_point.method_name}
         def #{join_point.method_name} *args, &block_for_method
           advice_chain = #{type_being_advised_text}.send :class_variable_get, "#{advice_chain_attr_sym}"
-          join_point = advice_chain.static_join_point.dup
+          join_point = advice_chain.static_join_point
           join_point.context.parameters = args
           join_point.context.block_for_method = block_for_method
           join_point.context.advised_object = #{target_self}

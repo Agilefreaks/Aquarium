@@ -33,9 +33,9 @@ describe Aspect, ".new when advising methods in a nested class" do
     advice_called = false
     @aspect = Aspect.new :before, :pointcut => {:type => Nested1::Nested2::MyClass, :methods => :do1} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :before
       jp.context.advised_object.should == myclass
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.returned_value.should == nil
       jp.context.raised_exception.should == nil
     end 
@@ -50,9 +50,9 @@ describe Aspect, ".new when advising methods in a nested class" do
     advice_called = false
     @aspect = Aspect.new :before, :pointcut => {:object => myclass, :methods => :do1} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :before
       jp.context.advised_object.should == myclass
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.returned_value.should == nil
       jp.context.raised_exception.should == nil
     end 
@@ -77,9 +77,9 @@ describe Aspect, ".new when advising methods in a nested module included by a cl
     advice_called = false
     @aspect = Aspect.new :before, :pointcut => {:type => Nested1::Nested2::MyModule, :methods => :do2} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :before
       jp.context.advised_object.should == myclass
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.returned_value.should == nil
       jp.context.raised_exception.should == nil
     end 
@@ -98,9 +98,9 @@ describe Aspect, ".new when advising methods in a nested module included by a cl
     advice_called = false
     @aspect = Aspect.new :before, :pointcut => {:type => MyClassWithModule2, :methods => :do2} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :before
       jp.context.advised_object.should == myclass
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.returned_value.should == nil
       jp.context.raised_exception.should == nil
     end 
@@ -120,9 +120,9 @@ describe Aspect, ".new when advising methods in a nested module included by a cl
     advice_called = false
     @aspect = Aspect.new :before, :pointcut => {:object => myclass, :methods => :do2} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :before
       jp.context.advised_object.should == myclass
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.returned_value.should == nil
       jp.context.raised_exception.should == nil
     end 

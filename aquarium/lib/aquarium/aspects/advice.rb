@@ -52,19 +52,29 @@ module Aquarium
             attr_accessor(:#{key})
           EOF
         end
+      end
         
-        # Bug #19262 workaround: need to only pass jp argument if arity is 1.
-        def call_advice jp, obj, *args
-          advice.arity == 1 ? advice.call(jp) : advice.call(jp, obj, *args)
-        end
+      def get_proc; @proc; end
+      
+      # Bug #19262 workaround: need to only pass jp argument if arity is 1.
+      def call_advice jp, obj, *args
+        advice.arity == 1 ? advice.call(jp) : advice.call(jp, obj, *args)
       end
   
       def call jp, obj, *args
-        do_call @proc, "", jp, obj, *args
+        begin
+          @proc.call jp, obj, *args
+        rescue Exception => e
+          handle_call_rescue e, "", jp
+        end
       end
       
       def invoke_original_join_point current_jp, obj, *args
-        do_call last, "While executing the original join_point: ", current_jp, obj, *args
+        begin
+          last.get_proc.call current_jp, obj, *args
+        rescue Exception => e
+          handle_call_rescue e, "While executing the original join_point: ", current_jp
+        end
       end
       
       # Supports Enumerable
@@ -98,10 +108,6 @@ module Aquarium
       
       protected
       
-      def invoking_object join_point
-        join_point.instance_method? ? join_point.context.advised_object : join_point.target_type
-      end
-
       #--
       # For performance reasons, we don't clone the context. 
       # There are potential concurrency issues, but note that the join point and its context object
@@ -120,17 +126,13 @@ module Aquarium
         jp.context.current_advice_node = @last_advice_node
       end
       
-      def do_call proc_to, error_message_prefix, jp, obj, *args
-        begin
-          proc_to.call jp, obj, *args
-        rescue => e
-          class_or_instance_method_separater = jp.instance_method? ? "#" : "."
-          context_message = error_message_prefix + "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
-          backtrace = e.backtrace
-          e2 = e.exception(context_message + e.message + " (join_point = #{jp.inspect})")
-          e2.set_backtrace backtrace
-          raise e2
-        end
+      def handle_call_rescue ex, error_message_prefix, jp
+        class_or_instance_method_separater = jp.instance_method? ? "#" : "."
+        context_message = error_message_prefix + "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
+        backtrace = ex.backtrace
+        e2 = ex.exception(context_message + ex.message + " (join_point = #{jp.inspect})")
+        e2.set_backtrace backtrace
+        raise e2
       end
     end
 

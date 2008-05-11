@@ -88,9 +88,9 @@ describe Aspect, " with :before advice" do
     advice_called = false
     @aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :before
       jp.context.advised_object.should == watchful
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.returned_value.should == nil
       jp.context.raised_exception.should == nil
     end 
@@ -118,9 +118,9 @@ describe Aspect, " with :after advice" do
     advice_called = false
     @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :after
       jp.context.advised_object.should == watchful
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.returned_value.should == 1
       jp.context.raised_exception.should == nil
     end 
@@ -137,10 +137,12 @@ describe Aspect, " with :after advice" do
       context = jp.context
     end 
     block_called = 0
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.should raise_error(Watchful::WatchfulError)
+    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') do |*args| 
+      block_called += 1 
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
+    end }.should raise_error(Watchful::WatchfulError)
     block_called.should == 1
     context.advised_object.should == watchful
-    context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     context.returned_value.should == nil
     context.raised_exception.kind_of?(Watchful::WatchfulError).should be_true
   end
@@ -203,9 +205,9 @@ describe Aspect, " with :after_returning advice" do
     advice_called = false
     @aspect = Aspect.new :after_returning, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :after_returning
       jp.context.advised_object.should == watchful
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.returned_value.should == 1
       jp.context.raised_exception.should == nil
     end 
@@ -261,8 +263,8 @@ describe Aspect, " with :after_raising advice" do
     advice_called = false
     @aspect = Aspect.new :after_raising, :pointcut => {:type => Watchful, :methods => /public_watchful_method/} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advised_object.should == watchful
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advice_kind.should == :after_raising
       jp.context.returned_value.should == nil
       jp.context.raised_exception.kind_of?(Watchful::WatchfulError).should be_true
@@ -424,10 +426,13 @@ describe Aspect, " with :before and :after advice" do
       contexts << jp.context
       advice_kinds << jp.context.advice_kind
       returned_values << jp.context.returned_value
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
     watchful = Watchful.new
     public_block_called = 0
-    watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| public_block_called += 1 }
+    watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') do |*args| 
+      public_block_called += 1 
+    end
     public_block_called.should == 1
     contexts.size.should == 2
     advice_kinds[0].should == :before
@@ -436,7 +441,6 @@ describe Aspect, " with :before and :after advice" do
     returned_values[1].should == 1
     contexts.each do |context|
       context.advised_object.should == watchful
-      context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       context.raised_exception.should == nil
     end
 
@@ -472,6 +476,7 @@ describe Aspect, " with :before and :after_returning advice" do
       contexts << jp.context
       advice_kinds << jp.context.advice_kind
       returned_values << jp.context.returned_value
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
     block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
@@ -483,7 +488,6 @@ describe Aspect, " with :before and :after_returning advice" do
     returned_values[1].should == 1
     contexts.each do |context|
       context.advised_object.should == watchful
-      context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       context.raised_exception.should == nil
     end
   end
@@ -512,6 +516,7 @@ describe Aspect, " with :before and :after_raising advice" do
       contexts << jp.context
       advice_kinds << jp.context.advice_kind
       raised_exceptions << jp.context.raised_exception
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
     block_called = 0
     lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.should raise_error(Watchful::WatchfulError)
@@ -523,7 +528,6 @@ describe Aspect, " with :before and :after_raising advice" do
     raised_exceptions[1].kind_of?(Watchful::WatchfulError).should be_true
     contexts.each do |context|
       context.advised_object.should == watchful
-      context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       context.returned_value.should == nil
     end
   end
@@ -546,10 +550,10 @@ describe Aspect, " with :around advice" do
     advice_called = false
     @aspect = Aspect.new :around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advised_object.should == watchful
       jp.context.advice_kind.should == :around
       jp.context.returned_value.should == nil
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.raised_exception.should == nil
     end 
     public_block_called = false
@@ -587,10 +591,10 @@ describe Aspect, " with :around advice" do
     advice_called = false
     @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSuperClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advised_object.should == child
       jp.context.advice_kind.should == :around
       jp.context.returned_value.should == nil
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.raised_exception.should == nil
     end 
     public_block_called = false
@@ -628,10 +632,10 @@ describe Aspect, " with :around advice" do
     advice_called = false
     @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSubClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
       advice_called = true
+      args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.advised_object.should == child
       jp.context.advice_kind.should == :around
       jp.context.returned_value.should == nil
-      jp.context.parameters.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       jp.context.raised_exception.should == nil
     end 
     public_block_called = false

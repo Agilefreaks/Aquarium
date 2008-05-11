@@ -59,7 +59,8 @@ describe Advice, "that raises an exception" do
       raise SpecExceptionForTesting.new("advice called with args: #{args.inspect}")
     end
     begin
-      Watchful.new.public_watchful_method(:a1, :a2) || fail
+      Watchful.new.public_watchful_method(:a1, :a2)
+      fail
     rescue => e
       e.message.should include("\"before\" advice")
     end
@@ -71,7 +72,8 @@ describe Advice, "that raises an exception" do
       raise "advice called with args: #{args.inspect}"
     end
     begin
-      Watchful.new.public_watchful_method(:a1, :a2) || fail
+      Watchful.new.public_watchful_method(:a1, :a2)
+      fail
     rescue => e
       e.message.should include("Watchful#public_watchful_method")
     end
@@ -83,7 +85,8 @@ describe Advice, "that raises an exception" do
       raise "advice called with args: #{args.inspect}"
     end
     begin
-      Watchful.public_class_watchful_method(:a1, :a2) || fail
+      Watchful.public_class_watchful_method(:a1, :a2)
+      fail
     rescue => e
       e.message.should include("Watchful.public_class_watchful_method")
     end
@@ -91,20 +94,20 @@ describe Advice, "that raises an exception" do
   end
 
   it "should rethrow an exception of the same type as the original exception." do
-    class MyException < Exception; end
+    class MyException1 < Exception; end
     aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
-      raise MyException.new("advice called with args: #{args.inspect}")
+      raise MyException1.new("advice called with args: #{args.inspect}")
     end
-    lambda { Watchful.public_class_watchful_method :a1, :a2 }.should raise_error(MyException)
+    lambda { Watchful.public_class_watchful_method :a1, :a2 }.should raise_error(MyException1)
     aspect.unadvise
   end
 
   it "should rethrow an exception with the same backtrace as the original exception." do
-    class MyException < Exception; end
+    class MyException2 < Exception; end
     @backtrace = nil
     aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
       begin
-        exception = MyException.new("advice called with args: #{args.inspect}")
+        exception = MyException2.new("advice called with args: #{args.inspect}")
         raise exception
       rescue Exception => e
         @backtrace = e.backtrace
@@ -112,7 +115,94 @@ describe Advice, "that raises an exception" do
       end
     end
     begin
-      Watchful.public_class_watchful_method(:a1, :a2) || fail
+      Watchful.public_class_watchful_method(:a1, :a2)
+      fail
+    rescue Exception => e
+      e.backtrace.should == @backtrace
+    end
+    aspect.unadvise
+  end
+end
+
+describe Advice, "#invoke_original_join_point that raises an exception" do
+  class InvokeOriginalJoinPointRaisingException
+    class IOJPRException < Exception; end
+    def raise_exception *args
+      raise IOJPRException.new(":raise_exception called with args: #{args.inspect}")
+    end
+    def self.class_raise_exception *args
+      raise IOJPRException.new(":class_raise_exception called with args: #{args.inspect}")
+    end
+  end
+  
+  it "should add the kind of advice to the exception message." do
+    aspect = Aspect.new :before, 
+    :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :raise_exception} do |jp, obj, *args| 
+      jp.invoke_original_join_point
+    end
+    begin
+      InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2)
+      fail
+    rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
+      e.message.should include("\"before\" advice")
+    end
+    aspect.unadvise
+  end
+
+  it "should add the \"Class#method\" of the advised object's type and method to the exception message." do
+    aspect = Aspect.new :before, 
+      :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :raise_exception} do |jp, obj, *args| 
+        jp.invoke_original_join_point
+    end
+    begin
+      InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2)
+      fail
+    rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
+      e.message.should include("InvokeOriginalJoinPointRaisingException#raise_exception")
+    end
+    aspect.unadvise
+  end
+
+  it "should add the \"Class.method\" of the advised type's class method to the exception message." do
+    aspect = Aspect.new :before, 
+      :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :class_raise_exception, 
+      :method_options => [:class]} do |jp, obj, *args| 
+        jp.invoke_original_join_point
+    end
+    begin
+      InvokeOriginalJoinPointRaisingException.class_raise_exception(:a1, :a2)
+      fail
+    rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
+      e.message.should include("InvokeOriginalJoinPointRaisingException.class_raise_exception")
+    end
+    aspect.unadvise
+  end
+
+  it "should rethrow an exception of the same type as the original exception." do
+    aspect = Aspect.new :before, 
+      :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :class_raise_exception, 
+      :method_options => [:class]} do |jp, obj, *args| 
+        jp.invoke_original_join_point
+    end
+    lambda { InvokeOriginalJoinPointRaisingException.class_raise_exception :a1, :a2 }.should raise_error(InvokeOriginalJoinPointRaisingException::IOJPRException)
+    aspect.unadvise
+  end
+
+  it "should rethrow an exception with the same backtrace as the original exception." do
+    @backtrace = nil
+    aspect = Aspect.new :before, 
+      :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :class_raise_exception, 
+      :method_options => [:class]} do |jp, obj, *args| 
+      begin
+        jp.invoke_original_join_point
+      rescue Exception => e
+        @backtrace = e.backtrace
+        raise e
+      end
+    end
+    begin
+      InvokeOriginalJoinPointRaisingException.class_raise_exception(:a1, :a2)
+      fail
     rescue Exception => e
       e.backtrace.should == @backtrace
     end
