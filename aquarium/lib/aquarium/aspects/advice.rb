@@ -53,21 +53,25 @@ module Aquarium
       end
         
       # Bug #19262 workaround: need to only pass jp argument if arity is 1.
-      def call_advice jp, obj, *args, &block
-        advice.arity == 1 ? advice.call(jp, &block) : advice.call(jp, obj, *args, &block)
+      def call_advice jp
+        if advice.arity == 1
+          advice.call jp
+        else
+          advice.call jp, jp.context.advised_object, *jp.context.parameters
+        end
       end
   
-      def call jp, obj, *args, &block
+      def call jp
         begin
-          advice_wrapper jp, obj, *args, &block
+          advice_wrapper jp
         rescue Exception => e
           handle_call_rescue e, "", jp
         end
       end
       
-      def invoke_original_join_point current_jp, obj, *args, &block
+      def invoke_original_join_point current_jp
         begin
-          last.advice_wrapper current_jp, obj, *args, &block
+          last.advice_wrapper current_jp
         rescue Exception => e
           handle_call_rescue e, "While executing the original join_point: ", current_jp
         end
@@ -140,9 +144,8 @@ module Aquarium
       def initialize options = {}
         super options
       end
-      def advice_wrapper jp, obj, *args, &block
-        block = jp.context.block_for_method if block.nil?
-        obj.send @alias_method_name, *args, &block
+      def advice_wrapper jp
+        jp.context.advised_object.send @alias_method_name, *jp.context.parameters, &jp.context.block_for_method
       end
     end
 
@@ -150,12 +153,12 @@ module Aquarium
       def initialize options = {}
         super options 
       end
-      def advice_wrapper jp, obj, *args, &block
+      def advice_wrapper jp
         update_current_context jp
         jp.context.advice_kind = :before
-        call_advice jp, obj, *args, &block
+        call_advice jp
         reset_current_context jp
-        next_node.call jp, obj, *args, &block
+        next_node.call jp
       end
     end
 
@@ -163,12 +166,12 @@ module Aquarium
       def initialize options = {}
         super options
       end
-      def advice_wrapper jp, obj, *args, &block
-        returned_value = next_node.call jp, obj, *args, &block
+      def advice_wrapper jp
+        returned_value = next_node.call jp
         update_current_context jp
         jp.context.advice_kind = :after_returning
         jp.context.returned_value = returned_value
-        call_advice jp, obj, *args, &block
+        call_advice jp
         result = jp.context.returned_value   # allow advice to modify the returned value
         reset_current_context jp
         result
@@ -182,15 +185,15 @@ module Aquarium
       def initialize options = {}
         super options
       end
-      def advice_wrapper jp, obj, *args, &block
+      def advice_wrapper jp
         begin
-          next_node.call jp, obj, *args, &block
+          next_node.call jp
         rescue Object => raised_exception
           if after_raising_exceptions_list_includes raised_exception
             update_current_context jp
             jp.context.advice_kind = :after_raising
             jp.context.raised_exception = raised_exception
-            call_advice jp, obj, *args, &block
+            call_advice jp
             raised_exception = jp.context.raised_exception   # allow advice to modify the raised exception
             reset_current_context jp
           end
@@ -213,15 +216,15 @@ module Aquarium
       def initialize options = {}
         super options
       end
-      def advice_wrapper jp, obj, *args, &block
+      def advice_wrapper jp
         # call_advice is invoked in each bloc, rather than once in an "ensure" clause, so the invocation in 
         # the rescue clause can allow the advice to change the exception that will be raised.
         begin
-          returned_value = next_node.call jp, obj, *args, &block
+          returned_value = next_node.call jp
           update_current_context jp
           jp.context.advice_kind = :after
           jp.context.returned_value = returned_value
-          call_advice jp, obj, *args, &block
+          call_advice jp
           result = jp.context.returned_value   # allow advice to modify the returned value
           reset_current_context jp
           result
@@ -229,7 +232,7 @@ module Aquarium
           update_current_context jp
           jp.context.advice_kind = :after
           jp.context.raised_exception = raised_exception
-          call_advice jp, obj, *args, &block
+          call_advice jp
           raised_exception = jp.context.raised_exception   # allow advice to modify the raised exception
           reset_current_context jp
           raise raised_exception
@@ -241,11 +244,11 @@ module Aquarium
       def initialize options = {}
         super options
       end
-      def advice_wrapper jp, obj, *args, &block
+      def advice_wrapper jp
         update_current_context jp
         jp.context.advice_kind = :around
         jp.context.proceed_proc = next_node
-        result = call_advice jp, obj, *args, &block
+        result = call_advice jp
         reset_current_context jp
         result
       end

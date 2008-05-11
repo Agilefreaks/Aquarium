@@ -449,7 +449,7 @@ module Aquarium
           join_point.context.parameters = args
           join_point.context.block_for_method = block_for_method
           join_point.context.advised_object = #{target_self}
-          advice_chain.call join_point, #{target_self}, *args, &block_for_method
+          advice_chain.call join_point
         end
         #{join_point.visibility.to_s} :#{join_point.method_name}
         private :#{alias_method_name}
