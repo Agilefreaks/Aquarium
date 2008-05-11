@@ -110,9 +110,7 @@ module Aquarium
       
       #--
       # For performance reasons, we don't clone the context. 
-      # There are potential concurrency issues, but note that the join point and its context object
-      # are cloned at the start of the advice invocation, so concurrency problems should be rare, if
-      # nonexistent.
+      # TODO: There are potential concurrency issues!
       #++
       def update_current_context jp
         return if advice.arity == 0
