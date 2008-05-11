@@ -1439,7 +1439,7 @@ describe Aspect, "methods" do
   end
   
   describe Aspect, ".new (advice block to around advice with just the join_point parameter - Bug #19262)" do  
-    it "should work not raise an error" do
+    it "should not raise an error" do
       aspect = Aspect.new :around, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method do |jp|; jp.proceed; end
       Aquarium::AspectInvocationTestClass.new.public_test_method
       aspect.unadvise
