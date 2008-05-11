@@ -42,7 +42,7 @@ module Aquarium
       include Enumerable
       def initialize options = {}, &proc_block
         raise Aquarium::Utils::InvalidOptions.new("You must specify an advice block or Proc") if proc_block.nil?
-        @proc = Proc.new &proc_block
+        @proc = proc_block
         # assign :next_node and :static_join_point so the attributes are always created
         options[:next_node] ||= nil  
         options[:static_join_point] ||= nil
@@ -213,8 +213,8 @@ module Aquarium
     class AfterAdviceChainNode < AdviceChainNode
       def initialize options = {}
         super(options) { |jp, obj, *args| 
-          # call_advice is invoked in each bloc, rather than once in an "ensure" clause, so the invocation in the rescue class
-          # can allow the advice to change the exception that will be raised.
+          # call_advice is invoked in each bloc, rather than once in an "ensure" clause, so the invocation in 
+          # the rescue clause can allow the advice to change the exception that will be raised.
           begin
             returned_value = next_node.call(jp, obj, *args)
             update_current_context jp

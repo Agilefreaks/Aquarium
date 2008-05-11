@@ -396,8 +396,8 @@ module Aquarium
         unless Aspect.is_type_join_point?(static_join_point) 
           type_being_advised_text = "(class << self; self; end)"
         end
-        type_to_advise2 = static_join_point.instance_method? ? type_to_advise : (class << type_to_advise; self; end)
-        type_to_advise2.class_eval(<<-EOF, __FILE__, __LINE__)
+        metatype_to_advise = static_join_point.instance_method? ? type_to_advise : (class << type_to_advise; self; end)
+        metatype_to_advise.class_eval(<<-EOF, __FILE__, __LINE__)
           #{def_eigenclass_method_text static_join_point}
           #{alias_original_method_text alias_method_name, static_join_point, type_being_advised_text}
         EOF
