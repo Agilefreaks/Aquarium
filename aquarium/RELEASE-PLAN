@@ -46,10 +46,18 @@ advise Java types!
 
 === Version 0.5
 
-My goals for this release are performance improvements (#19321) and investigating some ideas
+My goals for this release include more performance improvements (#19321) and investigating some ideas
 for a real DSL, meaning declarative statements in blocks, rather than method arguments. It will be 
 redundant somewhat with the existing "method-argument form", as it exists today, but it will set
 the stage for much more complex aspect definitions than would be convenient with the current form.
+
+Another big change is to make pointcut evaluation and advice application happen continuous at runtime,
+rather than only when the aspect is defined. This would eliminate subtle problems related to the order
+of loading and also makes the declarative nature of aspects more fully realized. For example, if I 
+declare an aspect for all types in a module namespace, it should still apply to nested types defined
+or loaded after the aspect is defined. This enhancement will also make it easier to define reusable
+and "abstract" aspects, where they aren't applied immediately, but only when extended by "concrete"
+aspects, for example.
 
 I'll maintain the current form for backwards compatibility and also because it is convenient for
 simpler aspects.

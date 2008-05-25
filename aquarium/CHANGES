@@ -9,12 +9,14 @@ Bug fixes:
 19321	Advice overhead is too high (ongoing improvements)
 
 Enhancements:
+13403	Support recursion into nested types without requiring "tricky" regular expressions
 13406	"Sugar" for adding methods and attributes to types
 18537	Provide a search for all pointcut constants
 19666	Improve the RDoc output
 19119	Provide an "after_raising" type of advice that lets you handle the exception.
 
-#15202: I never figured out the cause of this problem, but it hasn't been seen since late last year, so I suspect it disappeared as a side effect of on-going refactoring and enhancements.
+#15202: I never figured out the cause of this problem, but it hasn't been seen since late last 
+year, so I suspect it disappeared as a side effect of on-going refactoring and enhancements.
 
 #19262: If you just specified "|jp|" for an advice block, you would sometimes get a method missing
 error. I never figured out exactly why, but it was somehow related to passing the usual three 
@@ -24,6 +26,10 @@ arity and only passes the join point in this case.
 #19321: I removed some of the wasted object creation and initialization in advice invocation, 
 improving the overhead by about 40%. However, it is still at least 10x higher than simple method
 aliasing, so I want to make more improvements. (I did not close this item.)
+
+#13403: I added new options :types_and_nested_types and :types_and_nested that are analogous to
+the similar "ancestors" and "descendents" options. The nested option will return the specified 
+types and any types they "enclose". There are also corresponding "exclude" options.
 
 #13406: I've decided not to do this, as it really isn't the "simplest thing that could possibly
 work." It's easy enough for the user to define a module of new behavior and just use

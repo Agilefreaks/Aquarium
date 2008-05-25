@@ -51,7 +51,7 @@ module Aquarium
       # Aspect.new (:around | :before | :after | :after_returning | :after_raising )
       #   (:pointcuts => [...]), :named_pointcuts => [...] |
       #    ((:types => [...] | :types_and_ancestors => [...] | :types_and_descendents => [...]
-      #     :objects => [...]), 
+      #     | :types_and_nested_types | :objects => [...]), 
       #     :methods => [], :method_options => [...],
       #     :attributes => [...], :attribute_options[...]),
       #    (:advice = advice | do |join_point, obj, *args| ...; end)
@@ -133,7 +133,7 @@ module Aquarium
       #   to be warned when no matches occurred, for debugging purposes! A synonym for this option is
       #   <tt>ignore_no_jps => true | false</tt>.
       #
-      # For the options <i>e.g.,</i> <tt>:types</tt>, <tt>:methods</tt>, Aspect#new accepts all the options 
+      # For other options <i>e.g.,</i> <tt>:types</tt>, <tt>:methods</tt>, Aspect#new accepts all the options 
       # that Pointcut#new accepts. It also accepts the "universal" options documented in Aquarium::Utils::OptionsUtils.
       def initialize *options, &block
         @first_option_that_was_method = []
@@ -226,7 +226,7 @@ module Aquarium
       
       def calculate_excluded_types
         type_finder_options = {}
-        %w[types types_and_ancestors types_and_descendents].each do |opt|
+        %w[types types_and_ancestors types_and_descendents types_and_nested_types].each do |opt|
           type_finder_options[opt.intern] = @specification["exclude_#{opt}".intern] if @specification["exclude_#{opt}".intern]
         end
         excluded_types = Aquarium::Finders::TypeFinder.new.find type_finder_options
@@ -552,7 +552,7 @@ module Aquarium
       end
       
       def some_type_option_given?
-        types_given? or types_and_ancestors_given? or types_and_descendents_given? 
+        types_given? or types_and_ancestors_given? or types_and_descendents_given? or types_and_nested_types_given? 
       end
       
       def self.determine_type_or_object join_point
@@ -582,7 +582,7 @@ module Aquarium
         bad_options(":after_returning can't be used with :after_raising.") if options_given? :after_returning, :after_raising
         bad_options(":exceptions can't be specified except with :after_raising.") if exceptions_given? and not specified_advice_kinds.include?(:after_raising)
         unless some_type_object_join_point_or_pc_option_given? or default_objects_given?
-          bad_options("At least one of :pointcut(s), :named_pointcut(s), :join_point(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, or :object(s) is required.") 
+          bad_options("At least one of :pointcut(s), :named_pointcut(s), :join_point(s), :type(s), :type(s)_and_ancestors, :type(s)_and_descendents, :type(s)_and_nested_types, or :object(s) is required.") 
         end
         if (pointcuts_given? or named_pointcuts_given?) and (some_type_option_given? or objects_given?)
           bad_options("Can't specify both :pointcut(s) or :named_pointcut(s) and one or more of :type(s), and/or :object(s).") 

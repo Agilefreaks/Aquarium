@@ -12,7 +12,7 @@ def purge_actuals actuals
 end
 
 describe TypeUtils, "#find types and their descendents, using :types_and_descendents" do
-  it "should find the matching types and their descendent subclasses, even in different nested modules." do
+  it "should find the matching types and their descendent subtypes, even in different nested modules." do
     TypeUtils.sample_types.each do |t|
       actual = Aquarium::Finders::TypeFinder.new.find :types_and_descendents => (t.name)
       actual_keys = purge_actuals actual
@@ -29,7 +29,7 @@ describe TypeUtils, "#find types and their descendents, using :types_and_descend
 end
 
 describe TypeUtils, "#find types subtracting out excluded types and descendents, using :exclude_types_and_descendents" do
-  it "should find the matching types and their descendent subclasses, minus the excluded type hierarchies." do
+  it "should find the matching types and their descendent subtypes, minus the excluded type hierarchies." do
     actual = Aquarium::Finders::TypeFinder.new.find :types_and_descendents => ModuleForDescendents, :exclude_types_and_descendents => D1ForDescendents
     actual_keys = purge_actuals actual
     expected = TypeUtils.sample_types_descendents[ModuleForDescendents].reject do |c|

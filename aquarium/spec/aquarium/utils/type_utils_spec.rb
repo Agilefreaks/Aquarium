@@ -1,6 +1,7 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/utils/type_utils'
 require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
+require File.dirname(__FILE__) + '/../utils/type_utils_sample_nested_types'
 
 include Aquarium::Utils
 
@@ -83,3 +84,19 @@ describe TypeUtils, ".descendents applied to JRuby-wrapped Java classes" do
     TypeUtils.descendents(FakeJRubyWrapperModule).should include(FakeJRubyWrapperClass)
   end
 end
+
+describe TypeUtils, ".nested called with a type" do
+  it "should return the type itself in the result" do
+    Aquarium::NestedTestTypes.nested_in_NestedTestTypes.keys.each do |t|
+      TypeUtils.nested(t).should include(t)
+    end
+  end
+
+  it "should return all the modules and classes nested under the type, inclusive" do
+    Aquarium::NestedTestTypes.nested_in_NestedTestTypes.keys.each do |t|
+      actual_types = TypeUtils.nested(t)
+      actual_types.sort{|x,y| x.name <=> y.name}.should == Aquarium::NestedTestTypes.nested_in_NestedTestTypes[t].sort{|x,y| x.name <=> y.name}
+    end
+  end
+end
+

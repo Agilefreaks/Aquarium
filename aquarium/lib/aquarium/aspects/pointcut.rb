@@ -57,7 +57,7 @@ module Aquarium
       #
       # ===== Types and Ancestors or Descendents
       # Specify a type, type name, type name regular expression or an array of the same. (Mixed is allowed.)
-      # The ancestors or descendents will be found. To find <i>both</i> ancestors and descendents, use
+      # The ancestors or descendents will also be found. To find <i>both</i> ancestors and descendents, use
       # both options.
       # * <tt>:types_and_descendents => type || [type_list]</tt>
       # * <tt>:type_and_descendents  => type || [type_list]</tt>
@@ -73,6 +73,26 @@ module Aquarium
       # * <tt>:within_type_and_descendents  => type || [type_list]</tt>
       # * <tt>:within_types_and_ancestors   => type || [type_list]</tt>
       # * <tt>:within_type_and_ancestors    => type || [type_list]</tt>
+      #
+      # ===== Types and Nested Types
+      # Specify a type, type name, type name regular expression or an array of the same. (Mixed is allowed.)
+      # The nested (enclosed) types will also be found.
+      # * <tt>:types_and_nested_types => type || [type_list]</tt>
+      # * <tt>:type_and_nested_types  => type || [type_list]</tt>
+      # * <tt>:types_and_nested => type || [type_list]</tt>
+      # * <tt>:type_and_nested  => type || [type_list]</tt>
+      # * <tt>:for_types_and_nested_types => type || [type_list]</tt>
+      # * <tt>:for_type_and_nested_types  => type || [type_list]</tt>
+      # * <tt>:for_types_and_nested => type || [type_list]</tt>
+      # * <tt>:for_type_and_nested  => type || [type_list]</tt>
+      # * <tt>:on_types_and_nested_types => type || [type_list]</tt>
+      # * <tt>:on_type_and_nested_types  => type || [type_list]</tt>
+      # * <tt>:on_types_and_nested => type || [type_list]</tt>
+      # * <tt>:on_type_and_nested  => type || [type_list]</tt>
+      # * <tt>:within_types_and_nested_types => type || [type_list]</tt>
+      # * <tt>:within_type_and_nested_types  => type || [type_list]</tt>
+      # * <tt>:within_types_and_nested => type || [type_list]</tt>
+      # * <tt>:within_type_and_nested  => type || [type_list]</tt>
       #
       # ===== Objects
       # * <tt>:objects => object || [object_list]</tt>
@@ -155,6 +175,10 @@ module Aquarium
       # * <tt>:exclude_type_and_descendents  => type || [type_list]</tt>
       # * <tt>:exclude_types_and_ancestors   => type || [type_list]</tt>
       # * <tt>:exclude_type_and_ancestors    => type || [type_list]</tt>
+      # * <tt>:exclude_types_and_nested_types => type || [type_list]</tt>
+      # * <tt>:exclude_type_and_nested_types  => type || [type_list]</tt>
+      # * <tt>:exclude_types_and_nested       => type || [type_list]</tt>
+      # * <tt>:exclude_type_and_nested        => type || [type_list]</tt>
       # * <tt>:exclude_objects     => object || [object_list]</tt>
       # * <tt>:exclude_object      => object || [object_list]</tt>
       # * <tt>:exclude_methods     => method || [method_list]</tt>
@@ -250,7 +274,7 @@ module Aquarium
       end
 
       def any_type_related_options_given?
-        objects_given? or join_points_given? or types_given? or types_and_descendents_given? or types_and_ancestors_given?
+        objects_given? or join_points_given? or types_given? or types_and_descendents_given? or types_and_ancestors_given? or types_and_nested_types_given?
       end
       
       def self.validate_attribute_options spec_hash, options_hash
@@ -289,9 +313,10 @@ module Aquarium
         finder_options = {}
         exclude_finder_options = {}
         ['', 'exclude_'].each do |prefix|
-          ['', '_and_ancestors', '_and_descendents'].each do |suffix|
-            # Because the user might be asking for descendents and/or ancestors, we convert explicitly-specified
-            # types into names, then "refind" them. While less efficient, it makes the code more uniform.
+          ['', '_and_ancestors', '_and_descendents', '_and_nested_types'].each do |suffix|
+            # Because the user might be asking for descendents, ancestors and/or nested types, we convert
+            # explicitly-specified types into names, then "refind" them. While less efficient, it makes 
+            # the code more uniform.
             eval <<-EOF
               #{prefix}type_regexps_or_names#{suffix} = @specification[:#{prefix}types#{suffix}].map do |t|
                 Aquarium::Utils::TypeUtils.is_type?(t) ? t.name : t

@@ -24,19 +24,21 @@ module Aquarium
         end
       end
       
-      def self.add_ancestors_and_descendents_option_variants_for option, options_hash
+      def self.add_ancestors_descendents_and_nested_option_variants_for option, options_hash
         all_variants = options_hash[option].dup
         options_hash["#{option}_and_descendents"] = all_variants.map {|x| "#{x}_and_descendents"}
         options_hash["#{option}_and_ancestors"]   = all_variants.map {|x| "#{x}_and_ancestors"}
+        options_hash["#{option}_and_nested_types"] = 
+          all_variants.map {|x| "#{x}_and_nested_types"} + all_variants.map {|x| "#{x}_and_nested"}
       end
       
       TYPE_FINDER_CANONICAL_OPTIONS = {
         "types" => %w[type class classes module modules name names],
       }
-      # Add the ancestors and descendents first, then add all the preposition and exclude variants, so the latter
-      # are added to the former...
+      # Add the ancestors, descendents, and nested variants first, then add all the preposition and 
+      # exclude variants, so the latter are added to the former...
       TYPE_FINDER_CANONICAL_OPTIONS.keys.dup.each do |type_option|
-        add_ancestors_and_descendents_option_variants_for type_option, TYPE_FINDER_CANONICAL_OPTIONS
+        add_ancestors_descendents_and_nested_option_variants_for type_option, TYPE_FINDER_CANONICAL_OPTIONS
       end
       TYPE_FINDER_CANONICAL_OPTIONS.keys.dup.each do |type_option|
         add_prepositional_option_variants_for type_option, TYPE_FINDER_CANONICAL_OPTIONS
@@ -80,6 +82,18 @@ module Aquarium
       # * <tt>:type_and_ancestors  => types_and_type_names_and_regexps</tt>
       # * <tt>:name_and_ancestors  => types_and_type_names_and_regexps</tt>
       #
+      # ==== Types and Nested Types
+      # A single type, type name, name regular expression, or an array of the same. (Mixed allowed.)
+      # Matching types and any types nested within them will be found.
+      # * <tt>:types_and_nested_types => types_and_type_names_and_regexps</tt>
+      # * <tt>:names_and_nested_types => types_and_type_names_and_regexps</tt>
+      # * <tt>:type_and_nested_types  => types_and_type_names_and_regexps</tt>
+      # * <tt>:name_and_nested_types  => types_and_type_names_and_regexps</tt>
+      # * <tt>:types_and_nested => types_and_type_names_and_regexps</tt>
+      # * <tt>:names_and_nested => types_and_type_names_and_regexps</tt>
+      # * <tt>:type_and_nested  => types_and_type_names_and_regexps</tt>
+      # * <tt>:name_and_nested  => types_and_type_names_and_regexps</tt>
+      #
       # Note: This option will also match <tt>Class</tt>, <tt>Module</tt>, <i>etc.</>, 
       # so use with caution!
       #
@@ -101,12 +115,21 @@ module Aquarium
       # * <tt>:exclude_names_and_ancestors => types_and_type_names_and_regexps</tt>
       # * <tt>:exclude_type_and_ancestors  => types_and_type_names_and_regexps</tt>
       # * <tt>:exclude_name_and_ancestors  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_types_and_nested_types => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_names_and_nested_types => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_type_and_nested_types  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_name_and_nested_types  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_types_and_nested => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_names_and_nested => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_type_and_nested  => types_and_type_names_and_regexps</tt>
+      # * <tt>:exclude_name_and_nested  => types_and_type_names_and_regexps</tt>
       #
       # ==== Namespaces (Modules) and Regular Expressions
-      # Because of the special sigificance of the module ("namespace") separator "::", the rules
-      # for the regular expressions are as follows. Assume that "subexp" is a "sub regular
+      # Because of the special sigificance of the module ("namespace") separator "::", 
+      # special rules for the regular expressions apply. Normally, you can just use the
+      # "*_and_nested_types" or "*_and_nested" to match enclosed types, but if you want to
+      # be selective, note the following. First, assume that "subexp" is a "sub regular 
       # expression" that results if you split on the separator "::".
-      # (Feature Request 13403 should simplify this issue, when implemented.)
       #
       # A full regexp with no "::"::
       #   Allow partial matches, <i>i.e.</i>, as if you wrote <tt>/^.*#{regexp}.*$/.</tt>
@@ -222,7 +245,7 @@ module Aquarium
       end
   
       def finish_and_make_successful_result found, option
-        all = prettify(found + handle_ancestors_and_descendents(found, option))
+        all = prettify(found + handle_ancestors_descendents_and_nested(found, option))
         hash = make_return_hash(all)
         TypeFinderResult.new hash
       end
@@ -231,25 +254,32 @@ module Aquarium
         TypeFinderResult.new :not_matched => {name => Set.new([])}
       end
       
-      def handle_ancestors_and_descendents types, option
+      def handle_ancestors_descendents_and_nested types, option
         result = []
-        result << add_descendents(types) if should_find_descendents(option)
         result << add_ancestors(types)   if should_find_ancestors(option)
+        result << add_descendents(types) if should_find_descendents(option)
+        result << add_nested(types)      if should_find_nested(option)
         result
       end
       
-      def add_descendents types
-        types.inject([]) { |memo, t| memo << Aquarium::Utils::TypeUtils.descendents(t) }
-      end
       def add_ancestors types
         types.inject([]) { |memo, t| memo << t.ancestors }
       end
+      def add_descendents types
+        types.inject([]) { |memo, t| memo << Aquarium::Utils::TypeUtils.descendents(t) }
+      end
+      def add_nested types
+        types.inject([]) { |memo, t| memo << Aquarium::Utils::TypeUtils.nested(t) }
+      end
 
+      def should_find_ancestors option
+        option.to_s.include? "_ancestors"
+      end
       def should_find_descendents option
         option.to_s.include? "_descendents"
       end
-      def should_find_ancestors option
-        option.to_s.include? "_ancestors"
+      def should_find_nested option
+        option.to_s.include? "_nested"
       end
       
   

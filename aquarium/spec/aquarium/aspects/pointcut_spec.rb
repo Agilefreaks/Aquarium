@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../spec_example_types'
+require File.dirname(__FILE__) + '/../utils/type_utils_sample_nested_types'
 require 'aquarium/utils/invalid_options'
 require 'aquarium/extensions/hash'
 require 'aquarium/aspects/join_point'
@@ -308,6 +309,28 @@ describe Pointcut, "methods" do
   
     Aspect::CANONICAL_OPTIONS["types_and_descendents"].reject{|key| key.eql?("types_and_descendents")}.each do |key|
       it "should accept :#{key} as a synonym for :types_and_descendents." do
+        lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      end
+    end
+  end
+  
+  describe Pointcut, ".new (types and their nested types)" do
+    before(:each) do
+      before_pointcut_module_spec
+    end
+
+    it "should match types specified and their nested types." do
+      pc = Pointcut.new :types_and_nested_types => Aquarium::NestedTestTypes, :methods => :all, :method_options => :exclude_ancestor_methods
+      expected_types = Aquarium::NestedTestTypes.nested_in_NestedTestTypes[Aquarium::NestedTestTypes]
+      pc.join_points_matched.size.should == expected_types.size
+      pc.join_points_matched.each do |jp|
+        expected_types.should include(jp.target_type)
+      end
+      pc.join_points_not_matched.size.should == 0
+    end
+
+    Aspect::CANONICAL_OPTIONS["types_and_nested_types"].reject{|key| key.eql?("types_and_nested_types")}.each do |key|
+      it "should accept :#{key} as a synonym for :types_and_nested_types." do
         lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
       end
     end

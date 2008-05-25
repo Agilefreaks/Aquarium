@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../spec_example_types'
+require File.dirname(__FILE__) + '/../utils/type_utils_sample_nested_types'
 require 'aquarium/aspects/aspect'
 require 'aquarium/dsl'
 require 'aquarium/utils/array_utils'
@@ -195,7 +196,7 @@ describe Aspect, "methods" do
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
     end
 
-    [:type, :type_and_descendents, :type_and_ancestors].each do |type_key|
+    [:type, :type_and_descendents, :type_and_ancestors, :type_and_nested_types].each do |type_key|
       it "should ignore the :default_objects if at least one :#{type_key} is given and the :default_objects are objects." do
         object = Aquarium::AspectInvocationTestClass.new
         aspect = Aspect.new(:after, :default_objects => object, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method, :method => :public_test_method) {true}
@@ -489,6 +490,27 @@ describe Aspect, "methods" do
 
     it "should accept :type(s)_and_descendents => /T1/, :methods => [m, ...]" do  
       @types_option = :types_and_descendents
+      @type_spec = /Aquarium::AspectInvocationTestClass/
+      @method_spec = [:public_test_method]
+      do_type_spec
+    end
+
+    it "should accept :type(s)_and_nested_types => T1, :methods => [m, ...]" do  
+      @types_option = :types_and_nested_types
+      @type_spec = Aquarium::AspectInvocationTestClass
+      @method_spec = [:public_test_method]
+      do_type_spec
+    end
+
+    it "should accept :type(s)_and_nested_types => [T1, ...], :methods => [m, ...]" do  
+      @types_option = :types_and_nested_types
+      @type_spec = [Aquarium::AspectInvocationTestClass]
+      @method_spec = [:public_test_method]
+      do_type_spec
+    end
+
+    it "should accept :type(s)_and_nested_types => /T1/, :methods => [m, ...]" do  
+      @types_option = :types_and_nested_types
       @type_spec = /Aquarium::AspectInvocationTestClass/
       @method_spec = [:public_test_method]
       do_type_spec
@@ -917,6 +939,11 @@ describe Aspect, "methods" do
       do_type_pointcut_spec
     end
 
+    it "should accept {:type(s)_and_nested_types => [T1, ...], :methods => /m/} " do  
+      @pointcut_hash = {:type_and_nested_types => [Aquarium::AspectInvocationTestClass], :methods => /test_method/}
+      do_type_pointcut_spec
+    end
+
     it "should accept {:type(s) => T1, :methods => [m, ...]} " do  
       @pointcut_hash = {:type => Aquarium::AspectInvocationTestClass, :methods => [:public_test_method]}
       do_type_pointcut_spec
@@ -942,6 +969,11 @@ describe Aspect, "methods" do
       do_type_pointcut_spec
     end
 
+    it "should accept {:type(s)_and_nested_types => T1, :methods => /m/} " do  
+      @pointcut_hash = {:type_and_nested_types => Aquarium::AspectInvocationTestClass, :methods => /test_method/}
+      do_type_pointcut_spec
+    end
+
     it "should accept {:type(s) => /T1/, :methods => [m, ...]} " do  
       @pointcut_hash = {:type => /Aquarium::AspectInvocationTestClass/, :methods => [:public_test_method]}
       do_type_pointcut_spec
@@ -964,6 +996,11 @@ describe Aspect, "methods" do
 
     it "should accept {:type(s)_and_descendents => /T1/, :methods => /m/} " do  
       @pointcut_hash = {:type_and_descendents => /Aquarium::AspectInvocationTestClass/, :methods => /test_method/}
+      do_type_pointcut_spec
+    end
+
+    it "should accept {:type(s)_and_nested_types => /T1/, :methods => /m/} " do  
+      @pointcut_hash = {:type_and_nested_types => /Aquarium::AspectInvocationTestClass/, :methods => /test_method/}
       do_type_pointcut_spec
     end
 
@@ -1181,6 +1218,26 @@ describe Aspect, "methods" do
     it "should advise equivalent join points when :pointcut =>{:type_and_descendents => T, :method => m} is used or :pointcut => pointcut is used, where pointcut matches :type_and_descendents => T and :method => m." do
       @aspect1 = Aspect.new :after, :pointcut => {:type_and_descendents => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
       pointcut = Aquarium::Aspects::Pointcut.new :type_and_descendents => Aquarium::AspectInvocationTestClass, :method => :public_test_method
+      @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
+      aspects_should_be_equal 1, @aspect1, @aspect2
+    end
+
+    it "should advise equivalent join points when :type_and_nested_types => T and :method => m is used or :pointcut =>{:type_and_nested_types => T, :method => m} is used." do
+      @aspect1 = Aspect.new :after, :type_and_nested_types => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+      @aspect2 = Aspect.new :after, :pointcut => {:type_and_nested_types => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
+      aspects_should_be_equal 1, @aspect1, @aspect2
+    end
+
+    it "should advise equivalent join points when :type_and_nested_types => T and :method => m is used or :pointcut => pointcut is used, where pointcut matches :type_and_nested_types => T and :method => m." do
+      @aspect1 = Aspect.new :after, :type_and_nested_types => Aquarium::AspectInvocationTestClass, :method => :public_test_method, &@advice
+      pointcut = Aquarium::Aspects::Pointcut.new :type_and_nested_types => Aquarium::AspectInvocationTestClass, :method => :public_test_method
+      @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
+      aspects_should_be_equal 1, @aspect1, @aspect2
+    end
+  
+    it "should advise equivalent join points when :pointcut =>{:type_and_nested_types => T, :method => m} is used or :pointcut => pointcut is used, where pointcut matches :type_and_nested_types => T and :method => m." do
+      @aspect1 = Aspect.new :after, :pointcut => {:type_and_nested_types => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, &@advice
+      pointcut = Aquarium::Aspects::Pointcut.new :type_and_nested_types => Aquarium::AspectInvocationTestClass, :method => :public_test_method
       @aspect2 = Aspect.new :after, :pointcut => pointcut, &@advice
       aspects_should_be_equal 1, @aspect1, @aspect2
     end
@@ -1471,7 +1528,7 @@ describe Aspect, "methods" do
     def doit3; end
   end  
 
-  describe Aspect, ".new (with a :type(s) parameter and an :exclude_type(s), and :exclude_type(s)_and_ancestors, or an :exclude_type(s)_and_descendents parameter)" do  
+  describe Aspect, ".new (with a :type(s) parameter and an :exclude_type(s), and :exclude_type(s)_and_ancestors, an :exclude_type(s)_and_descendents, or an :exclude_type(s)_and_nested_types parameter)" do  
     before :all do
       @included_types = [DontExclude1, DontExclude2]
       @excluded_types = [Exclude1, Exclude2]
@@ -1524,6 +1581,16 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_types_and_descendents"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_descendents." do
+        lambda { Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end }.should_not raise_error
+      end
+    end
+
+    it "should accept :type(s) => [T1, ...], :exclude_types_and_nested_types => [T2, ...] and exclude join points in the excluded types" do  
+      do_exclude_types :exclude_types_and_nested_types
+    end
+  
+    Aspect::CANONICAL_OPTIONS["exclude_types_and_nested_types"].each do |key|
+      it "should accept :#{key} as a synonym for :exclude_types_and_nested_types." do
         lambda { Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end }.should_not raise_error
       end
     end
@@ -1670,6 +1737,27 @@ describe Aspect, "methods" do
       aspect = nil
       advice_called = false
       aspect = Aspect.new :before, :types_and_descendents => included_types, :methods => :doit, 
+        :exclude_join_points => excluded_join_points, :ignore_no_matching_join_points => true do |jp, obj, *args|; advice_called = true; end
+
+      advice_called = false
+      ClassWithPublicInstanceMethod.new.public_instance_test_method
+      advice_called.should be_false
+      advice_called = false
+      ClassIncludingModuleWithPublicInstanceMethod.new.public_instance_module_test_method
+      advice_called.should be_false
+      aspect.unadvise
+    end
+  end
+  
+  describe Aspect, ".new (with a :type(s)_and_nested_types parameter and an :exclude_join_point(s) parameter)" do  
+    it "should accept :type(s)_and_nested_types => [T1, ...], :exclude_join_point(s) => [jps], where [jps] are the list of join points for the types and methods to exclude" do  
+      included_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
+      excluded_join_point1 = JoinPoint.new :type => ClassWithPublicInstanceMethod, :method => :public_instance_test_method
+      excluded_join_point2 = JoinPoint.new :type => ModuleWithPublicInstanceMethod, :method => :public_instance_module_test_method
+      excluded_join_points = [excluded_join_point1, excluded_join_point2]
+      aspect = nil
+      advice_called = false
+      aspect = Aspect.new :before, :types_and_nested_types => included_types, :methods => :doit, 
         :exclude_join_points => excluded_join_points, :ignore_no_matching_join_points => true do |jp, obj, *args|; advice_called = true; end
 
       advice_called = false
@@ -1926,6 +2014,27 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_types_and_descendents"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_descendents." do
+        lambda {aspect = Aspect.new :before, :pointcuts => @pointcut1, key.intern => @excluded_types,
+          :ignore_no_matching_join_points => true, :noop => true do; end}.should_not raise_error
+      end
+    end
+  end
+
+  describe Aspect, ".new (with type-based :pointcut(s) and :exclude_type(s)_and_nested_types parameter)" do  
+    before :all do
+      @excluded_types = [ClassWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
+      @types = @excluded_types + [ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod]
+      @pointcut1 = Pointcut.new :types => @types, :method => :all, :method_options => [:exclude_ancestor_methods]
+    end
+    it "should accept :pointcut(s) => [P1, ...], :exclude_type(s)_and_nested_types => [types], where join points with [types] are excluded" do  
+      aspect = Aspect.new :before, :pointcuts => @pointcut1, :exclude_types_and_nested_types => @excluded_types, 
+        :ignore_no_matching_join_points => true do |jp, obj, *args|; end
+      aspect.pointcuts.size.should == 1
+      aspect.unadvise
+    end
+
+    Aspect::CANONICAL_OPTIONS["exclude_types_and_nested_types"].each do |key|
+      it "should accept :#{key} as a synonym for :exclude_types_and_nested_types." do
         lambda {aspect = Aspect.new :before, :pointcuts => @pointcut1, key.intern => @excluded_types,
           :ignore_no_matching_join_points => true, :noop => true do; end}.should_not raise_error
       end

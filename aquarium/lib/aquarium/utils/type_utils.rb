@@ -18,6 +18,17 @@ module Aquarium
         result.uniq
       end
       
+      def self.nested clazz
+        result = [clazz]
+        clazz.constants.each do |const|
+          mod = clazz.class_eval(const)
+          next unless is_type?(mod)
+          result << mod 
+          result << nested(mod)
+        end
+        result.flatten.uniq
+      end
+      
       protected
       
       # For JRuby classes, we have to "__x__" forms of the reflection methods that don't end in '?'. 
