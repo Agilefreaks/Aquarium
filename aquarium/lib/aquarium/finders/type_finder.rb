@@ -17,6 +17,13 @@ module Aquarium
       include Aquarium::Utils::TypeUtils
       include Aquarium::Utils::OptionsUtils
 
+      class TypeFinderResult < Aquarium::Finders::FinderResult
+        include Enumerable
+        def each
+          matched_keys.each { |x| yield x }
+        end
+      end
+      
       def self.add_ancestors_and_descendents_option_variants_for option, options_hash
         all_variants = options_hash[option].dup
         options_hash["#{option}_and_descendents"] = all_variants.map {|x| "#{x}_and_descendents"}
@@ -41,10 +48,10 @@ module Aquarium
       canonical_options_given_methods CANONICAL_OPTIONS
       canonical_option_accessor CANONICAL_OPTIONS
       
-      # Returns a Aquarium::Finders::FinderResult, where the "matched" keys are the input 
+      # Returns a TypeFinder::TypeFinderResult, where the "matched" keys are the input 
       # types, type names, and/or regular expressions, and objects for which matches were found and the 
       # corresponding values are the class constant or variable pointcuts that were found.
-      # The keys in the "not_matched" part of the FinderResult are the specified types and objects
+      # The keys in the "not_matched" part of the result are the specified types and objects
       # for which no matches were found.
       #
       # The options are as follows:
@@ -135,9 +142,9 @@ module Aquarium
       end
       
       def do_find_types
-        result   = Aquarium::Finders::FinderResult.new
-        excluded = Aquarium::Finders::FinderResult.new
+        result = TypeFinderResult.new
         return result if noop
+        excluded = TypeFinderResult.new
         @specification.each do |option, types|
           next unless TYPE_FINDER_CANONICAL_OPTIONS.keys.include?(option.to_s)
           next if types.nil? or types.empty?
@@ -150,7 +157,7 @@ module Aquarium
       end
       
       def find_matching regexpes_or_names, option
-        result = Aquarium::Finders::FinderResult.new
+        result = TypeFinderResult.new
         expressions = make_array regexpes_or_names
         expressions.each do |expression|
           expr = strip expression
@@ -217,11 +224,11 @@ module Aquarium
       def finish_and_make_successful_result found, option
         all = prettify(found + handle_ancestors_and_descendents(found, option))
         hash = make_return_hash(all)
-        Aquarium::Finders::FinderResult.new hash
+        TypeFinderResult.new hash
       end
       
       def make_failed_result name
-        Aquarium::Finders::FinderResult.new :not_matched => {name => Set.new([])}
+        TypeFinderResult.new :not_matched => {name => Set.new([])}
       end
       
       def handle_ancestors_and_descendents types, option

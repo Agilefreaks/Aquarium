@@ -67,3 +67,10 @@ Aspects are sometimes used for "fault injection", to enable easier testing of er
 expensive methods, using around advice. The latter technique complements mocking frameworks. You can see an example
 of stubbing the expensive <code>TypeUtils#descendents</code> in <code>Aquarium::TypeUtilsStub</code> (in 
 <code>spec_example_types.rb</code>) and the use of it in <code>spec/aquarium/aspects/pointcut_spec.rb</code>.
+
+h3. Mimicking <i>Introductions</i> (a.k.a. <i>Intertype Declarations</i>)
+
+AspectJ lets Java programmers add new methods and attributes to types. Ruby makes this easy however, so Aquarium doesn't provide a similar facility. However, if you need to extend a set of types, Aquarium's <code>TypeFinder</code> can be helpful, as shown here:
+
+<ruby file="../aquarium/examples/introductions_example.rb" />
+

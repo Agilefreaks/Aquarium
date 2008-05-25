@@ -53,17 +53,20 @@ describe Advice, "#invoke_original_join_point" do
   end
 end
 
+def should_raise_expected_exception_with_message message
+  begin
+    yield ; fail
+  rescue => e
+    e.message.should include(message)
+  end
+end
+
 describe Advice, "that raises an exception" do
   it "should add the kind of advice to the exception message." do
     aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args| 
       raise SpecExceptionForTesting.new("advice called with args: #{args.inspect}")
     end
-    begin
-      Watchful.new.public_watchful_method(:a1, :a2)
-      fail
-    rescue => e
-      e.message.should include("\"before\" advice")
-    end
+    should_raise_expected_exception_with_message("\"before\" advice") {Watchful.new.public_watchful_method(:a1, :a2)}
     aspect.unadvise
   end
 
@@ -71,12 +74,7 @@ describe Advice, "that raises an exception" do
     aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args| 
       raise "advice called with args: #{args.inspect}"
     end
-    begin
-      Watchful.new.public_watchful_method(:a1, :a2)
-      fail
-    rescue => e
-      e.message.should include("Watchful#public_watchful_method")
-    end
+    should_raise_expected_exception_with_message("Watchful#public_watchful_method") {Watchful.new.public_watchful_method(:a1, :a2)}
     aspect.unadvise
   end
 
@@ -84,12 +82,7 @@ describe Advice, "that raises an exception" do
     aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
       raise "advice called with args: #{args.inspect}"
     end
-    begin
-      Watchful.public_class_watchful_method(:a1, :a2)
-      fail
-    rescue => e
-      e.message.should include("Watchful.public_class_watchful_method")
-    end
+    should_raise_expected_exception_with_message("Watchful.public_class_watchful_method") {Watchful.public_class_watchful_method(:a1, :a2)}
     aspect.unadvise
   end
 
@@ -115,8 +108,7 @@ describe Advice, "that raises an exception" do
       end
     end
     begin
-      Watchful.public_class_watchful_method(:a1, :a2)
-      fail
+      Watchful.public_class_watchful_method(:a1, :a2) ; fail
     rescue Exception => e
       e.backtrace.should == @backtrace
     end
@@ -141,8 +133,7 @@ describe Advice, "#invoke_original_join_point that raises an exception" do
       jp.invoke_original_join_point
     end
     begin
-      InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2)
-      fail
+      InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2) ; fail
     rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
       e.message.should include("\"before\" advice")
     end
@@ -155,8 +146,7 @@ describe Advice, "#invoke_original_join_point that raises an exception" do
         jp.invoke_original_join_point
     end
     begin
-      InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2)
-      fail
+      InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2) ; fail
     rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
       e.message.should include("InvokeOriginalJoinPointRaisingException#raise_exception")
     end
@@ -170,8 +160,7 @@ describe Advice, "#invoke_original_join_point that raises an exception" do
         jp.invoke_original_join_point
     end
     begin
-      InvokeOriginalJoinPointRaisingException.class_raise_exception(:a1, :a2)
-      fail
+      InvokeOriginalJoinPointRaisingException.class_raise_exception(:a1, :a2) ; fail
     rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
       e.message.should include("InvokeOriginalJoinPointRaisingException.class_raise_exception")
     end
@@ -201,8 +190,7 @@ describe Advice, "#invoke_original_join_point that raises an exception" do
       end
     end
     begin
-      InvokeOriginalJoinPointRaisingException.class_raise_exception(:a1, :a2)
-      fail
+      InvokeOriginalJoinPointRaisingException.class_raise_exception(:a1, :a2) ; fail
     rescue Exception => e
       e.backtrace.should == @backtrace
     end

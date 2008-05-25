@@ -52,8 +52,12 @@ module Aquarium
       end
   
       # "Or" two results together
+      #--
+      # We use dup here and in other methods, rather than FinderResult.new, so that new subclass
+      # objects are returned correctly!
+      #++
       def or other_result
-        result = FinderResult.new
+        result = dup
         result.matched     = hash_union(matched,     other_result.matched)
         result.not_matched = hash_union(not_matched, other_result.not_matched)
         result
@@ -64,7 +68,7 @@ module Aquarium
   
       # "And" two results together
       def and other_result
-        result = FinderResult.new
+        result = dup
         result.matched     = hash_intersection(matched,     other_result.matched)
         result.not_matched = hash_intersection(not_matched, other_result.not_matched)
         result
@@ -74,7 +78,7 @@ module Aquarium
       alias :& :and
   
       def minus other_result
-        result = FinderResult.new
+        result = dup
         result.matched     = matched     - other_result.matched
         result.not_matched = not_matched - other_result.not_matched
         result

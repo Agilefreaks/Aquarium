@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../spec_example_types'
 require 'aquarium/aspects/aspect'
-require 'aquarium/aspects/dsl'
+require 'aquarium/dsl'
 require 'aquarium/utils/array_utils'
 require File.dirname(__FILE__) + '/../finders/pointcut_finder_spec_test_classes'
 

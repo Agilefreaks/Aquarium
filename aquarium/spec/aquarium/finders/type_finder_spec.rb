@@ -229,6 +229,23 @@ describe Aquarium::Finders::TypeFinder, "#find with :types_and_ancestors" do
   end  
 end
 
+describe Aquarium::Finders::TypeFinder, "#each returns found types" do
+  it "should return only types that were found" do
+    expected_found_types  = [Class, Kernel, Module, Object]
+    expected_unfound_exps = %w[TestCase Unknown1 Unknown2]
+    actual = Aquarium::Finders::TypeFinder.new.find :types=> %w[Kernel Module Object Class TestCase Unknown1 Unknown2]
+    actual.each {|t| expected_found_types.include?(t) and not expected_unfound_exps.include?(t.name)}
+  end
+
+  it "should return the same types returned by #matched_keys" do
+    expected_found_types  = [Class, Kernel, Module, Object]
+    expected_unfound_exps = %w[TestCase Unknown1 Unknown2]
+    actual = Aquarium::Finders::TypeFinder.new.find :types=> %w[Kernel Module Object Class TestCase Unknown1 Unknown2]
+    actual.each {|t| actual.matched_keys.include?(t)}
+    count = actual.inject(0) {|count, t| count += 1}
+    count.should == actual.matched_keys.size 
+  end
+end
 
 # This is a spec for a protected method. It's primarily to keep the code coverage 100%, because there is rarely-invoked error handling code...
 describe Aquarium::Finders::TypeFinder, "#get_type_from_parent should" do
