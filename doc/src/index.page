@@ -65,7 +65,7 @@ See the "Examples":examples.html and the "API":documentation/API/index.html sect
 
 h2. Start Here
 
-<pre>$ gem install -y aquarium</pre>
+<pre>$ gem install aquarium</pre>
 
 See the "download":download.html page for different options or go directly to "Rubyforge download":http://rubyforge.org/frs/?group_id=4281 page.
 
