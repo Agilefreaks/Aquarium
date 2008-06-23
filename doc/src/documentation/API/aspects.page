@@ -46,7 +46,7 @@ aspect1 = Aspect.new :before, :calls_to => :all_methods, :on_types => /*Service$
   log("calling #{join_point.inspect}")
 end
 
-include Aquarium::Aspects::DSL::AspectDSL
+include Aquarium::DSL
 aspect2 = before :calls_to => :all_methods, :on_types => /*Service$/ do |join_point, object, *args|
   log("calling #{join_point.inspect}")
 end
