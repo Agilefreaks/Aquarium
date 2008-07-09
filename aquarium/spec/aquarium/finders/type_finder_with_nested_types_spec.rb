@@ -5,7 +5,7 @@ require 'aquarium/finders/type_finder'
 
 include Aquarium::Utils
   
-def purge_actuals actuals
+def purge_uninteresting actuals
   # Remove extra stuff inserted by RSpec, Aquarium, and "pretty printer" (rake?), possibly in other specs! 
   actuals.matched_keys.reject do |t2| 
     t2.name.include?("Spec::") or t2.name =~ /Aquarium::(Utils|Extras|Examples|Aspects|PointcutFinderTestClasses)/ or t2.name =~ /^PP/
@@ -16,7 +16,7 @@ describe TypeUtils, "#find types and their nested types, using :types_and_nested
   it "should find the matching types and their nested types." do
     Aquarium::NestedTestTypes.nested_in_NestedTestTypes.keys.each do |t|
       actual = Aquarium::Finders::TypeFinder.new.find :types_and_nested_types => (t.name)
-      actual_keys = purge_actuals actual
+      actual_keys = purge_uninteresting actual
       actual_keys.sort{|x,y| x.name <=> y.name}.should == Aquarium::NestedTestTypes.nested_in_NestedTestTypes[t].sort{|x,y| x.name <=> y.name}
       actual.not_matched_keys.should == []
     end
@@ -34,7 +34,7 @@ describe TypeUtils, "#find nested types subtracting out excluded types and desce
     actual = Aquarium::Finders::TypeFinder.new.find :types_and_nested_types => Aquarium::NestedTestTypes, 
       :exclude_types_and_nested_types => Aquarium::NestedTestTypes::TopModule
     expected = [Aquarium::NestedTestTypes] + Aquarium::NestedTestTypes.nested_in_NestedTestTypes[Aquarium::NestedTestTypes::TopClass]
-    actual_keys = purge_actuals actual
+    actual_keys = purge_uninteresting actual
     actual_keys.sort{|x,y| x.name <=> y.name}.should == expected.sort{|x,y| x.name <=> y.name}
     actual.not_matched_keys.should == []
   end
