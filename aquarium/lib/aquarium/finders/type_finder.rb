@@ -26,10 +26,12 @@ module Aquarium
       
       def self.add_ancestors_descendents_and_nested_option_variants_for option, options_hash
         all_variants = options_hash[option].dup
-        options_hash["#{option}_and_descendents"] = all_variants.map {|x| "#{x}_and_descendents"}
-        options_hash["#{option}_and_ancestors"]   = all_variants.map {|x| "#{x}_and_ancestors"}
-        options_hash["#{option}_and_nested_types"] = 
-          all_variants.map {|x| "#{x}_and_nested_types"} + all_variants.map {|x| "#{x}_and_nested"}
+        %w[descendents ancestors nested_types].each do |suffix|
+          options_hash["#{option}_and_#{suffix}"] = all_variants.inject([]) do |memo, x|
+            memo << "#{x}_and_#{suffix}" << "#{x}_and_#{suffix}_of"
+          end
+        end
+        options_hash["#{option}_and_nested_types"] += all_variants.map {|x| "#{x}_and_nested"}
       end
       
       TYPE_FINDER_CANONICAL_OPTIONS = {
@@ -73,6 +75,7 @@ module Aquarium
       # * <tt>:names_and_descendents => types_and_type_names_and_regexps</tt>
       # * <tt>:type_and_descendents  => types_and_type_names_and_regexps</tt>
       # * <tt>:name_and_descendents  => types_and_type_names_and_regexps</tt>
+      # You can also append the suffix "_of" on any of these keys.
       #
       # ==== Types and Ancestors
       # A single type, type name, name regular expression, or an array of the same. (Mixed allowed.)
@@ -81,6 +84,7 @@ module Aquarium
       # * <tt>:names_and_ancestors => types_and_type_names_and_regexps</tt>
       # * <tt>:type_and_ancestors  => types_and_type_names_and_regexps</tt>
       # * <tt>:name_and_ancestors  => types_and_type_names_and_regexps</tt>
+      # You can also append the suffix "_of" on any of these keys.
       #
       # ==== Types and Nested Types
       # A single type, type name, name regular expression, or an array of the same. (Mixed allowed.)
@@ -93,6 +97,7 @@ module Aquarium
       # * <tt>:names_and_nested => types_and_type_names_and_regexps</tt>
       # * <tt>:type_and_nested  => types_and_type_names_and_regexps</tt>
       # * <tt>:name_and_nested  => types_and_type_names_and_regexps</tt>
+      # You can also append the suffix "_of" on any of the "*_types" keys.
       #
       # Note: This option will also match <tt>Class</tt>, <tt>Module</tt>, <i>etc.</>, 
       # so use with caution!
@@ -123,6 +128,8 @@ module Aquarium
       # * <tt>:exclude_names_and_nested => types_and_type_names_and_regexps</tt>
       # * <tt>:exclude_type_and_nested  => types_and_type_names_and_regexps</tt>
       # * <tt>:exclude_name_and_nested  => types_and_type_names_and_regexps</tt>
+      # You can also append the suffix "_of" on any of the "*_descendents", "*_ancestors",
+      # and "*_types" keys.
       #
       # ==== Namespaces (Modules) and Regular Expressions
       # Because of the special sigificance of the module ("namespace") separator "::", 
