@@ -40,8 +40,8 @@ describe TypeUtils, ".descendents called with a class" do
     TypeUtils.descendents(Aquarium::ForDescendents::NestedD31ForDescendents).should  eql([Aquarium::ForDescendents::NestedD31ForDescendents])
   end
 
-  it "should return all classes and their descendents that derive from a class" do
-    TypeUtils.sample_classes.each do |t|
+  TypeUtils.sample_classes.each do |t|
+    it "should return all classes and their descendents that derive from #{t}" do
       check_descendent_array t, TypeUtils.sample_classes_descendents[t]
     end 
   end
