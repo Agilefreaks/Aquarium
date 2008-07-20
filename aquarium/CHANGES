@@ -1,3 +1,13 @@
+== Version 0.4.3
+
+V0.4.3 adds a few bug fixes and enhancements, and several internal refactorings to improve 
+performance, etc..
+
+Bug fixes:
+
+Enhancements:
+21283	Allow "_of" suffix at end of "*_and_descendents", "*_and_ancestors", and "*_nested_types"
+
 == Version 0.4.2
 
 V0.4.2 adds a few bug fixes and enhancements, greatly improved RDoc output, and internal 
