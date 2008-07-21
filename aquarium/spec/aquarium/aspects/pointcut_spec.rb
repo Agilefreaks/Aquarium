@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_types'
-require File.dirname(__FILE__) + '/../utils/type_utils_sample_nested_types'
+require 'aquarium/spec_example_types'
+require 'aquarium/utils/type_utils_sample_nested_types'
 require 'aquarium/utils/invalid_options'
 require 'aquarium/extensions/hash'
 require 'aquarium/aspects/join_point'

@@ -1,11 +1,11 @@
 require 'set'
-require File.dirname(__FILE__) + '/../utils/array_utils'
-require File.dirname(__FILE__) + '/../utils/type_utils'
-require File.dirname(__FILE__) + '/../utils/invalid_options'
-require File.dirname(__FILE__) + '/../extensions/hash'
-require File.dirname(__FILE__) + '/../extensions/regexp'
-require File.dirname(__FILE__) + '/../extensions/symbol'
-require File.dirname(__FILE__) + '/finder_result'
+require 'aquarium/utils/array_utils'
+require 'aquarium/utils/type_utils'
+require 'aquarium/utils/invalid_options'
+require 'aquarium/extensions/hash'
+require 'aquarium/extensions/regexp'
+require 'aquarium/extensions/symbol'
+require 'aquarium/finders/finder_result'
 
 # Finds types known to the runtime environment.
 module Aquarium

@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/utils/type_utils'
-require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
-require File.dirname(__FILE__) + '/../utils/type_utils_sample_nested_types'
+require 'aquarium/utils/type_utils_sample_classes'
+require 'aquarium/utils/type_utils_sample_nested_types'
 
 include Aquarium::Utils
 

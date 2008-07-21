@@ -1,8 +1,8 @@
 # Specifically tests behavior when two or more advices apply to the same join point(s).
 
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_types'
-require File.dirname(__FILE__) + '/concurrently_accessed'
+require 'aquarium/spec_example_types'
+require 'aquarium/aspects/concurrently_accessed'
 require 'aquarium/aspects'
 
 include Aquarium::Aspects

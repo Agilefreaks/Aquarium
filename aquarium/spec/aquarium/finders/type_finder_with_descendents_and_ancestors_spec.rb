@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../utils/type_utils_sample_classes'
+require 'aquarium/utils/type_utils_sample_classes'
 require 'aquarium/finders/type_finder'
 
 include Aquarium::Utils

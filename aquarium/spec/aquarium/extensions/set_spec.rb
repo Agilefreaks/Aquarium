@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_types'
+require 'aquarium/spec_example_types'
 require 'aquarium/extensions/set'
 
 class Foo

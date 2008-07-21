@@ -1,10 +1,10 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_types'
-require File.dirname(__FILE__) + '/../utils/type_utils_sample_nested_types'
+require 'aquarium/spec_example_types'
+require 'aquarium/utils/type_utils_sample_nested_types'
 require 'aquarium/aspects/aspect'
 require 'aquarium/dsl'
 require 'aquarium/utils/array_utils'
-require File.dirname(__FILE__) + '/../finders/pointcut_finder_spec_test_classes'
+require 'aquarium/finders/pointcut_finder_spec_test_classes'
 
 require 'profiler'
 

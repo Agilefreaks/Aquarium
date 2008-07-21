@@ -2,8 +2,8 @@
 # where one advice is for the type and the other is for an object of the type.
 
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_types'
-require File.dirname(__FILE__) + '/concurrently_accessed'
+require 'aquarium/spec_example_types'
+require 'aquarium/aspects/concurrently_accessed'
 require 'aquarium/aspects'
 
 include Aquarium::Aspects

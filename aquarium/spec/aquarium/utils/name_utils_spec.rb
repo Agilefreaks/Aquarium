@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../spec_example_types'
+require 'aquarium/spec_example_types'
 require 'aquarium/utils/name_utils'
 
 describe Aquarium::Utils::NameUtils, ".make_valid_attr_name_from_method_name" do
