@@ -75,3 +75,29 @@ describe Aquarium::Extras::DesignByContract, "invariant" do
     InvarCond.new.good_action.should == "good"
   end
 end
+
+describe Aquarium::Extras::DesignByContract, "global enable/disable option" do
+  class ContractEnablement
+    include Aquarium::Extras::DesignByContract   
+    def action *args
+    end
+    
+    precondition :method => :action, :message => "Must pass more than one argument." do |jp, obj, *args|
+      args.size > 0
+    end
+  end
+  
+  it "should disable creation of the contract aspects when the contracts are disabled" do
+    begin
+      Aquarium::Extras::DesignByContract.disable_all
+      lambda { ContractEnablement.new.action }.should_not raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    ensure
+      Aquarium::Extras::DesignByContract.enable_all
+    end
+  end
+  
+  it "should enable creation of the contract aspects when the contracts are enabled" do
+    Aquarium::Extras::DesignByContract.enable_all
+    lambda { ContractEnablement.new.action }.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
+  end
+end

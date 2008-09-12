@@ -9,6 +9,9 @@ module Aquarium
     # a block passes. Note that it doesn't attempt to handle the correct behavior under contract 
     # inheritance. A usage example is included in the Examples as part of the distribution and it is also
     # shown on the web site.
+    # Normally, you want to disable the contracts in production runs, so you avoid the overhead. To do this
+    # effectively, call DesignByContract.disable_all before any contracts are created. That will prevent
+    # all of the aspects from being created along with their overhead.
     # *Warning*: This module automatically includes Aquarium::DSL into the class with 
     # the contract and it adds the :precondition, :postcondition, and the :invariant methods to Object! 
     module DesignByContract
@@ -20,17 +23,34 @@ module Aquarium
         end
       end
       
+      @@enabled = true
+
+      # Enable creation and execution of contracts
+      def self.enable_all
+        @@enabled = true
+      end
+      
+      # Disable creation of any subsequent contracts and disable execution of
+      # existing contracts. That is, while contracts are disabled, it no existing
+      # contracts will be executed and any attempts to define new contracts will be ignored.
+      def self.disable_all
+        @@enabled = false
+      end
+      
       def precondition *args, &contract_block
+        return unless @@enabled
         message = handle_message_arg args
         add_advice :before, "precondition", message, *args, &contract_block
       end
 
       def postcondition *args, &contract_block
+        return unless @@enabled
         message = handle_message_arg args
         add_advice :after_returning, "postcondition", message, *args, &contract_block
       end
 
       def invariant *args, &contract_block
+        return unless @@enabled
         message = handle_message_arg args
         Aspect.new make_args(:around, *args) do |jp, obj, *params|
           DesignByContract.test_condition "invariant failure (before invocation): #{message}", jp, obj, *params, &contract_block
@@ -43,7 +63,7 @@ module Aquarium
       private
 
       def self.test_condition message, jp, obj, *args
-        unless yield(jp, obj, *args)
+        if @@enabled and yield(jp, obj, *args) == false
           raise ContractError.new(message)
         end
       end
