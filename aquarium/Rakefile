@@ -65,7 +65,7 @@ desc 'Generate RDoc'
 rd = Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = '../doc/output/rdoc'
   rdoc.options << '--title' << 'Aquarium' << '--line-numbers' << '--inline-source' << '--main' << 'README'
-  rdoc.rdoc_files.include('README', 'CHANGES', 'MIT-LICENSE', 'examples/**/*.rb', 'UPGRADE', 'lib/**/*.rb') # 'EXAMPLES.rd'
+  rdoc.rdoc_files.include('README', 'CHANGES', 'MIT_LICENSE', 'examples/**/*.rb', 'UPGRADE', 'lib/**/*.rb') # 'EXAMPLES.rd'
 end
 
 # desc "Generate EXAMPLES.rb"
