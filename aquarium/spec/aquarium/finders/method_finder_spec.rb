@@ -327,6 +327,8 @@ end
 describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" do
   before(:each) do
     before_method_finder_spec
+    @expected_ClassWithPUblicClassMethod = Set.new(ClassWithPublicClassMethod.public_methods.reject{|m| m =~ /^__/}.sort.map{|m| m.intern})
+    @expected_ClassWithPrivateClassMethod = Set.new(ClassWithPrivateClassMethod.public_methods.reject{|m| m =~ /^__/}.sort.map{|m| m.intern})
   end
   
   it "should find all class methods specified by regular expression for types when :class is used." do
@@ -344,20 +346,36 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
     end
   end
   
+  it "should ignore any methods that start with double underscores '__' by default when searching with the :all method specification and the :class option." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all, :method_options => :class
+    actual.matched.size.should == 2
+    actual.not_matched.size.should == 0
+    actual.matched[ClassWithPublicClassMethod].should == @expected_ClassWithPUblicClassMethod
+    actual.matched[ClassWithPrivateClassMethod].should == @expected_ClassWithPrivateClassMethod 
+  end
+  
+  it "should find any methods that start with double underscores '__' with the :include_system_methods option." do
+    class WithUnderScores
+      def self.__foo__; end
+    end
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [WithUnderScores], :methods => :all, :method_options => [:class, :include_system_methods]
+    actual.matched[WithUnderScores].include?(:__foo__).should be_true
+  end
+  
   it "should find all public class methods in types when searching with the :all method specification and the :class option." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all, :method_options => :class
     actual.matched.size.should == 2
     actual.not_matched.size.should == 0
-    actual.matched[ClassWithPublicClassMethod].should == Set.new(ClassWithPublicClassMethod.public_methods.sort.map{|m| m.intern})
-    actual.matched[ClassWithPrivateClassMethod].should == Set.new(ClassWithPrivateClassMethod.public_methods.sort.map{|m| m.intern})
+    actual.matched[ClassWithPublicClassMethod].should == @expected_ClassWithPUblicClassMethod
+    actual.matched[ClassWithPrivateClassMethod].should == @expected_ClassWithPrivateClassMethod 
   end
   
   it "should accept :all_methods as a synonym for :all." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all_methods, :method_options => :class
     actual.matched.size.should == 2
     actual.not_matched.size.should == 0
-    actual.matched[ClassWithPublicClassMethod].should == Set.new(ClassWithPublicClassMethod.public_methods.sort.map{|m| m.intern})
-    actual.matched[ClassWithPrivateClassMethod].should == Set.new(ClassWithPrivateClassMethod.public_methods.sort.map{|m| m.intern})
+    actual.matched[ClassWithPublicClassMethod].should == @expected_ClassWithPUblicClassMethod
+    actual.matched[ClassWithPrivateClassMethod].should == @expected_ClassWithPrivateClassMethod 
   end
   
   it "should find all public class methods in types, but not ancestors, when searching with the :all method specification and the :class and :exclude_ancestor_methods options." do
@@ -400,8 +418,8 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods de
   it "should find all public class methods in types when searching with the :all method specification and the :class option." do
     actual = Aquarium::Finders::MethodFinder.new.find :type => [M, M2], :methods => :all, :method_options => [:class]
     actual.matched.size.should == 2
-    actual.matched[M].should  == Set.new(M.public_methods.sort.map{|m| m.intern})
-    actual.matched[M2].should == Set.new(M2.public_methods.sort.map{|m| m.intern})
+    actual.matched[M].should  == Set.new(M.public_methods.reject{|m| m =~ /^__/}.sort.map{|m| m.intern})
+    actual.matched[M2].should == Set.new(M2.public_methods.reject{|m| m =~ /^__/}.sort.map{|m| m.intern})
   end
   
   it "should not find any module-defined class methods in classes that include the modules." do
@@ -422,11 +440,27 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for instance methods
     before_method_finder_spec
   end
   
+  it "should ignore any methods that start with double underscores '__' by default when searching with the :all method specification and the :class option." do
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicInstanceMethod, ClassWithProtectedInstanceMethod, ClassWithPrivateInstanceMethod], :methods => :all
+    actual.matched.size.should == 3
+    [ClassWithPublicInstanceMethod, ClassWithProtectedInstanceMethod, ClassWithPrivateInstanceMethod].each do |c|
+      actual.matched[c].each {|m| m.to_s.match('^__').should be_nil}
+    end
+  end
+  
+  it "should find any methods that start with double underscores '__' with the :include_system_methods option." do
+    class WithUnderScores
+      def __foo__; end
+    end
+    actual = Aquarium::Finders::MethodFinder.new.find :types => [WithUnderScores], :methods => :all, :method_options => [:include_system_methods]
+    actual.matched[WithUnderScores].include?(:__foo__).should be_true
+  end
+  
   it "should find all public instance methods in classes when searching with the :all method specification." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicInstanceMethod, ClassWithProtectedInstanceMethod, ClassWithPrivateInstanceMethod], :methods => :all
     actual.matched.size.should == 3
     [ClassWithPublicInstanceMethod, ClassWithProtectedInstanceMethod, ClassWithPrivateInstanceMethod].each do |c|
-      actual.matched[c].should == Set.new(c.public_instance_methods.sort.map {|m| m.intern})
+      actual.matched[c].should == Set.new(c.public_instance_methods.reject{|m| m =~ /^__/}.sort.map {|m| m.intern})
     end
   end
   
@@ -444,7 +478,7 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for instance methods
     actual = Aquarium::Finders::MethodFinder.new.find :objects => [pub, pro, pri], :methods => :all
     actual.matched.size.should == 3
     [pub, pro, pri].each do |c|
-      actual.matched[c].should == Set.new(c.public_methods.sort.map {|m| m.intern})
+      actual.matched[c].should == Set.new(c.public_methods.reject{|m| m =~ /^__/}.sort.map {|m| m.intern})
     end
   end
   
@@ -1075,6 +1109,28 @@ describe Aquarium::Finders::MethodFinder, "#find (using :method_options => [:pub
     actual.not_matched[@pri].should  == Set.new([/test_method/])
     actual.not_matched[@cpub].should == Set.new([/test_method/])
     actual.not_matched[@cpri].should == Set.new([/test_method/])
+  end
+end
+
+describe Aquarium::Finders::MethodFinder, "#find (using :method_options => [:include_system_methods])" do
+  before(:each) do
+    before_method_finder_spec
+  end
+  
+  it "should find instance methods otherwise excluded by the MethodFinder::IGNORED_SYSTEM_METHODS list of regex's" do
+    class WithIgnored
+      def __foo__; end
+    end
+    actual = Aquarium::Finders::MethodFinder.new.find :class => WithIgnored, :methods => :all, :method_options => [:include_system_methods, :exclude_ancestor_methods]
+    actual.matched[WithIgnored].should include(:__foo__)    
+  end
+
+  it "should find class methods otherwise excluded by the MethodFinder::IGNORED_SYSTEM_METHODS list of regex's" do
+    class WithSelfIgnored
+      def self.__self_foo__; end
+    end
+    actual = Aquarium::Finders::MethodFinder.new.find :class => WithSelfIgnored, :methods => :all, :method_options => [:include_system_methods, :class, :exclude_ancestor_methods]
+    actual.matched[WithSelfIgnored].should include(:__self_foo__)        
   end
 end
 

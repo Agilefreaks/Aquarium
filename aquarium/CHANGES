@@ -1,12 +1,29 @@
 == Version 0.4.3
 
 V0.4.3 adds a few bug fixes and enhancements, and several internal refactorings to improve 
-performance, etc..
+performance, etc.
 
 Bug fixes:
+[none]
 
 Enhancements:
+14165	Support Ruby 1.8.2, 1.8.5, 1.8.6, 1.9.X and 2.0 releases and snapshots
 21283	Allow "_of" suffix at end of "*_and_descendents", "*_and_ancestors", and "*_nested_types"
+21924	Should be able to turn off contract-testing aspects globally in the Design by Contract extra module
+21993	By default, don't advise "system" methods that being with "_", but provide an option to do so
+
+14165: I closed this one because it's too broad. Aquarium currently runs with 1.8.6. I will open a
+ new enhancement specifically for 1.9.
+21283: Sometimes appending "_of" makes the specification read more smoothly, so it's now an option.
+21924: To class-level methods in DesignByContract, enable_all and disable_all, globally turn contracts
+on or off. See their documentation for details.
+21993: Now, by default, MethodFinder won't match any method that starts with two underscores ("__"), so
+you don't have to :exclude_ancestors as much just to avoid matching methods like "__id__" and 
+"__send__". There is also a new :method_options called :include_system_methods that will not suppress
+matching these methods. So, I'm calling these special methods "system methods". I don't yet provide a
+way to configure this list (RSpec methods would be good additions...). The list is currently defined
+as an array of regex's, MethodFinder::IGNORED_SYSTEM_METHODS. NOTE: This is effectively a behavior
+change, although it's not likely to affect anyone.
 
 == Version 0.4.2
 

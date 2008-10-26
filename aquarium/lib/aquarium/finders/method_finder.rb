@@ -74,6 +74,7 @@ module Aquarium
       # <tt>:instance</tt> or <tt>:instance_methods</tt>::   Search for instance methods.
       # <tt>:class</tt> or <tt>:class_methods</tt>::         Search for class methods.
       # <tt>:singleton</tt> or <tt>:singleton_methods</tt>:: Search for singleton methods. 
+      # <tt>:include_system_methods</tt>:: Also search for "system" methods like __id__ that are normally ignored (See IGNORED_SYSTEM_MEHTODS). 
       # 
       # Note: specifying <tt>:class</tt> when objects are specified won't work. 
       # Also, <tt>:class</tt>, <tt>:public</tt>, <tt>:protected</tt>, and <tt>:private</tt>
@@ -139,9 +140,14 @@ module Aquarium
         "instance"  => %w[instance_methods],
         "class"     => %w[class_methods],
         "singleton" => %w[singleton_methods],
-        "exclude_ancestor_methods" => %w[exclude_ancestors exclude_ancestors_methods suppress_ancestors suppress_ancestor_methods suppress_ancestors_methods]
+        "exclude_ancestor_methods" => %w[exclude_ancestors exclude_ancestors_methods suppress_ancestors suppress_ancestor_methods suppress_ancestors_methods],
+        "include_system_methods" => %w[include_all_system_methods]
       }
-        
+
+      # Methods we ignore by default, because users rarely want to advice them and so it makes
+      # finding what you want easier.
+      IGNORED_SYSTEM_METHODS = [/^__/]
+      
       def self.init_method_options scope_options_set
         return Set.new([]) if scope_options_set.nil?
         options = []
@@ -196,6 +202,8 @@ module Aquarium
             end
             found_methods += method_array
           end
+          filter_ignored_methods(found_methods) unless include_system_methods?
+          
           if found_methods.empty?
             types_and_objects_not_matched[type_or_object] = method_names_or_regexps
           else
@@ -205,6 +213,14 @@ module Aquarium
         Aquarium::Finders::FinderResult.new types_and_objects_to_matched_methods.merge(:not_matched => types_and_objects_not_matched)
       end
   
+      def filter_ignored_methods found_methods
+        IGNORED_SYSTEM_METHODS.each do |ism|
+          found_methods.reject! do |m| 
+            m.match(ism)
+          end
+        end
+      end
+
       def finish_specification_initialization
         @specification[:method_options] = MethodFinder.init_method_options(@specification[:method_options]) if @specification[:method_options]
         extra_validation
@@ -318,6 +334,10 @@ module Aquarium
         end
       end
   
+      def include_system_methods?
+        @specification[:method_options].include?(:include_system_methods)
+      end
+      
       def extra_validation 
         method_options = @specification[:method_options]
         return if method_options.nil?

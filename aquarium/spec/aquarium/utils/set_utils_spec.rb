@@ -3,7 +3,8 @@ require 'aquarium/spec_example_types'
 require 'aquarium/utils/set_utils'
 
 describe Aquarium::Utils::SetUtils, "make_set" do
-  
+  include Aquarium::Utils::SetUtils
+
   before :each do
     @empty_set = Set.new
   end
@@ -60,6 +61,8 @@ describe Aquarium::Utils::SetUtils, "make_set" do
 end
 
 describe Aquarium::Utils::SetUtils, "strip_set_nils" do
+  include Aquarium::Utils::SetUtils
+
   it "should return an empty set if an empty set is specified" do
     strip_set_nils(Set.new([])).should == Set.new([])
   end
