@@ -11,11 +11,11 @@ scatter duplicated code in each object to handle the <span class="keyword">cross
 AOP modularizes the specification of which execution points are affected (called
 <span class="keyword">join points</span>) and the actions that should be invoked at those points.
 
-For example, persistence of "model" objects is a cross-cutting concern, in the 
+For example, persistence of <span class="keyword">model</span> objects is a cross-cutting concern, in the 
 sense that the desired persistence approach (database, flat files, replication,
 etc.) is independent of the domain logic represented by the model. So, why should
 the model code have any persistence logic? Instead, capture the details of mapping
-the domain to the persistence approach in separate "components" and programmatically
+the domain to the persistence approach in separate <span class="keyword">components</span> and programmatically
 or declaratively modify the model objects to synchronize state changes with the 
 persistent memory of the state.
  
