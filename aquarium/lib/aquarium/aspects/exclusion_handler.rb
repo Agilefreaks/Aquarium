@@ -42,9 +42,9 @@ module Aquarium
         unless @specification[:exclude_types_calculated].nil?
           return true if @specification[:exclude_types_calculated].find do |t|
             case t
-            when String: type_or_object.name.eql?(t)
-            when Symbol: type_or_object.name.eql?(t.to_s)
-            when Regexp: type_or_object.name =~ t
+            when String then type_or_object.name.eql?(t)
+            when Symbol then type_or_object.name.eql?(t.to_s)
+            when Regexp then type_or_object.name =~ t
             else type_or_object == t
             end
           end
