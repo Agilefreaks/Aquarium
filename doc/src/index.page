@@ -8,7 +8,11 @@ h2. Overview
 
 For example, persistence of <span class="keyword">model</span> objects is a cross-cutting concern, in the  sense that the desired persistence approach (database, flat files, replication, etc.) is independent of the domain logic represented by the model. So, why should the model code have any persistence logic? Instead, capture the details of mapping the domain to the persistence approach in separate <span class="keyword">components</span> and programmatically or declaratively modify the model objects to synchronize state changes with the persistent memory of the state.
  
-*New in V0.4.0*: Preliminary support for advising Java classes in JRuby! See the discussion "here":jruby.html.
+h3. News.
+
+* September 24, 2009: I moved the source repository from RubyForge SVN to "GitHub":http://github.com/deanwampler/Aquarium.
+
+* New in V0.4.0: Preliminary support for advising Java classes in JRuby! See the discussion "here":jruby.html.
 
 See also the "RubyForge project page":http://rubyforge.org/projects/aquarium/.
 
