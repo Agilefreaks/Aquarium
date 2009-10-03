@@ -1,3 +1,15 @@
+== Version 0.4.4
+
+V0.4.4 changes no APIs. It upgrades compatibility with the latest JRuby (1.3.1), RSpec (1.2.8) and Webgen (0.5.10) for the build process. You'll only need to upgrade if you build Aquarium yourself.
+
+Enhancements:
+27235	Support RSpec 1.2.8 (latest) and and JRuby 1.3.1 (latest)
+27236	Upgrade website generation to webgen 0.5.X
+
+There are no API changes in this release, with one exception. Most of the code changes are minor fixes to RSpec files. The one exception is an apparent change in JRuby 1.3.1 w.r.t. the access restrictions on Java methods. It now appears that protected methods are public, that is they are in the method list returned by :public_methods, but not :protected_methods. Also, private methods are not returned by any of the :*_methods. 
+
+I used the upgrade to Webgen 0.5.X as an excuse to refresh the web site's appearance. The content is mostly the same as before.
+
 == Version 0.4.3
 
 V0.4.3 adds a few bug fixes and enhancements, and several internal 

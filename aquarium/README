@@ -440,7 +440,7 @@ In order to run Aquarium's full suite of specs (rake pre_commit) you must instal
 * win32console  # Required by the --colour switch if you're on Windows
 * meta_project  # Required in order to make releases at RubyForge
 * heckle        # Required if you use the --heckle switch
-* jruby         # Required if run the separate spec suite in the "jruby" directory
+* jruby         # Required if run the separate spec suite in the "jruby" directory (v1.3+)
 
 Once those are all installed, you should be able to run the suite with the following steps:
 

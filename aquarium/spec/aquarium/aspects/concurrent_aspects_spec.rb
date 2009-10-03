@@ -116,84 +116,84 @@ describe "concurrent advice", :shared => true do
 end
 
 describe "Using two :before advices" do
-  setup do
+  before :each do
     @advice_kinds = [:before, :before]
   end
   it_should_behave_like "concurrent advice"
 end
   
 describe "Using two :after advices" do
-  setup do
+  before :each do
     @advice_kinds = [:after, :after]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using two :after_returning advices" do
-  setup do
+  before :each do
     @advice_kinds = [:after_returning, :after_returning]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using two :after_raising advices" do
-  setup do
+  before :each do
     @advice_kinds = [:after_raising, :after_raising]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using two :around advices" do
-  setup do
+  before :each do
     @advice_kinds = [:around, :around]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using :before advice and :after advice" do
-  setup do
+  before :each do
     @advice_kinds = [:before, :after]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using :before advice and :after_returning advice" do
-  setup do
+  before :each do
     @advice_kinds = [:before, :after_returning]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using :before advice and :after_raising advice" do
-  setup do
+  before :each do
     @advice_kinds = [:before, :after_raising]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using :before advice and :around advice" do
-  setup do
+  before :each do
     @advice_kinds = [:before, :around]
   end
   it_should_behave_like "concurrent advice"
 end
   
 describe "Using :after advice and :after_returning advice" do
-  setup do
+  before :each do
     @advice_kinds = [:after, :after_returning]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using :after advice and :after_raising advice" do
-  setup do
+  before :each do
     @advice_kinds = [:after, :after_raising]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using :after advice and :around advice" do
-  setup do
+  before :each do
     @advice_kinds = [:after, :around]
   end
   it_should_behave_like "concurrent advice"
@@ -201,70 +201,70 @@ end
 
 
 describe "Using :after_returning advice and :after_raising advice" do
-  setup do
+  before :each do
     @advice_kinds = [:after_returning, :after_raising]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using :after_returning advice and :around advice" do
-  setup do
+  before :each do
     @advice_kinds = [:after_returning, :around]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using :after_raising advice and :around advice" do
-  setup do
+  before :each do
     @advice_kinds = [:after_raising, :around]
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using three :before advices" do
-  setup do
+  before :each do
     3.times {|i| @advice_kinds[i] = :before}
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using three :before advices" do
-  setup do
+  before :each do
     3.times {|i| @advice_kinds[i] = :before}
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using three :after advices" do
-  setup do
+  before :each do
     3.times {|i| @advice_kinds[i] = :after}
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using three :after_returning advices" do
-  setup do
+  before :each do
     3.times {|i| @advice_kinds[i] = :after_returning}
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using three :after_raising advices" do
-  setup do
+  before :each do
     3.times {|i| @advice_kinds[i] = :after_raising}
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using three :around advices" do
-  setup do
+  before :each do
     3.times {|i| @advice_kinds[i] = :around}
   end
   it_should_behave_like "concurrent advice"
 end
 
 describe "Using two :before advices and one :after advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :before}
     @advice_kinds[2] = :after
   end
@@ -272,7 +272,7 @@ describe "Using two :before advices and one :after advice" do
 end
 
 describe "Using two :before advices and one :after_returning advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :before}
     @advice_kinds[2] = :after_returning
   end
@@ -280,7 +280,7 @@ describe "Using two :before advices and one :after_returning advice" do
 end
 
 describe "Using two :before advices and one :after_raising advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :before}
     @advice_kinds[2] = :after_raising
   end
@@ -288,7 +288,7 @@ describe "Using two :before advices and one :after_raising advice" do
 end
 
 describe "Using two :before advices and one :around advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :before}
     @advice_kinds[2] = :around
   end
@@ -296,7 +296,7 @@ describe "Using two :before advices and one :around advice" do
 end
 
 describe "Using two :after advices and one :before advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after}
     @advice_kinds[2] = :before
   end
@@ -304,7 +304,7 @@ describe "Using two :after advices and one :before advice" do
 end
 
 describe "Using two :after advices and one :after_returning advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after}
     @advice_kinds[2] = :after_returning
   end
@@ -312,7 +312,7 @@ describe "Using two :after advices and one :after_returning advice" do
 end
 
 describe "Using two :after advices and one :after_raising advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after}
     @advice_kinds[2] = :after_raising
   end
@@ -320,7 +320,7 @@ describe "Using two :after advices and one :after_raising advice" do
 end
 
 describe "Using two :after advices and one :around advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after}
     @advice_kinds[2] = :around
   end
@@ -328,7 +328,7 @@ describe "Using two :after advices and one :around advice" do
 end
 
 describe "Using two :after_returning advices and one :before advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after_returning}
     @advice_kinds[2] = :before
   end
@@ -336,7 +336,7 @@ describe "Using two :after_returning advices and one :before advice" do
 end
 
 describe "Using two :after_returning advices and one :after advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after_returning}
     @advice_kinds[2] = :after
   end
@@ -344,7 +344,7 @@ describe "Using two :after_returning advices and one :after advice" do
 end
 
 describe "Using two :after_returning advices and one :after_raising advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after_returning}
     @advice_kinds[2] = :after_raising
   end
@@ -352,7 +352,7 @@ describe "Using two :after_returning advices and one :after_raising advice" do
 end
 
 describe "Using two :after_returning advices and one :around advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after_returning}
     @advice_kinds[2] = :around
   end
@@ -360,7 +360,7 @@ describe "Using two :after_returning advices and one :around advice" do
 end
 
 describe "Using two :after_raising advices and one :before advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after_raising}
     @advice_kinds[2] = :before
   end
@@ -368,7 +368,7 @@ describe "Using two :after_raising advices and one :before advice" do
 end
 
 describe "Using two :after_raising advices and one :after advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after_raising}
     @advice_kinds[2] = :after
   end
@@ -376,7 +376,7 @@ describe "Using two :after_raising advices and one :after advice" do
 end
 
 describe "Using two :after_raising advices and one :after_raising advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after_raising}
     @advice_kinds[2] = :after_raising
   end
@@ -384,7 +384,7 @@ describe "Using two :after_raising advices and one :after_raising advice" do
 end
 
 describe "Using two :after_raising advices and one :around advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :after_raising}
     @advice_kinds[2] = :around
   end
@@ -392,7 +392,7 @@ describe "Using two :after_raising advices and one :around advice" do
 end
 
 describe "Using two :around advices and one :before advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :around}
     @advice_kinds[2] = :before
   end
@@ -400,7 +400,7 @@ describe "Using two :around advices and one :before advice" do
 end
 
 describe "Using two :around advices and one :after advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :around}
     @advice_kinds[2] = :after
   end
@@ -408,7 +408,7 @@ describe "Using two :around advices and one :after advice" do
 end
 
 describe "Using two :around advices and one :after_returning advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :around}
     @advice_kinds[2] = :after_returning
   end
@@ -416,7 +416,7 @@ describe "Using two :around advices and one :after_returning advice" do
 end
 
 describe "Using two :around advices and one :after_raising advice" do
-  setup do
+  before :each do
     2.times {|i| @advice_kinds[i] = :around}
     @advice_kinds[2] = :after_raising
   end

@@ -279,7 +279,7 @@ describe JoinPoint, "#dup" do
 end
 
 describe JoinPoint, "#eql?" do
-  setup do
+  before :each do
     @jp1 = JoinPoint.new :type => Dummy, :method_name => :count
     @jp2 = JoinPoint.new :type => Dummy, :method_name => :count
     @jp3 = JoinPoint.new :type => Array, :method_name => :size
@@ -313,7 +313,7 @@ describe JoinPoint, "#eql?" do
 end
 
 describe JoinPoint, "#==" do
-  setup do
+  before :each do
     @jp1 = JoinPoint.new :type => Dummy, :method_name => :count
     @jp2 = JoinPoint.new :type => Dummy, :method_name => :count
     @jp3 = JoinPoint.new :type => Array, :method_name => :size
@@ -347,7 +347,7 @@ describe JoinPoint, "#==" do
 end
 
 describe JoinPoint, "#<=>" do
-  setup do
+  before :each do
     @jp1   = JoinPoint.new :type => Dummy, :method_name => :count
     @jp1nc = JoinPoint.new :type => Dummy, :method_name => :count
     @jp2   = JoinPoint.new :type => Dummy, :method_name => :count
@@ -536,7 +536,7 @@ def do_common_eql_setup
 end
 
 describe JoinPoint::Context, "#eql?" do
-  setup do
+  before :each do
     do_common_eql_setup
   end
   
@@ -558,7 +558,7 @@ describe JoinPoint::Context, "#eql?" do
 end
 
 describe JoinPoint::Context, "#==" do
-  setup do
+  before :each do
     do_common_eql_setup
   end
   

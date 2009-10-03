@@ -96,7 +96,10 @@ end
 
 def ignored_join_point jp
   # Ignore any types introduced by RSpec, other Aquarium types, and the "pretty printer" module (which Rake uses?)
-  jp.target_type.name =~ /^Spec/ or jp.target_type.name =~ /^Aquarium::(Aspects|Extras|Utils|PointcutFinderTestClasses)/ or jp.target_type.name =~ /^PP/
+  jp.target_type.name =~ /^Spec/ or 
+  jp.target_type.name =~ /^Aquarium::(Aspects|Extras|Utils|PointcutFinderTestClasses)/ or 
+  jp.target_type.name =~ /^PP/ or
+  jp.target_type.name =~ /InstanceExecHelper/
 end
 
 describe Pointcut, "methods" do

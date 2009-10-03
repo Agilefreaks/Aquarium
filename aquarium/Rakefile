@@ -145,6 +145,10 @@ end
 # TODO!
 desc "Creates a tag in git"
 task :tag do
+end
+
+desc "Creates a tag in svn (obsolete)"
+task :svntag do
   from = `svn info #{File.dirname(__FILE__)}`.match(/URL: (.*)\/aquarium/n)[1]
   to = from.gsub(/trunk/, "tags/#{Aquarium::VERSION::TAG}")
   tag_cmd = "svn cp #{from} #{to} -m \"Tag release #{Aquarium::VERSION::FULL_VERSION}\""
