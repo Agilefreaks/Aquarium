@@ -25,11 +25,12 @@ module Aquarium
 end
 
 Aquarium::Aspects::Aspect.new :around, 
-  :calls_to => /^raise_exception/, :in_type => Aquarium::Raiser do |jp, obj, *args|
+    :calls_to => /^raise_exception/, 
+    :in_type => Aquarium::Raiser do |jp, obj, *args|
   begin
     jp.proceed
   rescue Aquarium::Exception1 => e
-    raise Aquarium::NewException.new("Old exception message was \"#{e.message}\"")
+    raise Aquarium::NewException.new("Exception message was \"#{e.message}\"")
   end
 end
 
@@ -40,7 +41,8 @@ rescue Aquarium::Exception2 => e
   p "Rescued exception: #{e.class} with message: #{e}"
 end
 
-p "The raised Aquarium::Exception1 raised here will be intercepted and Aquarium::NewException will be raised:"
+p "The raised Aquarium::Exception1 raised here will be intercepted and"
+p " Aquarium::NewException will be raised:"
 begin
   Aquarium::Raiser.new.raise_exception1
 rescue Aquarium::NewException => e

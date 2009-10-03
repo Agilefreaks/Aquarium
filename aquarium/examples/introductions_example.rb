@@ -21,7 +21,8 @@ include Aquarium::Finders
 
 found = TypeFinder.new.find :types => /Aquarium::TypeFinderIntroductionExampleTarget/
 
-# Now, iterate through them and "extend" them with the module defining the new behavior.
+# Now, iterate through them and "extend" them with the module defining 
+# the new behavior.
 
 found.each {|t| t.extend Aquarium::TypeFinderIntroductionExampleModule }
 

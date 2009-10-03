@@ -1,0 +1,11 @@
+---
+title: Extras
+order_info: 3
+in_menu: true
+---
+## Extras
+
+Extras are tools that use <span class="keyword">Aquarium</span>, but are not imported automatically when requiring [aquarium.rb]. Instead, you have to require [aquarium/extras.rb] explicitly.
+
+[aquarium.rb]:../../rdoc/files/lib/aquarium_rb.html
+[aquarium/extras.rb]:../../rdoc/files/lib/aquarium/extras_rb.html

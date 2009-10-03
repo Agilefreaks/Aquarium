@@ -1,0 +1,41 @@
+---
+title: Install/Update
+sort_info: 2
+in_menu: true
+---
+
+## First-Time Installation
+
+There are several ways to install <span class="keyword">Aquarium</span>.
+
+## RubyGems
+
+This is the preferred approach. Non-windows users may have to use <code>sudo</code> for each command. Install or update to the latest with:
+<pre>
+gem install aquarium
+gem update aquarium
+</pre>  
+
+or if you want an older version:
+<pre>
+gem install aquarium -v 0.3.0
+gem update aquarium -v 0.3.0
+</pre>  
+
+### Notes on Updating
+
+<pre>{include_file: {filename: ../../aquarium/UPGRADE, process_output: false}}</pre>
+<p></p>
+### Direct download
+
+Get it from [Rubyforge].
+
+### GitHub
+
+Aquarium is now managed at [GitHub]. The older Subversion repository is now obsolete!
+
+<p>See the [README] for details about how to build <span class="keyword">Aquarium</span>.</p>
+
+[Rubyforge]:http://rubyforge.org/frs/?group&#095;id=4281
+[GitHub]:http://github.com/deanwampler/Aquarium
+[README]:rdoc/files/README.html

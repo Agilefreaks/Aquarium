@@ -11,6 +11,8 @@ require 'aquarium/version'
 require 'spec/rake/spectask'
 require 'spec/rake/verify_rcov'
 
+# TODO: add ../README.markdown to archives.
+
 # Some of the tasks are in separate files since they are also part of the website documentation
 load File.dirname(__FILE__) + '/rake_tasks/examples.rake'
 load File.dirname(__FILE__) + '/rake_tasks/verify_rcov.rake'
@@ -34,14 +36,14 @@ Spec::Rake::SpecTask.new do |t|
   t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
   t.spec_opts = ['--options', 'spec.opts']
   t.rcov = true
-  t.rcov_dir = '../doc/output/coverage'
+  t.rcov_dir = '../doc/aquarium/out/coverage'
   t.rcov_opts = ['--exclude', 'examples']
 end
 
-desc "Run all specs and store html output in doc/output/report.html"
+desc "Run all specs and store html output in doc/aquarium/out/report.html"
 Spec::Rake::SpecTask.new('spec_html') do |t|
   t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
-  t.spec_opts = ['--format html:../doc/output/report.html','--backtrace']
+  t.spec_opts = ['--format html:../doc/aquarium/out/report.html','--backtrace']
 end
 
 desc "Run all specs without rcov"
@@ -52,7 +54,7 @@ end
 
 desc 'Generate HTML documentation for website'
 task :webgen do
-  Dir.chdir '../doc' do
+  Dir.chdir '../doc/aquarium' do
     output = nil
     IO.popen('webgen 2>&1') do |io|
       output = io.read
@@ -63,7 +65,7 @@ end
 
 desc 'Generate RDoc'
 rd = Rake::RDocTask.new do |rdoc|
-  rdoc.rdoc_dir = '../doc/output/rdoc'
+  rdoc.rdoc_dir = '../doc/aquarium/out/rdoc'
   rdoc.options << '--title' << 'Aquarium' << '--line-numbers' << '--inline-source' << '--main' << 'README'
   rdoc.rdoc_files.include('README', 'CHANGES', 'MIT_LICENSE', 'examples/**/*.rb', 'UPGRADE', 'lib/**/*.rb') # 'EXAMPLES.rd'
 end
@@ -124,22 +126,24 @@ task :todo do
 end
 
 task :clobber do
-  rm_rf '../doc/output'
+  rm_rf '../doc/aquarium/out'
   rm_rf 'translated_specs'
 end
 
 task :release => [:clobber, :verify_committed, :verify_user, :spec, :publish_packages, :tag, :publish_website, :publish_news]
 
+# TODO!
 desc "Verifies that there is no uncommitted code"
 task :verify_committed do
-  IO.popen('svn stat') do |io|
+  IO.popen('git status') do |io|
     io.each_line do |line|
-      raise "\n!!! Do a svn commit first !!!\n\n" if line =~ /^\s*M\s*/
+      raise "\n!!! Do a git commit first !!!\n\n" if line =~ /^\s*M\s*/
     end
   end
 end
 
-desc "Creates a tag in svn"
+# TODO!
+desc "Creates a tag in git"
 task :tag do
   from = `svn info #{File.dirname(__FILE__)}`.match(/URL: (.*)\/aquarium/n)[1]
   to = from.gsub(/trunk/, "tags/#{Aquarium::VERSION::TAG}")
@@ -182,14 +186,16 @@ task :verify_user do
 end
 
 desc "Upload Website to RubyForge"
-task :publish_website => [:verify_user, :website] do
+task :publish_website => [:verify_user, :website, :do_publish_website]
+
+task :do_publish_website do
   unless Aquarium::VERSION::RELEASE_CANDIDATE
     # host = "aquarium-website@rubyforge.org"
     host = "#{ENV['RUBYFORGE_USER']}@rubyforge.org"
     publisher = Rake::SshDirPublisher.new(
       "#{host}",
       "/var/www/gforge-projects/#{PKG_NAME}",
-      "../doc/output"
+      "../doc/aquarium/out"
     )
     publisher.upload
   else
@@ -204,7 +210,7 @@ task :archive_website => [:verify_user, :website] do
   publisher = Rake::SshDirPublisher.new(
     "#{host}",
     "/var/www/gforge-projects/#{PKG_NAME}/#{Spec::VERSION::TAG}",
-    "../doc/output"
+    "../doc/aquarium/out"
   )
   publisher.upload
 end

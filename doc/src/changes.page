@@ -1,9 +1,0 @@
----
-title: Changes
-orderInfo: 4
-inMenu: true
----
-
-h2. Change Notes
-
-<pre>{includeFile: {filename: ../../aquarium/CHANGES, processOutput: false}}</pre>

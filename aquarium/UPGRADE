@@ -1,82 +1,88 @@
 == Updating to Aquarium-0.4.0
 
-This release is fully backwards-compatible with previous releases. It expands the API slightly and adds
-internal improvements to better support JRuby. There should be no upgrade issues. 
+This release is fully backwards-compatible with previous releases. It expands
+the API slightly and adds internal improvements to better support JRuby. There
+should be no upgrade issues. 
 
 == Updating to Aquarium-0.3.1
 
-There should be no upgrade issues with this release. However, the enhancement #17565 now ensures that a
-JoinPoint is only specified with one type and a type that actually exists, when a string, symbol, or
-regex is used to specify the type. 
+There should be no upgrade issues with this release. However, the enhancement 
+#17565 now ensures that a JoinPoint is only specified with one type and a type 
+that actually exists, when a string, symbol, or regex is used to specify the 
+type. 
 
 == Updating to Aquarium-0.3.0
 
-There are no known upgrade issues with this release. Although many new synonyms were added for API method
-parameters, all changes are backwards compatible.
+There are no known upgrade issues with this release. Although many new synonyms 
+were added for API method parameters, all changes are backwards compatible.
 
 == Updating to Aquarium-0.2.0
 
-This release changes the expected advice parameter list from |join_point, *method_args| to
-|join_point, object, *method_args|, where "object" is the current object receiving the message
-corresponding to the advised join point.  Therefore, when you upgrade, you will need to modify your
-advices to take this extra argument, even if you don't use it. Since an advice of |jp, *args| would
-silently "absorb" the object into the beginning of "*args", thereby potentially causing confusion,
-Aquarium will raise an exception if the advice block or proc has this obsolete signature. 
+This release changes the expected advice parameter list from
+  |join_point, *method_args|
+to
+  |join_point, object, *method_args| 
+where "object" is the current object receiving the message corresponding to 
+the advised join point.  Therefore, when you upgrade, you will need to modify 
+your advices to take this extra argument, even if you don't use it. Since an 
+advice of |jp, *args| would silently "absorb" the object into the beginning of 
+"*args", thereby potentially causing confusion, Aquarium will raise an exception 
+if the advice block or proc has this obsolete signature. 
 
-Note that "JoinPoint#Context.advised_object" is still supported, even if it is now less useful.
+Note that "JoinPoint#Context.advised_object" is still supported, even if it is 
+now less useful.
 
 == Updating to Aquarium-0.1.8
 
-V0.1.7 did not successfully "register" at rubyforge. This releases fixes that problem and also adds
-several feature enhancements and refactorings. There are no known upgrade issues.
+V0.1.7 did not successfully "register" at rubyforge. This releases fixes that 
+problem and also adds several feature enhancements and refactorings. There are 
+no known upgrade issues.
 
 == Updating to Aquarium-0.1.7
 
-This is primarily a bug-fix release, so there should be no upgrading or incompatibility issues.
+This is primarily a bug-fix release, so there should be no upgrading or 
+incompatibility issues.
 
 == Updating to Aquarium-0.1.6
 
-As described in the CHANGES, the JoinPoint#type, JoinPoint#type=, JoinPoint#object, and JoinPoint#object=
-are now deprecated. Client code that uses these methods will still work, but warning messages will be 
-written to STDOUT. See CHANGES for more details. 
+As described in the CHANGES, the JoinPoint#type, JoinPoint#type=, 
+JoinPoint#object, and JoinPoint#object= are now deprecated. Client code that 
+uses these methods will still work, but warning messages will be written to 
+STDOUT. See CHANGES for more details. 
 
 == Updating to Aquarium-0.1.5
 
-This is mostly a bug-fix release, but it did have to introduce one API change, as described in the 
-CHANGES. In particular, the aspect "DSL" methods are no longer automatically to Object, as some of 
-their names overlap with methods added by Rails. 
+This is mostly a bug-fix release, but it did have to introduce one API change, 
+as described in the CHANGES. In particular, the aspect "DSL" methods are no 
+longer automatically to Object, as some of their names overlap with methods 
+added by Rails. 
 
 Now, if you want these methods added to Object, you must require the new 
 lib/aquarium/aspects/dsl/object_dsl.rb explicitly. 
 
-As an alternative, if you just want these methods added selectively in certain types, then do the 
-following:
+As an alternative, if you just want these methods added selectively in certain 
+types, then do the following:
 
-<ruby>
-require 'aquarium/dsl/aspect_dsl'
+  require 'aquarium/dsl/aspect_dsl'
 
-class MyClass   # reopen "MyClass"
-	# Add the methods as _class_ methods
-	include Aquarium::DSL
-end
-</ruby>
+  class MyClass   # reopen "MyClass"
+	  # Add the methods as _class_ methods
+	  include Aquarium::DSL
+  end
 
 or, use (class|module)_eval:
-<ruby>
-require 'aquarium/dsl/aspect_dsl'
 
-MyClass.class_eval do
-	# Add the methods as _class_ methods
-	include Aquarium::DSL
-end
-</ruby>
+  require 'aquarium/dsl/aspect_dsl'
+
+  MyClass.class_eval do
+	  # Add the methods as _class_ methods
+	  include Aquarium::DSL
+  end
 
 To add the methods as _instance_ methods on individual objects:
 
-<ruby>
-object = MyClass.new
-object.extend(Aquarium::DSL)
-</ruby>
+  object = MyClass.new
+  object.extend(Aquarium::DSL)
 
 See the CHANGES for more details.
 

@@ -1,0 +1,10 @@
+---
+title: Utils
+order_info: 6
+in_menu: true
+---
+## Utils
+
+Miscellaneous utilities. See [utils.rb].
+
+[utils.rb]:../../rdoc/files/lib/aquarium/utils_rb.html

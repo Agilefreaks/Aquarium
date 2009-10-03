@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-# Example demonstrating "around" advice that traces calls to all methods in
-# classes Foo and Bar
+# Example demonstrating "around" advice that traces calls to all 
+# methods in classes Foo and Bar.
 
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 require 'aquarium'
@@ -38,13 +38,16 @@ bar1.do_something_else :b3, :b4
 
 include Aquarium::Aspects
 
-Aspect.new :around, :calls_to => :all_methods, :for_types => [Aquarium::Foo, Aquarium::Bar],
-    :method_options => :exclude_ancestor_methods do |execution_point, obj, *args|
+# "jp" is the "join point", a.k.a. the current execution point.
+Aspect.new :around, :calls_to => :all_methods, 
+    :for_types => [Aquarium::Foo, Aquarium::Bar],
+    :method_options => :exclude_ancestor_methods do |jp, obj, *args|
   begin
-    p "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
-    execution_point.proceed
+    names = "#{jp.target_type.name}##{jp.method_name}"
+    p "Entering: #{names}: args = #{args.inspect}"
+    jp.proceed
   ensure
-    p "Leaving:  #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+    p "Leaving:  #{names}: args = #{args.inspect}"
   end
 end
 
@@ -55,15 +58,17 @@ foo2.do_it :b5, :b6
 bar1 = Aquarium::Bar.new :a7, :a8
 bar1.do_something_else :b7, :b8
 
-# The "begin/ensure/end" idiom shown causes the advice to return the correct value; the result
-# of the "proceed", rather than the value returned by "p"!
-Aspect.new :around, :invocations_of => :initialize, :for_types => [Aquarium::Foo, Aquarium::Bar],  
-    :restricting_methods_to => :private_methods do |execution_point, obj, *args|
+# The "begin/ensure/end" idiom shown causes the advice to return the correct
+# value; the result of the "proceed", rather than the value returned by "p"!
+Aspect.new :around, :invocations_of => :initialize, 
+    :for_types => [Aquarium::Foo, Aquarium::Bar],  
+    :restricting_methods_to => :private_methods do |jp, obj, *args|
   begin
-    p "Entering: #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
-    execution_point.proceed
+    names = "#{jp.target_type.name}##{jp.method_name}"
+    p "Entering: #{names}: args = #{args.inspect}"
+    jp.proceed
   ensure
-    p "Leaving:  #{execution_point.target_type.name}##{execution_point.method_name}: args = #{args.inspect}"
+    p "Leaving:  #{names}: args = #{args.inspect}"
   end
 end
 
@@ -73,4 +78,3 @@ foo2.do_it :b9, :b10
 
 bar1 = Aquarium::Bar.new :a11, :a12
 bar1.do_something_else :b11, :b12
-

@@ -414,15 +414,18 @@ Aquarium::Extras provides add-ons for Aquarium, such as a Design by Contract imp
 
 The simplest approach is to install the gem:
 
-  gem install -y aquarium    # sudo may be required on non-Windows systems
+    gem install -y aquarium    # sudo may be required on non-Windows systems
 
 == Building the Aquarium gem
 
-If you prefer to build the gem locally, check out source from svn://rubyforge.org/var/svn/aquarium/trunk. Then
-do the following:
+If you prefer to build the gem locally, clone from GitHub,
 
-  rake gem
-  gem install pkg/aquarium-x.y.z.gem   # sudo may be required
+    git clone git://github.com/deanwampler/Aquarium.git 
+
+Then do the following:
+
+    rake gem
+    gem install pkg/aquarium-x.y.z.gem   # sudo may be required
 
 == Running Aquarium's RSpec Specs
 
@@ -432,8 +435,7 @@ In order to run Aquarium's full suite of specs (rake pre_commit) you must instal
 * rspec         # Used instead of Test::Unit for TDD
 * rcov          # Verifies that the code is 100% covered by specs
 * webgen        # Generates the static HTML website
-* RedCloth      # Required by webgen
-* syntax        # Required by RSpec's custom webgen extension to highlight ruby code
+* coderay       # Required by webgen
 * diff-lcs      # Required if you use the --diff switch
 * win32console  # Required by the --colour switch if you're on Windows
 * meta_project  # Required in order to make releases at RubyForge
@@ -442,7 +444,7 @@ In order to run Aquarium's full suite of specs (rake pre_commit) you must instal
 
 Once those are all installed, you should be able to run the suite with the following steps:
 
-* svn co svn://rubyforge.org/var/svn/aquarium/trunk aquarium
+* git clone git://github.com/deanwampler/Aquarium.git
 * cd aquarium
 * rake spec
 or

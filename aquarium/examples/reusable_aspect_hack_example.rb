@@ -17,11 +17,13 @@ module Aquarium
   module Reusables
     module TraceMethods
       def self.append_features mod
-        Aquarium::Aspects::Aspect.new :around, 
-            :type => mod, :methods => :all, :method_options => [:exclude_ancestor_methods] do |jp, object, *args|
-          p "Entering: "+jp.target_type.name+"#"+jp.method_name.to_s+": args = "+args.inspect
+        Aquarium::Aspects::Aspect.new :around, :type => mod, 
+            :methods => :all, 
+            :method_options => [:exclude_ancestor_methods] do |jp, object, *args|
+          names = "#{jp.target_type.name}##{jp.method_name}"
+          p "Entering: #{names}: args = #{args.inspect}"
           jp.proceed
-          p "Leaving:  "+jp.target_type.name+"#"+jp.method_name.to_s+": args = "+args.inspect
+          p "Leaving:  #{names}: args = #{args.inspect}"
         end
       end
     end    
@@ -32,7 +34,8 @@ class NotTraced1
   def doit; p "NotTraced1#doit"; end
 end
 p "You will be warned that no join points in NotTraced2 were matched."
-p "This happens because the include statement and hence the aspect evaluation happen BEFORE any methods are defined!"
+p "This happens because the include statement and hence the aspect evaluation"
+p " happen BEFORE any methods are defined!"
 class NotTraced2
   include Aquarium::Reusables::TraceMethods
   def doit; p "NotTraced2#doit"; end

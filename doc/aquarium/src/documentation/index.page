@@ -1,0 +1,30 @@
+---
+title: Documentation
+order_info: 4
+in_menu: true
+---
+## Documentation
+
+For more information about Aquarium, see:
+
+* The [README].
+* The Rubyforge [RDoc pages].
+* Several [Examples].
+* The [Aquarium API].
+* The <span class="keyword">RSpec</span> files in the distribution, which provide many usage examples.
+
+For blogs that cover <span class="keyword">Aquarium</span>, see Dean Wampler's blog at [Polyglot Programming].
+
+For more information on <span class="keyword">Aspect-Oriented Programming/Software Development</span>, start with Dean's [Aspect Programming] site and [AOSD.net], the official website of the AOP/AOSD community.
+
+Finally, see the [RubyForge project page] and sign up for one of the [mailing lists].
+
+[RDoc pages]:http://aquarium.rubyforge.org/rdoc/
+[README]:../rdoc/files/README.html
+[Examples]:../examples.html
+[Aquarium API]:API/index.html
+[Polyglot Programming]:http://blog.aspectprogramming.com/
+[Aspect Programming]:http://aspectprogramming.com
+[AOSD.net]:http://www.aosd.net
+[RubyForge project page]:http://rubyforge.org/projects/aquarium/
+[mailing lists]:http://rubyforge.org/mail/?group&#095;id=4281

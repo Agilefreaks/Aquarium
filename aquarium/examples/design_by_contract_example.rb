@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
-# Example demonstrating "Design by Contract", Bertrand Meyer's idea for programmatically-
-# specifying the contract of use for a class or module and testing it at runtime (usually
-# during the testing process)
-# This example is adapted from spec/extras/design_by_contract_spec.rb.
-# Note: the DesignByContract module adds the #precondition, #postcondition, and #invariant
-# methods shown below to Object and they use "self" as the :object to advise.  
+# Example demonstrating "Design by Contract", Bertrand Meyer's idea for
+# programmatically-specifying the contract of use for a class or module and
+# testing it at runtime (usually during the testing process). This example 
+# is adapted from spec/extras/design_by_contract_spec.rb.
+# Note: the DesignByContract module adds the #precondition, #postcondition, 
+# and #invariant methods shown below to Object and they use "self" as the 
+# :object to advise.  
  
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 require 'aquarium/extras/design_by_contract'
@@ -15,7 +16,8 @@ module Aquarium
       p "inside :action"
     end
   
-    precondition :calls_to => :action, :message => "Must pass more than one argument." do |jp, obj, *args|
+    precondition :calls_to => :action, 
+        :message => "Must pass more than one argument." do |jp, obj, *args|
       args.size > 0
     end
   end
@@ -37,8 +39,9 @@ module Aquarium
     end
   
     postcondition :calls_to => :action, 
-      :message => "Must return a copy of the input args with :a appended to it." do |jp, obj, *args|
-      jp.context.returned_value.size == args.size + 1 && jp.context.returned_value[-1] == :a
+      :message => "Must return new array, [:a] + args." do |jp, obj, *args|
+      jp.context.returned_value.size == args.size + 1 && 
+      jp.context.returned_value[-1] == :a
     end
   end
 end
@@ -66,7 +69,8 @@ module Aquarium
       @invar = 1
     end
   
-    invariant :calls_to => /action$/, :message => "Must not change the @invar value." do |jp, obj, *args|
+    invariant :calls_to => /action$/, 
+        :message => "The @invar value must not change." do |jp, obj, *args|
       obj.invar == 0
     end
   end

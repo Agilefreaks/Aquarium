@@ -1,0 +1,10 @@
+---
+title: Extensions
+order_info: 2
+in_menu: true
+---
+## Extensions
+
+Extensions to Ruby the core library. See [aquarium/extensions] for more information.
+
+[aquarium/extensions]:../../rdoc/files/lib/aquarium/extensions_rb.html

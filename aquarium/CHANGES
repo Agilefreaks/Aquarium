@@ -1,100 +1,122 @@
 == Version 0.4.3
 
-V0.4.3 adds a few bug fixes and enhancements, and several internal refactorings to improve 
-performance, etc.
+V0.4.3 adds a few bug fixes and enhancements, and several internal 
+refactorings to improve performance, etc.
 
 Bug fixes:
 [none]
 
 Enhancements:
 14165	Support Ruby 1.8.2, 1.8.5, 1.8.6, 1.9.X and 2.0 releases and snapshots
-21283	Allow "_of" suffix at end of "*_and_descendents", "*_and_ancestors", and "*_nested_types"
-21924	Should be able to turn off contract-testing aspects globally in the Design by Contract extra module
-21993	By default, don't advise "system" methods that being with "_", but provide an option to do so
+21283	Allow "_of" suffix at end of "*_and_descendents", "*_and_ancestors", 
+  and "*_nested_types"
+21924	Should be able to turn off contract-testing aspects globally in the 
+  Design by Contract extra module
+21993	By default, don't advise "system" methods that being with "_", but 
+  provide an option to do so
 
-14165: I closed this one because it's too broad. Aquarium currently runs with 1.8.6. I will open a
- new enhancement specifically for 1.9.
-21283: Sometimes appending "_of" makes the specification read more smoothly, so it's now an option.
-21924: To class-level methods in DesignByContract, enable_all and disable_all, globally turn contracts
-on or off. See their documentation for details.
-21993: Now, by default, MethodFinder won't match any method that starts with two underscores ("__"), so
-you don't have to :exclude_ancestors as much just to avoid matching methods like "__id__" and 
-"__send__". There is also a new :method_options called :include_system_methods that will not suppress
-matching these methods. So, I'm calling these special methods "system methods". I don't yet provide a
-way to configure this list (RSpec methods would be good additions...). The list is currently defined
-as an array of regex's, MethodFinder::IGNORED_SYSTEM_METHODS. NOTE: This is effectively a behavior
-change, although it's not likely to affect anyone.
+Details:
+14165: I closed this one because it's too broad. Aquarium currently runs with 
+  1.8.6. I will open a new enhancement specifically for 1.9.
+21283: Sometimes appending "_of" makes the specification read more smoothly, 
+  so it's now an option.
+21924: To class-level methods in DesignByContract, enable_all and disable_all, 
+  globally turn contracts on or off. See their documentation for details.
+21993: Now, by default, MethodFinder won't match any method that starts with 
+  two underscores ("__"), so you don't have to :exclude_ancestors as much just 
+  to avoid matching methods like  "__id__" and "__send__". There is also a new 
+  :method_options called :include_system_methods that will not suppress 
+  matching these methods. So, I'm calling these special methods "system 
+  methods". I don't yet provide a way to configure this list (RSpec methods 
+  would be good additions...). The list is currently defined as an array of 
+  regex's, MethodFinder::IGNORED_SYSTEM_METHODS. NOTE: This is effectively a 
+  behavior change, although it's not likely to affect anyone.
 
 == Version 0.4.2
 
-V0.4.2 adds a few bug fixes and enhancements, greatly improved RDoc output, and internal 
-refactorings to improve performance.
+V0.4.2 adds a few bug fixes and enhancements, greatly improved RDoc output, 
+and internal refactorings to improve performance.
 
 Bug fixes:
 15202	Intermittent confusion between classes and objects when invoking advice
-19262	Just putting join_point argument in advice block causes mysterious method missing error.
+19262	Just putting join_point argument in advice block causes mysterious 
+  method missing error.
 19321	Advice overhead is too high (ongoing improvements)
 
 Enhancements:
-13403	Support recursion into nested types without requiring "tricky" regular expressions
+13403	Support recursion into nested types without requiring "tricky" regular 
+  expressions
 13406	"Sugar" for adding methods and attributes to types
 18537	Provide a search for all pointcut constants
 19666	Improve the RDoc output
-19119	Provide an "after_raising" type of advice that lets you handle the exception.
+19119	Provide an "after_raising" type of advice that lets you handle the 
+  exception.
 
-#15202: I never figured out the cause of this problem, but it hasn't been seen since late last 
-year, so I suspect it disappeared as a side effect of on-going refactoring and enhancements.
+#15202: I never figured out the cause of this problem, but it hasn't been seen 
+  since late last 
+year, so I suspect it disappeared as a side effect of on-going refactoring and 
+  enhancements.
 
-#19262: If you just specified "|jp|" for an advice block, you would sometimes get a method missing
-error. I never figured out exactly why, but it was somehow related to passing the usual three 
-arguments internally, where the last two would be ignored in this case. Now, the code checks the 
-arity and only passes the join point in this case.  
+#19262: If you just specified "|jp|" for an advice block, you would sometimes 
+  get a method missing error. I never figured out exactly why, but it was 
+  somehow related to passing the usual three arguments internally, where the 
+  last two would be ignored in this case. Now, the code checks the arity and 
+  only passes the join point in this case.  
 
-#19321: I removed some of the wasted object creation and initialization in advice invocation, 
-improving the overhead by about 40%. However, it is still at least 10x higher than simple method
-aliasing, so I want to make more improvements. (I did not close this item.)
+#19321: I removed some of the wasted object creation and initialization in 
+  advice invocation, 
+improving the overhead by about 40%. However, it is still at least 10x higher 
+  than simple method aliasing, so I want to make more improvements. (I did not 
+  close this item.)
 
-#13403: I added new options :types_and_nested_types and :types_and_nested that are analogous to
-the similar "ancestors" and "descendents" options. The nested option will return the specified 
-types and any types they "enclose". There are also corresponding "exclude" options.
+#13403: I added new options :types_and_nested_types and :types_and_nested that 
+  are analogous to the similar "ancestors" and "descendents" options. The 
+  nested option will return the specified types and any types they "enclose". 
+  There are also corresponding "exclude" options.
 
-#13406: I've decided not to do this, as it really isn't the "simplest thing that could possibly
-work." It's easy enough for the user to define a module of new behavior and just use
-"obj.extend(module)". However, when the user needs to do this over a set of types, Aquarium's
-TypeFinder can be helpful, so I added an example to the Examples code and page.
+#13406: I've decided not to do this, as it really isn't the "simplest thing 
+  that could possibly work." It's easy enough for the user to define a module
+  of new behavior and just use "obj.extend(module)". However, when the user 
+  needs to do this over a set of types, Aquarium's TypeFinder can be helpful,
+  so I added an example to the Examples code and page.
 
-#18537: I've provided an example of the design approach where you define pointcuts in a class,
-as a kind of "aspect interface" and write aspects that specify those pointcuts. The problem has
-been that you had to name every single such pointcut explicitly. There was no "finder" option,
-as for types, methods, etc. Now there is a pointcut finder option with a new option 
-":named_pointcuts" for Aspect.new to specify a search for pointcuts in a set of types matching
-a name specification. Either constants or class variables will be matched (or both).
+#18537: I've provided an example of the design approach where you define 
+  pointcuts in a class, as a kind of "aspect interface" and write aspects that 
+  specify those pointcuts. The problem has been that you had to name every 
+  single such pointcut explicitly. There was no "finder" option, as for types, 
+  methods, etc. Now there is a pointcut finder option with a new option 
+  ":named_pointcuts" for Aspect.new to specify a search for pointcuts in a set 
+  of types matching a name specification. Either constants or class variables 
+  will be matched (or both).
 
-#19666: The rdoc for the key classes was cleaned up so it "renders" better. Feedback is welcome.
+#19666: The rdoc for the key classes was cleaned up so it "renders" better. 
+  Feedback is welcome.
 
-#19119: I finished the previously-incomplete support for allowing advice to change the raised
-exception, in both after and after_raising advice. A common scenario is to wrap the thrown
-exception in another. For example, a low-level, service-specific exception (like a database
-error) in a higher-level, more generic application exception. 
+#19119: I finished the previously-incomplete support for allowing advice to 
+  change the raised exception, in both after and after_raising advice. A 
+  common scenario is to wrap the thrown exception in another. For example, a 
+  low-level, service-specific exception (like a database error) in a
+  higher-level, more generic application exception. 
 
-You still can't rescue the exception completely in after_raising and after advice; the value
-for the exception in 
+You still can't rescue the exception completely in :after_raising and :after 
+advice; the value for the exception in 
   joinpoint.context.raised_exception
-when the advice returns will be raised by Aquarium. I think that permitting after_raising or 
-after advice to "eat" the exception could cause subtle issues with scope and variable binding. 
-It would also probably violate the "principle of least surprise"; the advice code that rescues 
-the exception would not be as "obvious" to the reader as the familiar idiom of rescue clauses
-that we are accustomed to using. Therefore, if you want to recover completely from an exception,
-use rescue clauses in around advice.
-
+when the advice returns will be raised by Aquarium. I think that permitting 
+:after_raising or :after advice to "eat" the exception could cause subtle 
+issues with scope and variable binding. It would also probably violate the 
+"principle of least surprise"; the advice code that rescues the exception would 
+not be as "obvious" to the reader as the familiar idiom of rescue clauses
+that we are accustomed to using. Therefore, if you want to recover completely 
+from an exception, use rescue clauses in around advice.
 
 == Version 0.4.1
 
-V0.4.1 adds a few bug fixes, a few more user examples, internal refactoring and some performance
-improvements.
+V0.4.1 adds a few bug fixes, a few more user examples, internal refactoring and 
+some performance improvements.
 
 Bug fixes:
-19116	When an exception is thrown during advice execution, the error message always reports the advice type is :before!
+19116	When an exception is thrown during advice execution, the error message 
+  always reports the advice type is :before!
 19261	after_raising DSL method provides no way to specify exceptions
 
 Enhancements:
@@ -102,17 +124,20 @@ Enhancements:
 19320	Move the Aquarium::...::AspectDSL file to Aquarium::DSL for convenience
 19399	Improve the Design by Contract example
 
-I added a new :exceptions argument (synonym :exception) that takes a single exception or list thereof. 
-You can only use this argument with :after_raising. If you specify exceptions with the latter and use
-the :exceptions argument, the values will be merged.
+I added a new :exceptions argument (synonym :exception) that takes a single 
+exception or list thereof. You can only use this argument with :after_raising. 
+If you specify exceptions with the latter and use the :exceptions argument, 
+the values will be merged.
 
-I thought it was ugly to have to type "include Aquarium::Aspects::DSL::AspectDSL", so I moved the code so
-now it's "include Aquarium::DSL". However, for backwards compatibility, the old module still works.
+I thought it was ugly to have to type "include 
+Aquarium::Aspects::DSL::AspectDSL", so I moved the code so now it's "include 
+Aquarium::DSL". However, for backwards compatibility, the old module still 
+works.
 
 == Version 0.4.0
 
-V0.4.0 adds specs to characterize and test advising Java classes when running on JRuby and adds several 
-API enhancements.
+V0.4.0 adds specs to characterize and test advising Java classes when running 
+on JRuby and adds several API enhancements.
 
 Bug fixes:
 17844	JRuby - Advising types, Aquarium thinks the type is a string
@@ -123,89 +148,101 @@ Enhancements:
 17834	Allow :class and :module (and variants) wherever :type is allowed
 17881	Add specs that exercise advising Java types and objects using JRuby
 
-#17844 occurred because of the way JRuby encodes Java packages into modules. Aquarium now properly handles 
-JRuby types.
+#17844 occurred because of the way JRuby encodes Java packages into modules. 
+  Aquarium now properly handles JRuby types.
 
 #17883 reflected a JRuby bug, so a workaround was required.
  
-#17834 allows the user to substitute the words "class", "classes", "module" or "modules" anywhere the words
-"type" and "types" are used in the API, since some users might naturally want to write aspects like this:
+#17834 allows the user to substitute the words "class", "classes", "module" or 
+"modules" anywhere the words "type" and "types" are used in the API, since some 
+users might naturally want to write aspects like this:
 
  	around :calls_to => :my_method, :in_class => MyClass do ...; end
 
-However, there is no enforcement to ensure that "class" is only used for classes and "module" is only used
-for modules, etc. Note: it's possible we'll enforce this in some future release, as a way of saying things
-like "only advise classes that match ...", etc. Caveat Emptor!
+However, there is no enforcement to ensure that "class" is only used for 
+classes and "module" is only used for modules, etc. Note: it's possible we'll 
+enforce this in some future release, as a way of saying things like "only advise 
+classes that match ...", etc. Caveat Emptor!
 
-For #18090, a bug prevented JoinPoint#invoke_original_join_point (which allows you to bypass all advices at
-the join point) from working except for :around advice (and yes, the specs didn't cover this adequately -
-gasp!). Now fixed.
+For #18090, a bug prevented JoinPoint#invoke_original_join_point (which allows 
+you to bypass all advices at the join point) from working except for :around 
+advice (and yes, the specs didn't cover this adequately - gasp!). Now fixed.
 
-For #17881, I created a separate set of specs for JRuby, so it's easier to run the "regular" Aquarium
-specs using MRI and the JRuby-specific specs separately with JRuby. The new "jruby" directory contains a 
-Rakefile, another set of specs, and Java example code for the specs to use. The default Rakefile task 
-re-runs the main Aquarium spec suite using JRuby, to confirm that the suite passes successfully, then it
-runs a set of different specs that load sample Java interfaces and classes into JRuby and then advises
-them with Aquarium.
+For #17881, I created a separate set of specs for JRuby, so it's easier to run 
+the "regular" Aquarium specs using MRI and the JRuby-specific specs separately 
+with JRuby. The new "jruby" directory contains a Rakefile, another set of specs, 
+and Java example code for the specs to use. The default Rakefile task re-runs 
+the main Aquarium spec suite using JRuby, to confirm that the suite passes 
+successfully, then it runs a set of different specs that load sample Java 
+interfaces and classes into JRuby and then advises them with Aquarium.
 
-I found a few JRuby bugs and other behavior differences between MRI during this release. I was able to handle
-them with modifications to the Aquarium code. If you "grep" the Aquarium "lib" and "spec" directories for the
-word "jruby" (ignoring case), you'll find notes about these issues and the workarounds I implemented.
+I found a few JRuby bugs and other behavior differences between MRI during this 
+release. I was able to handle them with modifications to the Aquarium code. If 
+you "grep" the Aquarium "lib" and "spec" directories for the word "jruby" 
+(ignoring case), you'll find notes about these issues and the workarounds I 
+implemented.
 
-The separate JRuby spec suite shows what you can and cannot do with Java types. As a side benefit, it also
-demonstrates how Java types, objects, and methods are mapped to Ruby. There are some important limitations,
-however. See the jruby.html page on the website or the README for more details. 
+The separate JRuby spec suite shows what you can and cannot do with Java types. 
+As a side benefit, it also demonstrates how Java types, objects, and methods 
+are mapped to Ruby. There are some important limitations, however. See the 
+jruby.html page on the website or the README for more details. 
 
 Note: JRuby 1.1RC2 was used.
-
  
 == Version 0.3.1
 
-V0.3.1 adds numerous performance improvements, especially in the RSpec suite, and some minor API additions.
+V0.3.1 adds numerous performance improvements, especially in the RSpec suite, 
+and some minor API additions.
 
 Bug fixes:
 N.A.
 
 Enhancements:
 14447	Unify internal handling of reporting errors to the user
-17514	Provide an Aquarium library-wide logger with configuration parameters and instance overrides
+17514	Provide an Aquarium library-wide logger with configuration parameters and 
+  instance overrides
 17515	Add an optional warning if an aspect doesn't match any join points
-17516	Remove unnecessary examples that use :types_and_descendents to shorten time to run the RSpec suite
-17565	JoinPoint.new should convert a type name, symbol, or regex to the type and only allow one type
+17516	Remove unnecessary examples that use :types_and_descendents to shorten 
+  time to run the RSpec suite
+17565	JoinPoint.new should convert a type name, symbol, or regex to the type 
+  and only allow one type
 
-These first two enhancements are related. There is a now an Aquarium::Utils::DefaultLogger
-module with static accessors for getting and setting the "system-wide" logger. 
+These first two enhancements are related. There is a now an 
+Aquarium::Utils::DefaultLogger module with static accessors for getting and 
+setting the "system-wide" logger. 
 
-When instance-level overrides are necessary, the Aquarium::Utils::OptionsUtils provides 
-"universal" options (but currently used only by Aspect and Pointcut) for specifying a logger 
-(with the new :logger parameter), or alternatively, specifying just the output stream 
-(:logger_stream) and/or the severity (:severity, one of the standard library's 
-Logger::Severity-defined constants). If either of the latter two options is specified, a 
-separate logger instance is created, rather than changing parameters for the global logger.
+When instance-level overrides are necessary, the Aquarium::Utils::OptionsUtils 
+provides "universal" options (but currently used only by Aspect and Pointcut) 
+for specifying a logger (with the new :logger parameter), or alternatively, 
+specifying just the output stream (:logger_stream) and/or the severity 
+(:severity, one of the standard library's Logger::Severity-defined constants). 
+If either of the latter two options is specified, a separate logger instance is 
+created, rather than changing parameters for the global logger.
 
-OptionsUtils also supports a :noop parameter, which classes interpret to mean do none (or
-perhaps only some) of the processing. Useful for debugging.
+OptionsUtils also supports a :noop parameter, which classes interpret to mean 
+do none (or perhaps only some) of the processing. Useful for debugging.
 
-#17515 adds a helpful warning to the system (or aspect-instance's) logger if an aspect 
-matches no join points. This warning will be suppressed if (i) the severity level for the 
-logger is above WARN or (ii) the aspect was created with the option 
-	:ignore_no_matching_join_points => true.
+#17515 adds a helpful warning to the system (or aspect-instance's) logger if 
+  an aspect matches no join points. This warning will be suppressed if (i) the 
+  severity level for the logger is above WARN or (ii) the aspect was created 
+  with the option :ignore_no_matching_join_points => true.
 
-#17516 fixes halved the long execution times for the whole RSpec suite by refactoring some examples
-that used type finders with the :types_and_descendents option unnecessarily. It is a very intensive
-computation! Note that I stubbed out these calls using an aspect with around advise, a useful
-"development-time" aspect. See Aquarium::TypeUtilsStub (in spec_example_types.rb) and how it's used
-in pointcut_spec.rb. Using this technique and other optimizations, the time to run the suite was 
-reduced from ~5 minutes to about 1 minute.
+#17516 fixes halved the long execution times for the whole RSpec suite by 
+refactoring some examples that used type finders with the :types_and_descendents 
+option unnecessarily. It is a very intensive computation! Note that I stubbed 
+out these calls using an aspect with around advise, a useful "development-time" 
+aspect. See Aquarium::TypeUtilsStub (in spec_example_types.rb) and how it's used
+in pointcut_spec.rb. Using this technique and other optimizations, the time to 
+run the suite was reduced from ~5 minutes to about 1 minute.
  
-#17565 fixes a "hole" in JoinPoint, where it doesn't confirm that a specified type string, symbol
-or regex matches a class that exists and only one class. Now it does and it stores the type, rather
-than the original "specification" for it.
+#17565 fixes a "hole" in JoinPoint, where it doesn't confirm that a specified 
+type string, symbol or regex matches a class that exists and only one class. Now 
+it does and it stores the type, rather than the original "specification" for it.
 
 == Version 0.3.0
 
-V0.3.0 adds numerous improvements to the DSL, making aspect specification more intuitive and 
-English-like. For example, where you previously wrote, e.g.,
+V0.3.0 adds numerous improvements to the DSL, making aspect specification more 
+intuitive and English-like. For example, where you previously wrote, e.g.,
 
 	around :methods => :all, :types => [Foo, Bar], :advice => advice_proc
 	after  :attribute => name, :attribute_options => [:readers], :objects => [foo, bar] ...
@@ -215,8 +252,8 @@ Now you can write the same aspects as follows:
 	around :calls_to => :all_methods, :within_types => [Foo, Bar], :use_advice => advice_proc
 	after  :reading => name, :on_objects => [foo, bar] ...
 
-Other improvements include performance and robustness enhancements and miscellaneous internal 
-refactoring and DRY improvements.
+Other improvements include performance and robustness enhancements and 
+miscellaneous internal refactoring and DRY improvements.
 
 Bug fixes:
 16267	gem not updating
@@ -226,78 +263,89 @@ Enhancements:
 
 For #17154, the following changes were made:
 Added :all_methods as a synonym for the :all special value.
-Added :reading as a synonym for :attributes => ..., :attribute_options => [:readers]
-Added :writing and :changing as synonyms for :attributes => ..., :attribute_options => [:writers]
+Added :reading as a synonym for :attributes => ..., :attribute_options => 
+  [:readers]
+Added :writing and :changing as synonyms for :attributes => ...,   
+  :attribute_options => [:writers]
 Added :accessing as a synonym for :attributes => ...
-Added :calls_to, :calling, :invoking, :sending_message_to  as synonyms for :methods.
-Added :on_types, :in_types, :within_types and :for_types as synonyms for :types. The same
-set of prefixes is supported for :type, :objects, :object, and the various :exclude_*, 
-:*_and_ancestors, and :*_and_descendents.
+Added :calls_to, :calling, :invoking, :sending_message_to  as synonyms for  
+  :methods.
+Added :on_types, :in_types, :within_types and :for_types as synonyms for :types.   
+  The same set of prefixes is supported for :type, :objects, :object, and the 
+  various :exclude_*, :*_and_ancestors, and :*_and_descendents.
 
-The full list of possible synonyms are shown in the spec examples. In particular, see "pointcut_spec.rb".
-
+The full list of possible synonyms are shown in the spec examples. In 
+particular, see "pointcut_spec.rb".
 
 == Version 0.2.0
 
-V0.2.0 changes the parameter list used for advice blocks and adds numerous enhancements, robustness
-improvements and more complete "spec'ing".
+V0.2.0 changes the parameter list used for advice blocks and adds numerous 
+enhancements, robustness improvements and more complete "spec'ing".
 
 Bug fixes:
 none
 
 Enhancements:
-13402	Support a subclass syntax like AspectJ's "Type+"
-13984	More flexible argument list to the advise block
-14053	Remove JoinPoint#type, JoinPoint#type=, JoinPoint#object, and JoinPoint#object=
+13402	Support a subclass syntax like AspectJ's "Type+".
+13984	More flexible argument list to the advise block.
+14053	Remove JoinPoint#type, JoinPoint#type=, JoinPoint#object, and 
+  JoinPoint#object=
 14061	Add a control flow mechanism to skipping (sic) intermediate advice
 15164	Deprecate ObjectFinder
 15413	Remove ObjectFinder
 15710	Eliminate redundant public methods in various "finders"
 
-#13402 adds new invocation options to specify types and their descendents (subclasses or modules
-that include the specified module(s)) and ancestors. The latter should be used cautiously as it
-will include things like Kernel, Object, and Class!  I used new command options rather than the
-AspectJ "+" suffix (and the proposed, but never implemented "-" suffix for ancestors), because
-the "+" would be confusing with regular expressions and not in the spirit of trying to make
-the pointcut language "easy to read". So, the following are now available:
-  :type_and_ancestors
-  :types_and_ancestors
-  :type_and_descendents
-  :types_and_descendents
-And the corresponding:
-  :exclude_type_and_ancestors
-  :exclude_types_and_ancestors
-  :exclude_type_and_descendents
-  :exclude_types_and_descendents
-If you want both the ancestors and descendents, just use both options with the same value.
+#13402 adds new invocation options to specify types and their descendents 
+  (subclasses or modules that include the specified module(s)) and ancestors. 
+  The latter should be used cautiously as it will include things like Kernel, 
+  Object, and Class!  I used new command options rather than the AspectJ "+" 
+  suffix (and the proposed, but never implemented "-" suffix for ancestors), 
+  because the "+" would be confusing with regular expressions and not in the 
+  spirit of trying to make the pointcut language "easy to read". So, the 
+  following are now available:
+    :type_and_ancestors
+    :types_and_ancestors
+    :type_and_descendents
+    :types_and_descendents
+  And the corresponding:
+    :exclude_type_and_ancestors
+    :exclude_types_and_ancestors
+    :exclude_type_and_descendents
+    :exclude_types_and_descendents
+  If you want both the ancestors and descendents, just use both options with 
+  the same value.
 
-#13984 adds the object as the second argument to the advice block parameter list. This change
-reflects the fact that the object is often needed, but calling jp.context.advised_object is a
-bit tedious. THIS CHANGE BREAKS BACKWARDS COMPATIBILITY!! An exception is raised if advice has
-the signature |jp, *args|.
+#13984 adds the object as the second argument to the advice block parameter 
+  list. This change reflects the fact that the object is often needed, but 
+  calling jp.context.advised_object is a bit tedious. THIS CHANGE BREAKS 
+  BACKWARDS COMPATIBILITY!! An exception is raised if advice has the signature 
+  |jp, *args|.
 
-#14061 adds a new method, JoinPoint#invoke_original_join_point, which will invoke the original
-method without intermediate advice. If called within around advice, you can write advice that 
-vetoes all subsequent advice, yet invokes the original method. Use this technique cautiously, 
-however, since you may not always know what other advices are involved and what side effects 
-this control-flow change might cause.
+#14061 adds a new method, JoinPoint#invoke_original_join_point, which will 
+  invoke the original method without intermediate advice. If called within 
+  around advice, you can write advice that vetoes all subsequent advice, yet 
+  invokes the original method. Use this technique cautiously, however, since you 
+  may not always know what other advices are involved and what side effects this 
+  control-flow change might cause.
 
-#15164 and 15413 remove ObjectFinder because it is not used and it requires ObjectSpace, which 
-has high overhead and won't be enabled, by default, in JRuby (it will be optional).
+#15164 and 15413 remove ObjectFinder because it is not used and it requires 
+  ObjectSpace, which has high overhead and won't be enabled, by default, in 
+  JRuby (it will be optional).
 
-#15710 removes redundant methods that were becoming a maintenance issue, in particular, 
-MethodFinder#find_all_by and TypeFinder#find_by_name. This is a non-backwards-compatible API
-change. 
+#15710 removes redundant methods that were becoming a maintenance issue, in 
+  particular, MethodFinder#find_all_by and TypeFinder#find_by_name. This is a 
+  non-backwards-compatible API change. 
 
-Finally, note that I have not yet been able to resolve bug #15202, "Intermittent confusion
-between classes and objects when invoking advice." I believe this is a very rare occurrence
-and only likely to ever happen during the "torture-test" of running the RSpec suite. Please post
-a comment to Tracker if you encounter it!
+Finally, note that I have not yet been able to resolve bug #15202, "Intermittent 
+confusion between classes and objects when invoking advice." I believe this is a 
+very rare occurrence and only likely to ever happen during the "torture-test" of 
+running the RSpec suite. Please post a comment to Tracker if you encounter it!
 
 == Version 0.1.8
 
-V0.1.7 did not successfully "register" at rubyforge. This releases fixes that problem and also
-adds several feature enhancements and refactorings. There are no known upgrade issues.
+V0.1.7 did not successfully "register" at rubyforge. This releases fixes that 
+problem and also adds several feature enhancements and refactorings. There are 
+no known upgrade issues.
 
 Bug fixes:
 none
@@ -306,13 +354,15 @@ Enhancements:
 13399	Add :exclusion options for methods and types.
 14707	:exclude_ancestor_methods as synonym for :suppress_ancestor_methods
 
-13399 adds new :exclude_(pointcuts|join_points|types|objects|methods|attributes) options for
-Aspect.new, and Pointcut.new that make it easier to specify a list or regular expression for 
-various "items" and then to exclude particular items, e.g.,
-	Aspect.new :around, :types => /nterestingType/, :exclude_types => UninterestingType ...
+13399 adds new :exclude_(pointcuts|join_points|types|objects|methods|attributes) 
+  options for Aspect.new, and Pointcut.new that make it easier to specify a list 
+  or regular expression for various "items" and then to exclude particular 
+  items, e.g., Aspect.new :around, :types => /nterestingType/, :exclude_types => 
+  UninterestingType ...
 
-The :exclude_ancestor_methods option is now preferred over :suppress_ancestor_methods,
-since the former is more consistent with the new :exclude_* options.
+The :exclude_ancestor_methods option is now preferred over 
+:suppress_ancestor_methods, since the former is more consistent with the new 
+:exclude_* options.
 
 == Version 0.1.7
 
@@ -320,47 +370,51 @@ Bug fixes:
 14946	Advice fails when instrumenting methods containing special characters
 15038	Spec for pointcut example variation #1
 15039	Spec for pointcut example variation #2
-15085	Specifying just :attributes for aspects also matches all methods, as if :methods =&gt; :all specified
+15085	Specifying just :attributes for aspects also matches all methods, as if 
+  :methods =&gt; :all specified
 
 Enhancements:
 13396	Unify internal handling of types vs. objects
 
-15038 and 15039 were bugs in one of the examples (actually in the comments). However, 
-experimenting with them also revealed the nasty 15085 bug!
+15038 and 15039 were bugs in one of the examples (actually in the comments). 
+  However, experimenting with them also revealed the nasty 15085 bug!
 
-I previously handled some special characters in method names, but not all the possible
-ones, hence 14946. Aquarium should now properly handle any valid Ruby method name.
-
+I previously handled some special characters in method names, but not all the 
+possible ones, hence 14946. Aquarium should now properly handle any valid Ruby 
+method name.
 
 == Version 0.1.6
 
 Bug fixes:
-14353	Advising subclass method that calls super raises exception when method executed
-14356	Regexps for types must cover the whole name, which is inconsistent with method/attribute regexps
+14353	Advising subclass method that calls super raises exception when method 
+  executed
+14356	Regexps for types must cover the whole name, which is inconsistent with 
+  method/attribute regexps
 14384	Design by Contract "extra" does not return correct value "invar" handling
 13410	Fix funky navigation bar on website
 
-14353 was kind of bad, but it's actually a Ruby bug with a good workaround. If you 
-advised a method that called "super", Ruby would use the wrong method name to lookup the
-class in the parent. See the bug description for the details.
+14353 was kind of bad, but it's actually a Ruby bug with a good workaround. If 
+  you advised a method that called "super", Ruby would use the wrong method name 
+  to lookup the class in the parent. See the bug description for the details.
 
-For 14356, type regular expressions now match on parts of names; they don't have to match
-the whole name. The exception is regular expressions with module separators "::". In this
-case, it seems to make more sense for the regular expression to be interpreted as follows:
-If the expression is /A::B::C::D/, then for the the outermost types, the expression behaves
-as /^.*A/, for the types between two "::", the expressions behave as /^B$/ and /^C$/, and
-the trailing expression behaves as /D.*$/.
+For 14356, type regular expressions now match on parts of names; they don't have 
+  to match the whole name. The exception is regular expressions with module 
+  separators "::". In this case, it seems to make more sense for the regular 
+  expression to be interpreted as follows: If the expression is /A::B::C::D/, 
+  then for the the outermost types, the expression behaves as /^.*A/, for the 
+  types between two "::", the expressions behave as /^B$/ and /^C$/, and the 
+  trailing expression behaves as /D.*$/.
 
-14384 was an easy mistake to make with "around" advice; you have to remember to return the 
-result of the "join_point.proceed" call, unless you specifically want to change the returned
-value! Here are two ways to do it:
+14384 was an easy mistake to make with "around" advice; you have to remember to 
+  return the result of the "join_point.proceed" call, unless you specifically 
+  want to change the returned value! Here are two ways to do it:
 
 	do_something_before(...)
 	result = join_point.proceed
 	do_something_after(...)
 	return result
 
-or
+  or
 	
 	begin
 		do_something_before(...)
@@ -369,8 +423,9 @@ or
 		do_something_after(...)
 	end
 
-The latter approach looks "asymmetrical" and it will behave differently if "proceed" raises!
-However, it eliminates the temporary, if you find that desirable.
+The latter approach looks "asymmetrical" and it will behave differently if 
+"proceed" raises! However, it eliminates the temporary, if you find that 
+desirable.
  
 Enhancements:
 13407	Pick a better method name for JoinPoint#type, which hides the Module#type
@@ -384,22 +439,25 @@ For 13407, new attribute methods have been added
 * JoinPoint#target_object 	return the object that the join_point matches.
 * JoinPoint#target_object=	set the object that the join_point matches.
 
-The following, older methods are now deprecated and will be removed in the 0.2.0 release (#14053):
+The following, older methods are now deprecated and will be removed in the 0.2.0 
+release (#14053):
 * JoinPoint#type
 * JoinPoint#type=
 * JoinPoint#object
 * JoinPoint#object=
 
-JoinPoint#type method is deprecated because it hides Module#type, which returns the type of 
-the corresponding object. For "symmetry", the other three methods are also now deprecated and 
-they will be removed in a future release. Until then, all will print a warning message to 
-STDOUT. (If you really want the type of what could be a JoinPoint object, you should use #class
-anyway, as Module#type is also deprecated!)
+JoinPoint#type method is deprecated because it hides Module#type, which returns 
+the type of the corresponding object. For "symmetry", the other three methods 
+are also now deprecated and they will be removed in a future release. Until 
+then, all will print a warning message to STDOUT. (If you really want the type 
+of what could be a JoinPoint object, you should use #class anyway, as 
+Module#type is also deprecated!)
 
 == Version 0.1.5
 
 Bug fixes:
-13514	Protected and private methods are made public when advised and left that way when unadvised
+13514	Protected and private methods are made public when advised and left that 
+  way when unadvised
 13650	Loading Aquarium interferes with Rails filters
 13864	Bug with negative object_id
 
@@ -407,21 +465,24 @@ Enhancements:
 13392	Convert examples to specs.
 13463	Support running in JRuby
 
-Fixing 13650 required an API change, which is why I've tagged this release "0.1.5" instead of
-something like "0.1.1" (and the changes don't seem big enough to warrant "0.2.0"...).
+Fixing 13650 required an API change, which is why I've tagged this release 
+"0.1.5" instead of something like "0.1.1" (and the changes don't seem big enough 
+to warrant "0.2.0"...).
 
-Previously, requiring "aquarium.rb" in the top-level "lib" directory would implicitly require 
-lib/aquarium/dsl/aspect_dsl.rb, which
-has Object include the AspectDSL module. This module adds methods like :before and :after to Object. 
-Unfortunately, those methods collide with methods of the same name that Rails adds to Object. It was 
-also a bit presumptuous of me to assume that everyone wanted those methods on Object ;)
+Previously, requiring "aquarium.rb" in the top-level "lib" directory would 
+implicitly require lib/aquarium/dsl/aspect_dsl.rb, which has Object include the 
+AspectDSL module. This module adds methods like :before and :after to Object. 
+Unfortunately, those methods collide with methods of the same name that Rails 
+adds to Object. It was also a bit presumptuous of me to assume that everyone 
+wanted those methods on Object ;)
 
-In this release, aspect_dsl.rb is still implicitly included and it still defines the AspectDSL 
-module. Now, however, it does not include the AspectDSL module in Object. Instead, if you want this 
-behavior for all types, you must require the new lib/aquarium/aspects/dsl/object_dsl.rb explicitly. 
+In this release, aspect_dsl.rb is still implicitly included and it still defines 
+the AspectDSL module. Now, however, it does not include the AspectDSL module in 
+Object. Instead, if you want this behavior for all types, you must require the 
+new lib/aquarium/aspects/dsl/object_dsl.rb explicitly. 
 
-As an alternative, if you just want the AspectDSL module included selectively in certain types, 
-then do the following:
+As an alternative, if you just want the AspectDSL module included selectively in 
+certain types, then do the following:
 
 	class MyClass   # reopen "MyClass"
 		# Add the methods as _class_ methods
@@ -443,11 +504,13 @@ To add the methods as _instance_ methods on individual objects:
 	object.extend(Aquarium::DSL)
 
 
-Note: as discussed at http://practicalruby.blogspot.com/2007/02/reopen-with-moduleeval.html, 
+Note: as discussed at 
+http://practicalruby.blogspot.com/2007/02/reopen-with-moduleeval.html, 
 using "class_eval" or "module_eval" is safer that just reopening a class if 
-you're not sure that "MyClass" has actually been defined yet. However, in our particular case, it 
-probably doesn't matter, as AspectDSL doesn't change anything about the type, like aliasing existing 
-methods. Still, we can't guarantee that this won't change in the future.
+you're not sure that "MyClass" has actually been defined yet. However, in our 
+particular case, it probably doesn't matter, as AspectDSL doesn't change 
+anything about the type, like aliasing existing methods. Still, we can't 
+guarantee that this won't change in the future.
 
 == Version 0.1.0
 

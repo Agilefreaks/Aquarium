@@ -1,0 +1,10 @@
+---
+title: Finders
+order_info: 4
+in_menu: true
+---
+## Finders
+
+Utilities for finding types, objects, methods, etc. in the current runtime. See [finders.rb].
+
+[finders.rb]:../../rdoc/files/lib/aquarium/finders_rb.html
