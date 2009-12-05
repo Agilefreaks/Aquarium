@@ -37,7 +37,7 @@ module Aquarium
         "pointcuts"         => %w[pointcut],
         "named_pointcuts"   => %w[named_pointcut],
         "exceptions"        => %w[exception],
-        "ignore_no_matching_join_points" => %[ignore_no_jps]
+        "ignore_no_matching_join_points" => %w[ignore_no_jps]
       }
       ["pointcuts", "named_pointcuts"].each do |pc_option|
         add_prepositional_option_variants_for pc_option, ASPECT_CANONICAL_OPTIONS
