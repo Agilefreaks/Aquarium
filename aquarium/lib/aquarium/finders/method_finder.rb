@@ -62,10 +62,9 @@ module Aquarium
       # By default, the searches are restricted to public instance methods. 
       # * <tt>:method_options => options</tt>
       # * <tt>:method_option => options</tt>
-      # * <tt>:options  => options</tt>
       # * <tt>:restricting_methods_to => options</tt>
       #     
-      # Note, the <tt>:options</tt> synonym is deprecated.
+      # Note, the older, deprecated <tt>:options</tt> synonym has been removed.
       #
       # Here are the allowed "options". Specify one or more of them. Any combination is allowed.
       # <tt>:public</tt> or <tt>:public_methods</tt>::       Search for public methods (default).
@@ -95,7 +94,6 @@ module Aquarium
         init_specification options, CANONICAL_OPTIONS do
           finish_specification_initialization 
         end
-        warn_if_deprecated_options_used options
         return Aquarium::Finders::FinderResult.new if nothing_to_find?
         types_and_objects = input_types + input_objects
         method_names_or_regexps = input_methods
@@ -116,7 +114,7 @@ module Aquarium
       METHOD_FINDER_CANONICAL_OPTIONS = {
         "objects" => %w[object for_object for_objects on_object on_objects in_object in_objects within_object within_objects],
         "methods" => %w[method within_method within_methods calling invoking invocations_of calls_to sending_message_to sending_messages_to],
-        "method_options" => %w[options method_option restricting_methods_to] 
+        "method_options" => %w[method_option restricting_methods_to] 
       }
       
       %w[objects methods].each do |key|
@@ -178,11 +176,6 @@ module Aquarium
       end
   
       private
-  
-      def warn_if_deprecated_options_used options
-        return unless options[:options]
-        logger.warn "The :options => ... option is now deprecated. Please use :method_options instead."
-      end
   
       def do_find_all_by types_and_objects, method_names_or_regexps
         types_and_objects = make_array types_and_objects

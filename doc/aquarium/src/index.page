@@ -13,7 +13,7 @@ sort_info: 1
  
 ### News
 
-* September 24, 2009: I moved the source repository from RubyForge SVN to [GitHub].
+* V0.4.4 (Oct. 4, 2009): Moved the source repository from RubyForge SVN to [GitHub]. Upgraded to latest JRuby, RSpec, and Webgen.
 
 * New in V0.4.0: Preliminary support for advising Java classes in JRuby! See the discussion [here].
 
@@ -61,7 +61,7 @@ end
 
 <p>The special method <code>#proceed</code> invokes the advised method, passing it the args list (by default). For <code>#around</code> advice, you must call <code>#proceed</code> unless you specifically don't want the original method called!</p>
 
-See the "Examples":examples.html and the [API] section for more details.
+See the [Examples] and the [API] section for more details.
 
 ## Start Here
 
@@ -78,3 +78,4 @@ See the [download] page for different options or go directly to the [RubyForge d
 [RubyGems]: http://rubygems.org/
 [download]: download.html
 [here]:jruby.html
+[Examples]:examples.html

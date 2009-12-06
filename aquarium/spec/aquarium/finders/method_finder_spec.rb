@@ -115,12 +115,6 @@ describe Aquarium::Finders::MethodFinder, "#find (synonymous input parameters)" 
       actual.should == expected
     end
   end
-
-  it "should warn that :options as a synonym for :method_options is deprecated." do
-    expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :options => [:exclude_ancestor_methods], :logger_stream => @logger_stream
-    @logger_stream.to_s.grep(/WARN.*deprecated/).should_not be_nil
-  end
-  
 end
   
 describe Aquarium::Finders::MethodFinder, "#find (invalid input parameters)" do
@@ -335,7 +329,9 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
     # NOTE: The list of methods defined by Kernel is different for MRI and JRuby!
     expected = {}
     expected[Kernel] = [:respond_to?]
-    expected[Kernel] += [:chomp!, :chop!] unless Object.const_defined?('JRUBY_VERSION')
+    if RUBY_VERSION.index("1.8") and not Object.const_defined?('JRUBY_VERSION')
+      expected[Kernel] += [:chomp!, :chop!] 
+    end
     [Object, Module, Class].each do |clazz|
       expected[clazz] = [:respond_to?]
     end

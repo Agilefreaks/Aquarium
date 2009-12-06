@@ -37,7 +37,8 @@ module Aquarium
           %w[public protected private].each do |protection|
             meta_method = "#{protection}_#{suffix}"
             found_methods = type_or_instance.send(meta_method, include_ancestors)
-            if found_methods.include?(method_sym.to_s)
+            # Try both the symbol (ruby 1.9) and the string (1.8).
+            if found_methods.include?(method_sym) or found_methods.include?(method_sym.to_s)
               return yield(type_or_instance, method_sym, protection.intern)
             end
           end
@@ -61,7 +62,7 @@ module Aquarium
           object.ancestors
         else
           eigen = (class << object; self; end)
-          [eigen] + eigen.ancestors
+          eigen.ancestors + [eigen]
         end
       end
       

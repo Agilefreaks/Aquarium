@@ -118,9 +118,8 @@ class Watchful
 
   %w[public protected private].each do |protection|
     class_eval(<<-EOF, __FILE__, __LINE__)
-      public
       attr_accessor :#{protection}_watchful_method_args, :#{protection}_watchful_method_that_raises_args
-      #{protection}
+      public        :#{protection}_watchful_method_args, :#{protection}_watchful_method_that_raises_args
       def #{protection}_watchful_method *args
         @#{protection}_watchful_method_args = args
         yield *args if block_given?
@@ -130,6 +129,7 @@ class Watchful
         yield *args if block_given?
         raise WatchfulError.new #("#{protection}_watchful_method_that_raises")
       end
+      #{protection} :#{protection}_watchful_method, :#{protection}_watchful_method_that_raises
     EOF
   end
 

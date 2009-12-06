@@ -100,9 +100,10 @@ module Aquarium
         next_node.nil?
       end
   
-      def inspect &block
-        block ? yield(self) : super 
-      end
+      # TODO: remove this method, which causes run-away recursions in R1.9.1
+      # def inspect &block
+      #   block ? yield(self) : super 
+      # end
   
       NIL_OBJECT = Aquarium::Utils::NilObject.new
       

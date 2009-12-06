@@ -23,10 +23,10 @@ end
 
 
 describe Aspect, " cannot advise the private implementation methods inserted by other aspects" do  
+  class WithAspectLikeMethod
+    def _aspect_foo; end
+  end
   it "should have no affect." do
-    class WithAspectLikeMethod
-      def _aspect_foo; end
-    end
     aspect = Aspect.new(:after, :pointcut => {:type => WithAspectLikeMethod, :methods => :_aspect_foo}) {|jp, obj, *args| fail}
     WithAspectLikeMethod.new._aspect_foo
     aspect.unadvise
@@ -40,7 +40,7 @@ describe Aspect, " when advising a type" do
   after(:each) do
     @aspect.unadvise
   end
-  
+
   it "should not add new public instance or class methods that the advised type responds to." do
     all_public_methods_before = all_public_methods_of_type Watchful
     @aspect = Aspect.new :after, :pointcut => {:type => Watchful, :method_options => :exclude_ancestor_methods}, :advice => @advice 
@@ -153,26 +153,25 @@ describe Aspect, " with :after advice" do
     do_watchful_public_protected_private 
   end
   
-  it "should ignore the value returned by the advice" do
-    class ReturningValue
-      def doit args
-        args + ["d"]
-      end
+  class ReturningValue
+    def doit args
+      args + ["d"]
     end
+  end
+
+  it "should ignore the value returned by the advice" do
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
+    advise_called = false
     @aspect = Aspect.new :after, :type => ReturningValue, :method => :doit do |jp, obj, *args|
+      advise_called = true
       %w[aa] + jp.context.returned_value + %w[e]
     end 
     ReturningValue.new.doit(ary).should == %w[a b c d]
+    advise_called.should == true
   end
 
-  it "should all the advice to assign a new return value" do
-    class ReturningValue
-      def doit args
-        args + ["d"]
-      end
-    end
+  it "should allow the advice to assign a new return value" do
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
     @aspect = Aspect.new :after, :type => ReturningValue, :method => :doit do |jp, obj, *args|
@@ -223,26 +222,25 @@ describe Aspect, " with :after_returning advice" do
     do_watchful_public_protected_private 
   end
   
-  it "should ignore the value returned by the advice" do
-    class ReturningValue
-      def doit args
-        args + ["d"]
-      end
+  class ReturningValue
+    def doit args
+      args + ["d"]
     end
+  end
+
+  it "should ignore the value returned by the advice" do
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
+    advice_called = false
     @aspect = Aspect.new :after_returning, :type => ReturningValue, :method => :doit do |jp, obj, *args|
+      advice_called = true
       %w[aa] + jp.context.returned_value + %w[e]
     end 
     ReturningValue.new.doit(ary).should == %w[a b c d]
+    advice_called.should == true
   end
 
   it "should allow the advice to change the returned value" do
-    class ReturningValue
-      def doit args
-        args + ["d"]
-      end
-    end
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
     @aspect = Aspect.new :after_returning, :type => ReturningValue, :method => :doit do |jp, obj, *args|
@@ -567,25 +565,25 @@ describe Aspect, " with :around advice" do
     advice_called.should be_true
   end
 
-  it "should advise subclass invocations of methods advised in the superclass." do
-    module AdvisingSuperClass
-      class SuperClass
-        def public_method *args
-          # yield *args if block_given?
-        end
-        protected
-        def protected_method *args
-          yield *args if block_given?
-        end
-        private
-        def private_method *args
-          yield *args if block_given?
-        end
+  module AdvisingSuperClass
+    class SuperClass
+      def public_method *args
+        # yield *args if block_given?
       end
-      class SubClass < SuperClass
+      protected
+      def protected_method *args
+        yield *args if block_given?
+      end
+      private
+      def private_method *args
+        yield *args if block_given?
       end
     end
-    
+    class SubClass < SuperClass
+    end
+  end
+  
+  it "should advise subclass invocations of methods advised in the superclass." do
     child = AdvisingSuperClass::SubClass.new
     advice_called = false
     @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSuperClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
@@ -608,25 +606,25 @@ describe Aspect, " with :around advice" do
     advice_called.should be_true
   end
 
-  it "should advise subclass invocations of methods advised in the subclass that are defined in the superclass." do
-    module AdvisingSubClass
-      class SuperClass
-        def public_method *args
-          # yield *args if block_given?
-        end
-        protected
-        def protected_method *args
-          yield *args if block_given?
-        end
-        private
-        def private_method *args
-          yield *args if block_given?
-        end
+  module AdvisingSubClass
+    class SuperClass
+      def public_method *args
+        # yield *args if block_given?
       end
-      class SubClass < SuperClass
+      protected
+      def protected_method *args
+        yield *args if block_given?
+      end
+      private
+      def private_method *args
+        yield *args if block_given?
       end
     end
-    
+    class SubClass < SuperClass
+    end
+  end
+  
+  it "should advise subclass invocations of methods advised in the subclass that are defined in the superclass." do
     child = AdvisingSubClass::SubClass.new
     advice_called = false
     @aspect = Aspect.new :around, :pointcut => {:type => AdvisingSubClass::SuperClass, :methods => [:public_method]} do |jp, obj, *args|
@@ -649,18 +647,19 @@ describe Aspect, " with :around advice" do
     advice_called.should be_true
   end
 
-  it "should not advise subclass overrides of superclass methods, when advising superclasses (but calls to superclass methods are advised)." do
-    class WatchfulChild2 < Watchful
-      def public_watchful_method *args
-        @override_called = true
-        yield(*args) if block_given?
-      end
-      attr_reader :override_called
-      def initialize
-        super
-        @override_called = false
-      end
+  class WatchfulChild2 < Watchful
+    def public_watchful_method *args
+      @override_called = true
+      yield(*args) if block_given?
     end
+    attr_reader :override_called
+    def initialize
+      super
+      @override_called = false
+    end
+  end
+
+  it "should not advise subclass overrides of superclass methods, when advising superclasses (but calls to superclass methods are advised)." do
     @aspect = Aspect.new(:around, :pointcut => {:type => Watchful, :methods => [:public_watchful_method]}) {|jp, obj, *args| fail}
     child = WatchfulChild2.new
     public_block_called = false
@@ -697,12 +696,13 @@ describe Aspect, " with :around advice" do
     watchful.public_watchful_method_args.should == [:a4, :a5, :a6]
   end
   
-  it "should return the value returned by the advice, NOT the value returned by the advised join point!" do
-    class ReturningValue
-      def doit args
-        args + ["d"]
-      end
+  class ReturningValue
+    def doit args
+      args + ["d"]
     end
+  end
+
+  it "should return the value returned by the advice, NOT the value returned by the advised join point!" do
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
     @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, obj, *args|
@@ -713,11 +713,6 @@ describe Aspect, " with :around advice" do
   end
 
   it "should return the value returned by the advised join point only if the advice returns the value" do
-    class ReturningValue
-      def doit args
-        args + ["d"]
-      end
-    end
     ary = %w[a b c]
     ReturningValue.new.doit(ary).should == %w[a b c d]
     @aspect = Aspect.new :around, :type => ReturningValue, :method => :doit do |jp, obj, *args|
@@ -923,8 +918,9 @@ end
 %w[public protected private].each do |protection|
   describe Aspect, " when advising and unadvising #{protection} methods" do
     it "should keep the protection level of the advised methods unchanged." do
-      meta   = "#{protection}_instance_methods"
-      method = "#{protection}_watchful_method"
+      meta   = :"#{protection}_instance_methods"
+      method_name = "#{protection}_watchful_method"
+      method = RUBY_VERSION.index("1.8") ? method_name : method_name.intern
       Watchful.send(meta).should include(method)
       aspect = Aspect.new(:after, :type => Watchful, :method => method.intern, :method_options => [protection.intern]) {|jp, obj, *args| true }
       Watchful.send(meta).should include(method)
@@ -935,13 +931,18 @@ end
 end
 
 
+class TypeDefinedMethodClass
+  def inititalize; @called = false; end
+  def m; @called = true; end
+  attr_reader :called
+end
+
+class InstanceDefinedMethodClass
+  def inititalize; @called = false; end
+  attr_reader :called
+end
+
 describe Aspect, " when unadvising methods for instance-type pointcuts for type-defined methods" do
-  class TypeDefinedMethodClass
-    def inititalize; @called = false; end
-    def m; @called = true; end
-    attr_reader :called
-  end
-  
   it "should cause the object to respond to the type's original method." do
     object = TypeDefinedMethodClass.new
     aspect = Aspect.new(:before, :object => object, :method => :m) {true}
@@ -952,11 +953,6 @@ describe Aspect, " when unadvising methods for instance-type pointcuts for type-
 end
 
 describe Aspect, " when unadvising methods for instance-type pointcuts for instance-defined methods" do
-  class InstanceDefinedMethodClass
-    def inititalize; @called = false; end
-    attr_reader :called
-  end
-  
   it "should cause the object to respond to the object's original method." do
     object = TypeDefinedMethodClass.new
     def object.m; @called = true; end
