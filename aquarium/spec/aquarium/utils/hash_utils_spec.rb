@@ -3,6 +3,7 @@ require 'aquarium/spec_example_types'
 require 'aquarium/utils/hash_utils'
 
 describe Aquarium::Utils::HashUtils, "#make_hash" do
+  include Aquarium::Utils::HashUtils
   
   it "should return an empty hash if the input is nil." do
     make_hash(nil).should == {}

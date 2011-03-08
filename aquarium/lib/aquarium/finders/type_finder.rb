@@ -4,7 +4,6 @@ require 'aquarium/utils/type_utils'
 require 'aquarium/utils/invalid_options'
 require 'aquarium/extensions/hash'
 require 'aquarium/extensions/regexp'
-require 'aquarium/extensions/symbol'
 require 'aquarium/finders/finder_result'
 
 # Finds types known to the runtime environment.

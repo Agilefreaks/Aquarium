@@ -1,4 +1,3 @@
-require 'aquarium/extensions/symbol'
 require 'aquarium/utils/html_escaper'
 
 module Aquarium

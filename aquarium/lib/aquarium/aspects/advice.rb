@@ -1,6 +1,5 @@
 require 'aquarium/utils/array_utils'
 require 'aquarium/extensions/string'
-require 'aquarium/extensions/symbol'
 require 'aquarium/utils/invalid_options'
 require 'aquarium/utils/nil_object'
 

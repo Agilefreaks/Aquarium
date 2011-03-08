@@ -153,7 +153,7 @@ describe Aquarium::Finders::FinderResult, "#<<" do
   end    
 end
 
-describe "union of finder results", :shared => true do
+shared_examples_for "union of finder results" do
   it "should return a FinderResult equal to the second, non-empty FinderResult if the first FinderResult is empty." do
     result1 = Aquarium::Finders::FinderResult.new
     result2 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
@@ -221,7 +221,7 @@ describe Aquarium::Finders::FinderResult, "#|" do
   end    
 end
 
-describe "intersection of finder results", :shared => true do
+shared_examples_for "intersection of finder results" do
   it "should return an empty FinderResult if self is empty." do
     result1 = Aquarium::Finders::FinderResult.new
     result2 = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
@@ -298,7 +298,7 @@ describe Aquarium::Finders::FinderResult, "#&" do
 end
 
 
-describe "subtraction of finder results", :shared => true do
+shared_examples_for "subtraction of finder results" do
   it "should return an empty FinderResult if self is substracted from itself." do
     result = Aquarium::Finders::FinderResult.new :b => [:b1, :b2]
     (result - result).should be_empty
@@ -377,7 +377,7 @@ describe Aquarium::Finders::FinderResult, "#.append_not_matched" do
   end
 end
 
-describe "equality", :shared => true do
+shared_examples_for "equality" do
   it "should return true for the same object." do
     result = Aquarium::Finders::FinderResult.new
     result.should be_eql(result)

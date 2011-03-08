@@ -3,6 +3,8 @@ require 'aquarium/utils/array_utils'
 require 'set'
 
 describe Aquarium::Utils::ArrayUtils, "#make_array" do
+  include Aquarium::Utils::ArrayUtils
+  
   it "should return an empty array if the input is nil." do
     make_array(nil).should == []
   end
@@ -50,6 +52,8 @@ describe Aquarium::Utils::ArrayUtils, "#make_array" do
 end
 
 describe Aquarium::Utils::ArrayUtils, "#strip_array_nils" do
+  include Aquarium::Utils::ArrayUtils
+
   it "should return an empty array if an input array contains all nils." do
     strip_array_nils([nil, nil]).should == []
   end

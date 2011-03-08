@@ -15,7 +15,7 @@ end
 class Bar
 end
 
-describe "set comparison", :shared => true do
+shared_examples_for "set comparison" do
   it "should return true for the same set" do
     s = Set.new [Foo.new("f1"), Foo.new("f2")]
     s.should eql(s)

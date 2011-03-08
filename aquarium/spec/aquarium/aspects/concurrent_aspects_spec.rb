@@ -95,7 +95,7 @@ module ConcurrentAspectsSpecSupport
   end
 end
 
-describe "concurrent advice", :shared => true do
+shared_examples_for "concurrent advice" do
   include ConcurrentAspectsSpecSupport
   
   before :all do

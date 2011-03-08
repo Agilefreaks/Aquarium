@@ -9,7 +9,7 @@ module Aquarium
         visited = [Class, Object, Module, clazz]
         result = [clazz]
         Module.constants.each do |const|
-          mod = Module.class_eval(const)
+          mod = Module.class_eval(const.to_s)
           if mod.respond_to?(:ancestors)
             result << mod if mod.ancestors.include?(clazz)
             do_descendents clazz, mod, visited, result
@@ -21,7 +21,7 @@ module Aquarium
       def self.nested clazz
         result = [clazz]
         clazz.constants.each do |const|
-          mod = clazz.class_eval(const)
+          mod = clazz.class_eval(const.to_s)
           next unless is_type?(mod)
           result << mod 
           result << nested(mod)

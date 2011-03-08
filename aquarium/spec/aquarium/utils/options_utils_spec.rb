@@ -1,6 +1,7 @@
 
 require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/utils'
+require 'stringio'
 
 include Aquarium::Utils
 
@@ -157,28 +158,28 @@ end
 
 describe OptionsUtils, ".canonical_option_accessor" do
   it "should create a reader and writer method for each option" do
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("foos")
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("bars")
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("foos=")
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("bars=")
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:foos)
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:bars)
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:foos=)
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:bars=)
   end
   it "should accept individual options" do
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("foos")
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("bars")
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("foos=")
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include("bars=")
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:foos)
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:bars)
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:foos=)
+    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:bars=)
   end
   it "should accept the CANONICAL_OPTIONS as an argument" do
-    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include("foos")
-    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include("bars")
-    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include("foos=")
-    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include("bars=")
+    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include(:foos)
+    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include(:bars)
+    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include(:foos=)
+    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include(:bars=)
   end
 end
 describe OptionsUtils, ".canonical_option_reader" do
   it "creates a reader method for each option" do
-    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should include("foos")
-    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should include("bars")
+    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should include(:foos)
+    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should include(:bars)
     Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should_not include("foos=")
     Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should_not include("bars=")
   end
@@ -190,9 +191,9 @@ end
 describe OptionsUtils, ".canonical_option_writer" do
   it "creates a writer method for each option" do
     Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should_not include("foos")
-    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should_not include("bars")
-    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should include("foos=")
-    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should include("bars=")
+    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should_not include(:bars)
+    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should include(:foos=)
+    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should include(:bars=)
   end
   it "should create writers that convert the input values to sets, if they aren't already sets" do
     object = Aquarium::OptionsUtilsExampleWithAccessors.new

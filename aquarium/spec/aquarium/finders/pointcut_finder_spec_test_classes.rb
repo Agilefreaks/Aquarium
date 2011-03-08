@@ -48,9 +48,9 @@ module Aquarium
       pc_array.sort{|x,y| x.object_id <=> y.object_id}
     end
     def self.found_pointcuts_should_match found_result_set, expected_found_pc_array, expected_not_found_type_array = []
+      self.sort_pc_array(found_result_set.found_pointcuts).should == expected_found_pc_array
       found_result_set.matched.size.should == expected_found_pc_array.size
       found_result_set.not_matched.size.should == expected_not_found_type_array.size
-      self.sort_pc_array(found_result_set.found_pointcuts).should == expected_found_pc_array
     end
 
     def self.all_pointcut_classes

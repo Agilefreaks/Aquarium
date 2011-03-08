@@ -125,6 +125,7 @@ module Aquarium
       def hashify options
         return options if options.kind_of?(Hash)
         new_options = {}
+        options = [options] unless options.kind_of?(Array)
         options.each do |x|
           if x.kind_of?(Hash)
             new_options.merge!(x)
