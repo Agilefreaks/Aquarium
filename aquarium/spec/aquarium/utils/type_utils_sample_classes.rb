@@ -184,6 +184,7 @@ module Aquarium
         else
           sample_classes_ancestors.inject({}) do |map, (k,v)|
             map[k] = (v << BasicObject).sort {|a,b| a.name <=> b.name}
+            map
           end
         end
           
