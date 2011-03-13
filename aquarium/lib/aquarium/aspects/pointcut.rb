@@ -206,13 +206,13 @@ module Aquarium
       # if you care only about the matched join points, then just compare #join_points_matched
       def eql? other
         object_id == other.object_id || 
-        (self.class === other &&
+        (self.class == other.class &&
          specification == other.specification && 
          candidate_types == other.candidate_types && 
          candidate_types_excluded == other.candidate_types_excluded && 
          candidate_objects == other.candidate_objects && 
-         join_points_not_matched == other.join_points_not_matched &&
-         join_points_matched == other.join_points_matched)  # not_matched is probably smaller, so do first.
+         join_points_matched == other.join_points_matched &&
+         join_points_not_matched == other.join_points_not_matched)
       end
   
       alias :== :eql?
@@ -250,7 +250,7 @@ module Aquarium
       def self.make_attribute_reading_writing_options options_hash
         result = {}
         [:writing, :changing, :reading].each do |attr_key|
-          next if options_hash[attr_key].nil? or options_hash[attr_key].empty?
+          next if options_hash[attr_key].nil? or options_hash[attr_key].to_s.empty?
           result[:attributes] ||= Set.new([])
           result[:attribute_options] ||= Set.new([])
           result[:attributes].merge(Aquarium::Utils::ArrayUtils.make_array(options_hash[attr_key]))

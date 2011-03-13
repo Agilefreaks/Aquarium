@@ -159,7 +159,7 @@ module Aquarium
           end
         end
         options << :instance unless (options.include?(:class) or options.include?(:singleton))
-        Set.new(options.sort.uniq)
+        Set.new(options.sort{|x,y| x.to_s <=> y.to_s}.uniq)
       end
   
       def self.all_recognized_method_option_symbols

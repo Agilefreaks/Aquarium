@@ -115,23 +115,20 @@ module Aquarium
           Aquarium::ForDescendents::Nested2ModuleForDescendents,
           ModuleForDescendents]}
 
-      @@sample_classes_ancestors = {
+      sample_classes_ancestors = {
         BaseForDescendents => [
           BaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         D1ForDescendents => [
           D1ForDescendents,
           ModuleForDescendents,
           BaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         D2ForDescendents => [
           D2ForDescendents,
           BaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         D11ForDescendents => [
@@ -139,25 +136,21 @@ module Aquarium
           D1ForDescendents,
           ModuleForDescendents,
           BaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         Aquarium::ForDescendents::NestedBaseForDescendents => [
           Aquarium::ForDescendents::NestedBaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         Aquarium::ForDescendents::NestedD1ForDescendents => [
           Aquarium::ForDescendents::NestedD1ForDescendents,
           Aquarium::ForDescendents::NestedModuleForDescendents,
           Aquarium::ForDescendents::NestedBaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         Aquarium::ForDescendents::NestedD2ForDescendents => [
           Aquarium::ForDescendents::NestedD2ForDescendents,
           Aquarium::ForDescendents::NestedBaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         Aquarium::ForDescendents::NestedD11ForDescendents => [
@@ -165,20 +158,17 @@ module Aquarium
           Aquarium::ForDescendents::NestedD1ForDescendents,
           Aquarium::ForDescendents::NestedModuleForDescendents,
           Aquarium::ForDescendents::NestedBaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         Aquarium::ForDescendents::NestedD3ForDescendents => [
           Aquarium::ForDescendents::NestedD3ForDescendents,
           ModuleForDescendents,
           BaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         Aquarium::ForDescendents::NestedD4ForDescendents => [
           Aquarium::ForDescendents::NestedD4ForDescendents,
           BaseForDescendents,
-          BasicObject,
           Object,
           Kernel],
         Aquarium::ForDescendents::NestedD31ForDescendents => [
@@ -186,9 +176,16 @@ module Aquarium
           D1ForDescendents,
           ModuleForDescendents,
           BaseForDescendents,
-          BasicObject,
           Object,
           Kernel]}
+
+        @@sample_classes_ancestors = if RUBY_VERSION =~ /^1.8/
+          sample_classes_ancestors
+        else
+          sample_classes_ancestors.inject({}) do |map, (k,v)|
+            map[k] = (v << BasicObject).sort {|a,b| a.name <=> b.name}
+          end
+        end
           
         @@sample_types_ancestors = @@sample_classes_ancestors.merge @@sample_modules_ancestors 
           

@@ -58,7 +58,12 @@ module Aquarium
         
         alias :to_s :inspect
     
-        # We require the same object id, not just equal objects.
+        def inspect
+          "JoinPoint::Context: {advice_kind = #{advice_kind}, advised_object = #{advised_object}, parameters = #{parameters}, " +
+          "proceed_proc = #{proceed_proc}, current_advice_node = #{current_advice_node.inspect}, returned_value = #{returned_value}, " +
+          "raised_exception = #{raised_exception}, block_for_method = #{block_for_method}}"
+        end
+
         def <=> other
           return 0 if object_id == other.object_id 
           return 1 if other.nil?
@@ -166,7 +171,6 @@ module Aquarium
         @instance_method
       end
       
-      # We require the same object id, not just equal objects.
       def <=> other
         return 0  if object_id == other.object_id 
         return 1  if other.nil?
@@ -196,7 +200,6 @@ module Aquarium
   
       alias :to_s :inspect
 
-  
       protected
   
       def compare_field field_reader, other
@@ -207,7 +210,13 @@ module Aquarium
         else
           return 1 if field2.nil?
         end
-        block_given? ? (yield field1, field2) : (field1 <=> field2)
+        if block_given?
+          yield field1, field2
+        elsif field1.respond_to?(:<=>)
+          field1 <=> field2
+        else
+          field1.to_s <=> field2.to_s
+        end
       end
       
       def boolean_compare b1, b2

@@ -8,14 +8,11 @@ require 'rake/rdoctask'
 require 'aquarium/version'
 
 # Use RSpec's files.
-require 'spec/rake/spectask'
-require 'spec/rake/verify_rcov'
-
-# TODO: add ../README.markdown to archives.
+require 'rspec/core/rake_task'
 
 # Some of the tasks are in separate files since they are also part of the website documentation
-load File.dirname(__FILE__) + '/rake_tasks/examples.rake'
-load File.dirname(__FILE__) + '/rake_tasks/verify_rcov.rake'
+#load File.dirname(__FILE__) + '/rake_tasks/examples.rake'
+#load File.dirname(__FILE__) + '/rake_tasks/verify_rcov.rake'
 
 PKG_NAME = "aquarium"
 PKG_VERSION   = Aquarium::VERSION::STRING
@@ -29,27 +26,16 @@ PKG_FILES = FileList[
 ]
 FileUtils.touch(File.dirname(__FILE__) + '/previous_failures.txt')
 
-task :default => [:verify_rcov]
+task :default => :spec  
 
 desc "Run all specs"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
-  t.spec_opts = ['--options', 'spec.opts']
-  t.rcov = true
-  t.rcov_dir = '../doc/aquarium/out/coverage'
-  t.rcov_opts = ['--exclude', 'examples']
+RSpec::Core::RakeTask.new do |t|
+  t.rspec_opts = ['--color']
 end
 
 desc "Run all specs and store html output in doc/aquarium/out/report.html"
-Spec::Rake::SpecTask.new('spec_html') do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
-  t.spec_opts = ['--format html:../doc/aquarium/out/report.html','--backtrace']
-end
-
-desc "Run all specs without rcov"
-Spec::Rake::SpecTask.new('spec_no_rcov') do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
-  t.spec_opts = ['--colour']
+RSpec::Core::RakeTask.new('spec_html') do |t|
+  t.rspec_opts = ['--format html:../doc/aquarium/out/report.html','--backtrace']
 end
 
 desc 'Generate HTML documentation for website'

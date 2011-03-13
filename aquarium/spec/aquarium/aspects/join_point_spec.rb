@@ -269,7 +269,6 @@ describe JoinPoint, "#invoke_original_join_point" do
   end
 end
 
-  
 describe JoinPoint, "#dup" do
   it "should duplicate the fields in the join point." do
     jp  = JoinPoint.new :type => String, :method_name => :count

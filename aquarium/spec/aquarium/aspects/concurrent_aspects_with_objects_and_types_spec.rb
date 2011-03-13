@@ -37,7 +37,9 @@ describe "Advising an object join point and then the corresponding type join poi
       rescue ConcurrentlyAccessed::Error
         fail unless advice_kind == :after_raising 
       end
-      @invoked.sort.should == [:object, :type]
+      @invoked.length.should == 2
+      @invoked.should include(:object)
+      @invoked.should include(:type)
     end
   end  
   

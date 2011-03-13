@@ -118,7 +118,9 @@ describe Aquarium::Finders::TypeFinder, "#find types and their descendents and a
     regexs = [/ForDescendents$/, /Aquarium::ForDescendents::.*ForDescendents/]
     actual = Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => regexs, :types_and_descendents => regexs
     actual_keys = purge_actuals actual
-    expected = TypeUtils.sample_types_descendents_and_ancestors.keys + [Kernel, BasicObject, Object]
+    extras = RUBY_VERSION =~ /^1.8/ ? [Kernel, Object] : [Kernel, BasicObject, Object]
+    
+    expected = TypeUtils.sample_types_descendents_and_ancestors.keys + extras
     actual_keys.size.should == expected.size
     expected.each do |t|
       actual_keys.should include(t)

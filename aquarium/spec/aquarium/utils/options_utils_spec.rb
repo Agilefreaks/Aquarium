@@ -156,44 +156,39 @@ module Aquarium
   end
 end
 
+def method_checks which_type, has_methods, has_not_methods = []
+  # Handle 1.8 vs. 1.9 difference; convert methods names uniformly to symbols
+  methods = which_type.instance_methods.map {|m| m.intern}
+  has_methods.each     {|m| methods.should include(m)}
+  has_not_methods.each {|m| methods.should_not include(m)}
+end
+
 describe OptionsUtils, ".canonical_option_accessor" do
+  
   it "should create a reader and writer method for each option" do
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:foos)
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:bars)
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:foos=)
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:bars=)
+    method_checks Aquarium::OptionsUtilsExampleWithAccessors, [:foos, :bars, :foos=, :bars=]
   end
   it "should accept individual options" do
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:foos)
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:bars)
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:foos=)
-    Aquarium::OptionsUtilsExampleWithAccessors.instance_methods.should include(:bars=)
+    method_checks Aquarium::OptionsUtilsExampleWithAccessors, [:foos, :bars, :foos=, :bars=]
   end
   it "should accept the CANONICAL_OPTIONS as an argument" do
-    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include(:foos)
-    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include(:bars)
-    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include(:foos=)
-    Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors.instance_methods.should include(:bars=)
+    method_checks Aquarium::OptionsUtilsExampleWithCanonicalOptionsAccessors, [:foos, :bars, :foos=, :bars=]
   end
 end
+
 describe OptionsUtils, ".canonical_option_reader" do
   it "creates a reader method for each option" do
-    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should include(:foos)
-    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should include(:bars)
-    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should_not include("foos=")
-    Aquarium::OptionsUtilsExampleWithReaders.instance_methods.should_not include("bars=")
+    method_checks Aquarium::OptionsUtilsExampleWithReaders, [:foos, :bars], [:foos=, :bars=]
   end
   it "should create readers that return set values" do
     object = Aquarium::OptionsUtilsExampleWithReaders.new
     object.foos.class.should == Set
   end
 end
+
 describe OptionsUtils, ".canonical_option_writer" do
   it "creates a writer method for each option" do
-    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should_not include("foos")
-    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should_not include(:bars)
-    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should include(:foos=)
-    Aquarium::OptionsUtilsExampleWithWriters.instance_methods.should include(:bars=)
+    method_checks Aquarium::OptionsUtilsExampleWithWriters, [:foos=, :bars=], [:foos, :bars]
   end
   it "should create writers that convert the input values to sets, if they aren't already sets" do
     object = Aquarium::OptionsUtilsExampleWithAccessors.new

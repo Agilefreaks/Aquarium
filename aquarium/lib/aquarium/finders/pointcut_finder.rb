@@ -82,6 +82,7 @@ module Aquarium
         types = types_search_result.matched.keys
         pointcuts = PoincutFinderResult.new
         unless any_names_given? 
+          # todo: This causes the last pointcut_finder_spec to fail!
           pointcuts << find_constant_pointcuts(types)
           pointcuts << find_class_variable_pointcuts(types)
           return pointcuts
@@ -135,7 +136,7 @@ module Aquarium
         elsif names.kind_of?(String) or names.kind_of?(Symbol)
           names.to_s.eql? candidate
         else
-          names.inject(false) {|matches, name| matches = true if matches_name(candidate, name); matches}
+          names.any? {|name| matches_name(candidate, name)}
         end
       end
       
@@ -146,7 +147,7 @@ module Aquarium
         elsif names.kind_of?(String) or names.kind_of?(Symbol)
           names.to_s =~ /^@@/ ? names.to_s : "@@#{names}"
         else
-          names.inject([]) {|result, name| result << to_class_variable_name(name); result}
+          names.inject([]) {|result, name| result << to_class_variable_name(name)}
         end
       end
       

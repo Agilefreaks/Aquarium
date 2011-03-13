@@ -145,7 +145,7 @@ module Aquarium
         super options
       end
       def advice_wrapper jp
-        jp.context.advised_object.send @alias_method_name, *jp.context.parameters, &jp.context.block_for_method
+        jp.context.advised_object.__send__ @alias_method_name, *jp.context.parameters, &jp.context.block_for_method
       end
     end
 

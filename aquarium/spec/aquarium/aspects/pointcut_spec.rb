@@ -96,7 +96,7 @@ end
 
 def ignored_join_point jp
   # Ignore any types introduced by RSpec, other Aquarium types, and the "pretty printer" module (which Rake uses?)
-  jp.target_type.name =~ /^Spec/ or 
+  jp.target_type.name =~ /^R?Spec/ or 
   jp.target_type.name =~ /^Aquarium::(Aspects|Extras|Utils|PointcutFinderTestClasses)/ or 
   jp.target_type.name =~ /^PP/ or
   jp.target_type.name =~ /InstanceExecHelper/
@@ -1725,6 +1725,7 @@ describe Pointcut, "methods" do
       pc1 = Pointcut.new  :types => /Class.*Method/, :methods => /_test_method$/
       pc2 = Pointcut.new  :types => /Class.*Method/, :methods => /_test_method$/
       pc3 = Pointcut.new  :objects => [ClassWithPublicInstanceMethod.new, ClassWithPublicInstanceMethod.new]
+      
       pc1.should be_eql(pc1)
       pc1.should be_eql(pc2)
       pc1.should_not eql(pc3)

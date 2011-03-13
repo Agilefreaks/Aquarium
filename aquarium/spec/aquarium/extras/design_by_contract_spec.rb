@@ -28,7 +28,7 @@ describe Aquarium::Extras::DesignByContract, "postcondition" do
     end
     
     postcondition :method => :action, :message => "Must pass more than one argument and first argument must be non-empty." do |jp, obj, *args|
-      args.size > 0 && ! args[0].empty?
+      args.size > 0 && ! args[0].to_s.empty?
     end
   end
   
