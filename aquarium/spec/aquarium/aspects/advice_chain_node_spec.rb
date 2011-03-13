@@ -1,5 +1,4 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-require 'aquarium/spec_example_types'
 require 'aquarium'
 
 include Aquarium::Aspects::Advice

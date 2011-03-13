@@ -5,6 +5,16 @@ module Aquarium
   module Utils
     module MethodUtils
       
+      # The metaprogramming methods such as "public_instance_methods" require
+      # strings for 1.8, symbols for 1.9.
+      def self.to_name string_or_symbol
+        if RUBY_VERSION =~ /^1.8/
+          string_or_symbol.to_s
+        else
+          string_or_symbol.intern
+        end
+      end
+      
       def self.method_args_to_hash *args
         return {} if args.empty? || (args.size == 1 && args[0].nil?)
         hash = (args[-1] and args[-1].kind_of? Hash) ? args.pop : {}

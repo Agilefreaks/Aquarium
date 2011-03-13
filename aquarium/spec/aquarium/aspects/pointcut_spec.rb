@@ -95,7 +95,10 @@ def before_pointcut_module_spec
 end
 
 def ignored_join_point jp
-  # Ignore any types introduced by RSpec, other Aquarium types, and the "pretty printer" module (which Rake uses?)
+  # Ignore any type ambiguities introduced by Ruby 1.9.X.
+  # Igore types introduced by RSpec, other Aquarium types, 
+  # and the "pretty printer" module (which Rake uses?)
+  jp.target_type.name =~ /^(Basic)?Object/ or 
   jp.target_type.name =~ /^R?Spec/ or 
   jp.target_type.name =~ /^Aquarium::(Aspects|Extras|Utils|PointcutFinderTestClasses)/ or 
   jp.target_type.name =~ /^PP/ or
@@ -286,7 +289,7 @@ describe Pointcut, "methods" do
 
     it "should match classes specified and their ancestor and descendent modules and classes." do
       pc = Pointcut.new :types_and_ancestors => /^Class(Including|DerivedFrom).*Method/, :types_and_descendents => /^Class(Including|DerivedFrom).*Method/, :methods => :all, :method_options => :exclude_ancestor_methods
-      expected_types = @example_modules_with_public_instance_method + [Kernel, Module, Object]
+      expected_types = @example_modules_with_public_instance_method + [Kernel, Module]
       pc.join_points_matched.each do |jp|
         next if ignored_join_point(jp)
         expected_types.should include(jp.target_type)
@@ -555,15 +558,14 @@ describe Pointcut, "methods" do
       expected_types = [
         ClassDerivedFromClassIncludingModuleWithPublicInstanceMethod, 
         ClassIncludingModuleWithPublicInstanceMethod,
-        Kernel,
-        Object]
+        Kernel]
       found_types = {}
       pc.join_points_matched.each do |jp|
         next if ignored_join_point(jp)
         expected_types.should include(jp.target_type)
         found_types[jp.target_type] = true
       end
-      found_types.size.should == 4
+      found_types.size.should == 3
       not_expected_types = @expected_modules_not_matched_jps.map {|jp| jp.target_type}
       pc.join_points_not_matched.each do |jp|
         next if ignored_join_point(jp)
@@ -583,14 +585,14 @@ describe Pointcut, "methods" do
     end
 
     def check_module_descendents pc
-      expected_types = [Kernel, Object]
+      expected_types = [Kernel]
       found_types = {}
       pc.join_points_matched.each do |jp|
         next if ignored_join_point(jp)
         expected_types.should include(jp.target_type)
         found_types[jp.target_type] = true
       end
-      found_types.size.should == 2
+      found_types.size.should == 1
       not_expected_types = @expected_modules_not_matched_jps.map {|jp| jp.target_type}
       pc.join_points_not_matched.each do |jp|
         next if ignored_join_point(jp)
@@ -637,14 +639,14 @@ describe Pointcut, "methods" do
     end
   
     def check_class_descendents pc
-      expected_types = [Kernel, ModuleIncludingModuleWithPublicInstanceMethod, ModuleWithPublicInstanceMethod, Object]
+      expected_types = [Kernel, ModuleIncludingModuleWithPublicInstanceMethod, ModuleWithPublicInstanceMethod]
       found_types = {}
       pc.join_points_matched.each do |jp|
         next if ignored_join_point(jp)
         expected_types.should include(jp.target_type)
         found_types[jp.target_type] = true
       end
-      found_types.size.should == 4
+      found_types.size.should == 3
       not_expected_types = @expected_modules_not_matched_jps.map {|jp| jp.target_type}
       pc.join_points_not_matched.each do |jp|
         next if ignored_join_point(jp)

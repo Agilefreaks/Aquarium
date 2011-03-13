@@ -6,24 +6,23 @@ require 'rake'
 require 'rake/clean'
 
 # Use RSpec's files.
-require 'spec/rake/spectask'
-require 'spec/rake/verify_rcov'
+require 'rspec/core/rake_task'
 
 task :default => [:jruby]
 
 task :jruby => [:aquarium_spec, :jruby_spec] 
 
 desc "Run all specs"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
-  t.spec_opts = ['--colour']
+RSpec::Core::RakeTask.new do |t|
+  # t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
+  t.rspec_opts = ['--colour'] + FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
 end
 task :spec => :verify_jruby
 
 desc "Run all specs in reverse"
-Spec::Rake::SpecTask.new(:spec_in_reverse) do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
-  t.spec_opts = ['--reverse', '--colour']
+RSpec::Core::RakeTask.new(:spec_in_reverse) do |t|
+  #t.spec_files = FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
+  t.rspec_opts = ['--reverse', '--colour'] + FileList['spec/**/*_spec.rb', 'examples/**/*_spec.rb']
 end
 task :spec => :verify_jruby
 
@@ -31,13 +30,15 @@ desc "Run all of aquarium's specs using JRuby"
 task :aquarium_spec => :verify_jruby do
   output = nil
   Dir.chdir '..' do
-    sh "rake spec_no_rcov"
+    sh "rake spec"
   end
 end
 
 task :verify_jruby do
   unless self.class.const_defined? "JRUBY_VERSION"
     raise "ERROR: You must run these rake tasks with jruby."
+  else
+    raise "WARNING: JRuby support is not provided in this release. See ../CHANGES for details."
   end
 end
 

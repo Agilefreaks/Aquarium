@@ -1,6 +1,7 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/spec_example_types'
 require 'aquarium/aspects'
+require 'aquarium/utils'
 require 'logger'
 
 include Aquarium::Aspects
@@ -920,7 +921,7 @@ end
     it "should keep the protection level of the advised methods unchanged." do
       meta   = :"#{protection}_instance_methods"
       method_name = "#{protection}_watchful_method"
-      method = RUBY_VERSION.index("1.8") ? method_name : method_name.intern
+      method = Aquarium::Utils::MethodUtils.to_name method_name
       Watchful.send(meta).should include(method)
       aspect = Aspect.new(:after, :type => Watchful, :method => method.intern, :method_options => [protection.intern]) {|jp, obj, *args| true }
       Watchful.send(meta).should include(method)

@@ -5,7 +5,7 @@ require 'aquarium/aspects/aspect'
 require 'aquarium/dsl'
 require 'aquarium/utils/array_utils'
 require 'aquarium/finders/pointcut_finder_spec_test_classes'
-
+require 'stringio'
 require 'profiler'
 
 include Aquarium::Aspects
@@ -156,6 +156,7 @@ describe Aspect, "methods" do
       aspect = Aspect.new(:after, :default_objects => object1, :object => object2, :method => :public_test_method) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object1}
+      aspect.unadvise
     end
 
     it "should ignore the :default_objects if at least one other :object is given and the :default_objects are types." do
@@ -164,6 +165,7 @@ describe Aspect, "methods" do
         :object => object, :method => :public_test_method) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+      aspect.unadvise
     end
 
     it "should ignore the :default_objects if at least one :pointcut is given even if the :default_objects => object are given." do
@@ -172,6 +174,7 @@ describe Aspect, "methods" do
         :pointcut => {:type => Aquarium::AspectInvocationTestClass2, :method => :public_test_method}, :method => :public_test_method) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
+      aspect.unadvise
     end
 
     it "should ignore the :default_objects if at least one :pointcut is given even if the :default_objects => type are given." do
@@ -179,6 +182,7 @@ describe Aspect, "methods" do
         :pointcut => {:type => Aquarium::AspectInvocationTestClass2, :method => :public_test_method}, :method => :public_test_method) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+      aspect.unadvise
     end
 
     it "should ignore the :default_objects if at least one :join_point is given and the :default_objects are objects." do
@@ -187,6 +191,7 @@ describe Aspect, "methods" do
       aspect = Aspect.new(:after, :default_objects => object, :join_point => join_point, :method => :public_test_method) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
+      aspect.unadvise
     end
 
     it "should ignore the :default_objects if at least one :join_point is given and the :default_objects are types." do
@@ -194,6 +199,7 @@ describe Aspect, "methods" do
       aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, :join_point => join_point, :method => :public_test_method) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+      aspect.unadvise
     end
 
     [:type, :type_and_descendents, :type_and_ancestors, :type_and_nested_types].each do |type_key|
@@ -202,18 +208,21 @@ describe Aspect, "methods" do
         aspect = Aspect.new(:after, :default_objects => object, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method, :method => :public_test_method) {true}
         aspect.join_points_matched.size.should == 1
         aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
+        aspect.unadvise
       end
 
       it "should ignore the :default_objects if at least one :#{type_key} is given and the :default_objects are types." do
         aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method, :method => :public_test_method) {true}
         aspect.join_points_matched.size.should == 1
         aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+        aspect.unadvise
       end
     end
 
     Aspect::CANONICAL_OPTIONS["default_objects"].each do |key|
       it "should accept :#{key} as a synonym for :default_objects." do
         aspect = Aspect.new(:after, key.intern => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method, :noop => true) {true}
+        aspect.unadvise
       end
     end
   
@@ -234,17 +243,20 @@ describe Aspect, "methods" do
       aspect = Aspect.new(:after, :default_objects => object, :named_pointcut => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
+      aspect.unadvise
     end
 
     it "should ignore the :default_objects if at least one :named_pointcut is given even if the :default_objects => type are given." do
       aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, :named_pointcut => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}) {true}
       aspect.join_points_matched.size.should == 1
       aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
+      aspect.unadvise
     end
 
     Aspect::CANONICAL_OPTIONS["named_pointcuts"].each do |key|
       it "should accept :#{key} as a synonym for :named_pointcuts." do
-        lambda { Aspect.new :before, key.intern => {:types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes}, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, key.intern => {:types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes}, :noop => true do; end
+        aspect.unadvise
       end
     end
 
@@ -265,7 +277,8 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["types"].each do |key|
       it "should accept :#{key} as a synonym for :types." do
-        lambda { Aspect.new :before, key.intern => Aquarium::AspectInvocationTestClass, :method => :public_test_method, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, key.intern => Aquarium::AspectInvocationTestClass, :method => :public_test_method, :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -281,7 +294,8 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["pointcuts"].each do |key|
       it "should accept :#{key} as a synonym for :pointcuts." do
-        lambda { Aspect.new :before, key.intern => {:type => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, key.intern => {:type => Aquarium::AspectInvocationTestClass, :method => :public_test_method}, :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -299,7 +313,8 @@ describe Aspect, "methods" do
     Aspect::CANONICAL_OPTIONS["objects"].each do |key|
       it "should accept :#{key} as a synonym for :objects." do
         object = Aquarium::AspectInvocationTestClass.new
-        lambda { Aspect.new :before, key.intern => object, :method => :public_test_method, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, key.intern => object, :method => :public_test_method, :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -315,7 +330,8 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["methods"].each do |key|
       it "should accept :#{key} as a synonym for :methods." do
-        lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, key.intern => :public_test_method, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, key.intern => :public_test_method, :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -1475,23 +1491,28 @@ describe Aspect, "methods" do
     end
 
     it "should accept an argument list matching |jp, object, *args|." do
-      lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp, object, *args|; end }.should_not raise_error(Exception)
+      aspect = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp, object, *args|; end
+      aspect.unadvise
     end
 
     it "should accept an argument list matching |jp, object|." do
-      lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp, object|; end }.should_not raise_error(Exception)
+      aspect = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp, object|; end
+      aspect.unadvise
     end
 
     it "should accept an argument list matching |jp|." do
-      lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp|; end }.should_not raise_error(Exception)
+      aspect = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do |jp|; end
+      aspect.unadvise
     end
 
     it "should accept an argument list matching ||." do
-      lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do ||; end }.should_not raise_error(Exception)
+      aspect = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do ||; end
+      aspect.unadvise
     end
 
     it "should accept no argument list." do
-      lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do; end }.should_not raise_error(Exception)
+      aspect = Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method, :noop => true do; end
+      aspect.unadvise
     end
   end
   
@@ -1561,7 +1582,8 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_types"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types." do
-        lambda { Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end
+        aspect.unadvise
       end
     end
 
@@ -1571,7 +1593,8 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_types_and_ancestors"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_ancestors." do
-        lambda { Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end
+        aspect.unadvise
       end
     end
 
@@ -1581,7 +1604,8 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_types_and_descendents"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_descendents." do
-        lambda { Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end
+        aspect.unadvise
       end
     end
 
@@ -1591,7 +1615,8 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_types_and_nested_types"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_nested_types." do
-        lambda { Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, :types => @all_types, key.intern => @excluded_types, :methods => :doit, :noop => true do; end
+        aspect.unadvise
       end
     end
 
@@ -1631,7 +1656,8 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_objects"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_objects." do
-        lambda { Aspect.new :before, :objects => @all_objects, key.intern => @excluded_objects, :methods => :doit, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, :objects => @all_objects, key.intern => @excluded_objects, :methods => :doit, :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -1674,7 +1700,8 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_join_points"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_join_points." do
-        lambda { Aspect.new :before, :objects => @all_objects, key.intern => @excluded_join_points, :methods => :doit, :noop => true do; end }.should_not raise_error
+        aspect = Aspect.new :before, :objects => @all_objects, key.intern => @excluded_join_points, :methods => :doit, :noop => true do; end
+        aspect.unadvise
       end
     end
   end  
@@ -1836,7 +1863,8 @@ describe Aspect, "methods" do
   
     Aspect::CANONICAL_OPTIONS["exclude_pointcuts"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_pointcuts." do
-        lambda {aspect = Aspect.new :before, :objects => @all_objects, key.intern => @excluded_pointcuts, :methods => :doit, :noop => true do; end}.should_not raise_error
+        aspect = Aspect.new :before, :objects => @all_objects, key.intern => @excluded_pointcuts, :methods => :doit, :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -1931,9 +1959,10 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_named_pointcuts"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_named_pointcuts." do
-        lambda {aspect = Aspect.new :before,  :pointcuts => Aquarium::PointcutFinderTestClasses.all_pointcuts, 
+        aspect = Aspect.new :before,  :pointcuts => Aquarium::PointcutFinderTestClasses.all_pointcuts, 
           key.intern => {:matching => /POINTCUT/, :in_types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes},
-          :noop => true do; end}.should_not raise_error
+          :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -1968,8 +1997,9 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_types"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types." do
-        lambda {aspect = Aspect.new :before,  :pointcuts => [@pointcut1, @pointcut2], key.intern => @excluded_types,
-          :noop => true do; end}.should_not raise_error
+        aspect = Aspect.new :before,  :pointcuts => [@pointcut1, @pointcut2], key.intern => @excluded_types,
+          :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -1993,8 +2023,9 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_types_and_ancestors"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_ancestors." do
-        lambda {aspect = Aspect.new :before,  :pointcuts => @pointcut1, key.intern => @excluded_types,
-          :noop => true do; end}.should_not raise_error
+        aspect = Aspect.new :before,  :pointcuts => @pointcut1, key.intern => @excluded_types,
+          :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -2014,8 +2045,9 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_types_and_descendents"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_descendents." do
-        lambda {aspect = Aspect.new :before, :pointcuts => @pointcut1, key.intern => @excluded_types,
-          :ignore_no_matching_join_points => true, :noop => true do; end}.should_not raise_error
+        aspect = Aspect.new :before, :pointcuts => @pointcut1, key.intern => @excluded_types,
+          :ignore_no_matching_join_points => true, :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -2035,8 +2067,9 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_types_and_nested_types"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_nested_types." do
-        lambda {aspect = Aspect.new :before, :pointcuts => @pointcut1, key.intern => @excluded_types,
-          :ignore_no_matching_join_points => true, :noop => true do; end}.should_not raise_error
+        aspect = Aspect.new :before, :pointcuts => @pointcut1, key.intern => @excluded_types,
+          :ignore_no_matching_join_points => true, :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -2075,8 +2108,9 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_objects"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_objects." do
-        lambda {aspect = Aspect.new :before, :pointcuts => [@pointcut1, @pointcut2], key.intern => @excluded_objects,
-          :noop => true do; end}.should_not raise_error
+        aspect = Aspect.new :before, :pointcuts => [@pointcut1, @pointcut2], key.intern => @excluded_objects,
+          :noop => true do; end
+        aspect.unadvise
       end
     end
   end
@@ -2135,7 +2169,8 @@ describe Aspect, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_methods"].each do |key|
       it "should accept :#{key} as a synonym for :exclude_methods." do
-        lambda { Aspect.new :before, :pointcuts => [@pointcut1, @pointcut2, @pointcut3, @pointcut4], key.intern => :doit3, :noop => true }.should_not raise_error
+        aspect = Aspect.new :before, :pointcuts => [@pointcut1, @pointcut2, @pointcut3, @pointcut4], key.intern => :doit3, :noop => true
+        aspect.unadvise
       end
     end
   

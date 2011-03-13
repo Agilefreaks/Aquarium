@@ -18,6 +18,19 @@ describe Advice, "#sort_by_priority_order" do
   end
 end
 
+def puts_advice_chain aspect, label
+    puts label
+    aspect.pointcuts.each do |pc|
+      pc.join_points_matched.each do |jp|
+        chain = Aspect.get_advice_chain(jp)
+        chain.each do |a|
+          puts "advice_node: #{a.inspect}"
+        end
+        puts "last: #{chain.last}"
+      end
+    end
+    puts ""
+end
 describe Advice, "#invoke_original_join_point" do
   class InvocationCounter
     def initialize; @counter = 0; end

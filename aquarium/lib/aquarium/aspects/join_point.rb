@@ -194,8 +194,9 @@ module Aquarium
       alias :==  :eql?
       alias :=== :eql?
   
+      #todo: restore context output.
       def inspect
-        "JoinPoint: {target_type = #{target_type.inspect}, target_object = #{target_object.inspect}, method_name = #{method_name}, instance_method? #{instance_method?}, context = " # #{context.inspect}}"
+        "JoinPoint: {target_type = #{target_type.nil? ? target_type : target_type.name}, target_object = #{target_object.inspect}, method_name = #{method_name}, instance_method? #{instance_method?}, context = #{context.inspect}"
       end
   
       alias :to_s :inspect

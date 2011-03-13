@@ -1,6 +1,7 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/spec_example_types'
 require 'aquarium/finders/method_finder'
+require 'stringio'
 
 # :stopdoc:
 class Base
@@ -336,7 +337,7 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
       expected[clazz] = [:respond_to?]
     end
     class_array = [Kernel, Module, Object, Class]
-    actual = Aquarium::Finders::MethodFinder.new.find :types => class_array, :methods => [/^resp.*\?$/, /^ch.*\!$/], :method_options => :class
+    actual = Aquarium::Finders::MethodFinder.new.find :types => class_array, :methods => [/^resp.*to\?$/, /^ch.*\!$/], :method_options => :class
     class_array.each do |c|
       actual.matched[c].should == Set.new(expected[c])
     end

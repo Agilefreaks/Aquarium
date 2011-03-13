@@ -30,7 +30,7 @@ task :default => :spec
 
 desc "Run all specs"
 RSpec::Core::RakeTask.new do |t|
-  t.rspec_opts = ['--color']
+  t.rspec_opts = ['--color', '--format progress', '--profile']
 end
 
 desc "Run all specs and store html output in doc/aquarium/out/report.html"

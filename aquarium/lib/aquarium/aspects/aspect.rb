@@ -341,7 +341,7 @@ module Aquarium
       end
 
       def join_point_for_aspect_implementation_method? join_point
-        join_point.method_name.to_s.index("#{Aspect.aspect_method_prefix}") == 0
+        join_point.method_name.to_s.index(Aspect.aspect_method_prefix.to_s) == 0
       end
       
       def add_advice_to_chain join_point, advice_kind, advice
@@ -375,12 +375,12 @@ module Aquarium
       end
 
       def need_advice_framework? join_point
-        alias_method_name = (Aspect.make_saved_method_name join_point).intern
+        alias_method_name = (Aspect.make_saved_method_name join_point)
         private_method_defined?(join_point, alias_method_name) == false
       end
       
       def add_advice_framework join_point
-        alias_method_name = (Aspect.make_saved_method_name join_point).intern
+        alias_method_name = (Aspect.make_saved_method_name join_point)
         type_to_advise = Aspect.type_to_advise_for join_point
         # Note: Must set advice chain, a class variable on the type we're advising, FIRST. 
         # Otherwise the class_eval that follows will assume the @@ advice chain belongs to Aspect!
@@ -496,7 +496,7 @@ module Aquarium
       end
   
       def restore_original_method_text join_point
-        alias_method_name = (Aspect.make_saved_method_name join_point).intern
+        alias_method_name = (Aspect.make_saved_method_name join_point)
         <<-EOF
           #{join_point.instance_method? ? "" : "class << self"}
           #{unalias_original_method_text alias_method_name, join_point}
@@ -527,7 +527,8 @@ module Aquarium
 
       def private_method_defined? join_point, alias_method_name
         type_to_advise = Aspect.type_to_advise_for join_point
-        type_to_advise.send(:private_instance_methods).include? alias_method_name.to_s
+        method_name = Aquarium::Utils::MethodUtils.to_name alias_method_name
+        type_to_advise.send(:private_instance_methods).include? method_name
       end
   
       def self.make_advice_chain_attr_sym join_point
@@ -540,7 +541,7 @@ module Aquarium
       def self.make_saved_method_name join_point
         type_or_object_key = make_type_or_object_key join_point
         valid_name = Aquarium::Utils::NameUtils.make_valid_attr_name_from_method_name join_point.method_name
-        "#{Aspect.aspect_method_prefix}saved_#{type_or_object_key}_#{valid_name}"
+        "#{Aspect.aspect_method_prefix}saved_#{type_or_object_key}_#{valid_name}".intern
       end
   
       def self.aspect_method_prefix

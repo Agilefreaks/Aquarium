@@ -1,6 +1,24 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 require 'aquarium/utils/method_utils'
 
+describe Aquarium::Utils::MethodUtils, ".to_name" do
+  it "should return a String for Ruby 1.8" do
+    name = Aquarium::Utils::MethodUtils.to_name "length"
+    if RUBY_VERSION =~ /^1.8/
+      name.class.should == String
+    end
+    String.public_instance_methods.include?(name)
+  end
+
+  it "should return a Symbol for Ruby 1.9" do
+    name = Aquarium::Utils::MethodUtils.to_name "length"
+    if RUBY_VERSION =~ /^1.9/
+      name.class.should == Symbol
+    end
+    String.public_instance_methods.include?(name)
+  end
+end
+
 describe Aquarium::Utils::MethodUtils, ".method_args_to_hash" do
 
   it "should return an empty hash for no arguments." do

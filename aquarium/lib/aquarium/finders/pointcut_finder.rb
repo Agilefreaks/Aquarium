@@ -82,7 +82,6 @@ module Aquarium
         types = types_search_result.matched.keys
         pointcuts = PoincutFinderResult.new
         unless any_names_given? 
-          # todo: This causes the last pointcut_finder_spec to fail!
           pointcuts << find_constant_pointcuts(types)
           pointcuts << find_class_variable_pointcuts(types)
           return pointcuts
@@ -108,13 +107,23 @@ module Aquarium
         types.each do |t|
           candidates = t.constants.select {|c| matches_name(c, names)}
           candidates.each do |c|
-            if t.const_defined? c
+            if is_const_defined? t, c
               con = t.const_get c
               pointcuts.append_matched({t => con}) if con.kind_of?(Aquarium::Aspects::Pointcut)
             end
           end
         end
         pointcuts
+      end
+      
+      # Handle Ruby 1.8 vs. 1.9. We don't want to return true
+      # if the const is defined in an ancestor.
+      def is_const_defined? type, name
+        if RUBY_VERSION =~ /^1.8/
+          type.const_defined? name
+        else
+          type.const_defined? name, false
+        end
       end
       
       def find_class_variable_pointcuts types, names = :all
@@ -132,9 +141,9 @@ module Aquarium
       def matches_name candidate, names
         return true if names == :all
         if names.kind_of? Regexp
-          names.match candidate
+          names.match candidate.to_s
         elsif names.kind_of?(String) or names.kind_of?(Symbol)
-          names.to_s.eql? candidate
+          names.to_s.eql? candidate.to_s
         else
           names.any? {|name| matches_name(candidate, name)}
         end

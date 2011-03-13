@@ -1,6 +1,10 @@
 == Version 0.5.0
 
-V0.5.0 adds support for Ruby 1.9.1, JRuby 1.4.0, and Webgen (0.5.10 - for the build process). It also has some minor API changes summarized below.
+V0.5.0 adds support for Ruby 1.9.1, 1.9.2, RSpec 2.5, and Webgen (0.5.10 - for the build process). 
+
+WARNING: JRuby support is not available in this release, due to lack of demand the need to complete the Ruby 1.9.X ports quickly. Restoring support for JRuby is planned, but the timeframe is TBD.
+
+It also has some minor API changes summarized below.
 
 Enhancements:
 22558	Support Ruby 1.9

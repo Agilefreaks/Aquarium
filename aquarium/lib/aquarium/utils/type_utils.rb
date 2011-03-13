@@ -1,3 +1,5 @@
+require 'set'
+
 module Aquarium
   module Utils
     module TypeUtils
@@ -6,7 +8,10 @@ module Aquarium
       end
 
       def self.descendents clazz
-        visited = [Class, Object, Module, clazz]
+        visited = Set.new([Class, Object, Module, clazz])
+        if RUBY_VERSION =~ /^1.9/
+          visited << BasicObject 
+        end
         result = [clazz]
         Module.constants.each do |const|
           mod = Module.class_eval(const.to_s)
@@ -34,6 +39,7 @@ module Aquarium
       # For JRuby classes, we have to "__x__" forms of the reflection methods that don't end in '?'. 
       # That includes "send", so we do some ugly switching, rather than call "mod.send(method_name)"
       # or "mod.__send__(method_name)"!
+      # TODO: is this still true with the latest JRUBY versions?
       def self.do_descendents clazz, visiting_module, visited, result
         visited << visiting_module
         use_underscore_methods = use_underscore_methods? visiting_module

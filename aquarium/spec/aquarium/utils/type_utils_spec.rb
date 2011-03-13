@@ -31,13 +31,15 @@ describe TypeUtils, ".descendents called with a class" do
   end
 
   it "should return just the class if it has no descendents" do
-    TypeUtils.descendents(D11ForDescendents).should eql([D11ForDescendents])
-    TypeUtils.descendents(D2ForDescendents).should  eql([D2ForDescendents])
-    TypeUtils.descendents(Aquarium::ForDescendents::NestedD11ForDescendents).should  eql([Aquarium::ForDescendents::NestedD11ForDescendents])
-    TypeUtils.descendents(Aquarium::ForDescendents::NestedD2ForDescendents).should   eql([Aquarium::ForDescendents::NestedD2ForDescendents])
-    TypeUtils.descendents(Aquarium::ForDescendents::NestedD3ForDescendents).should   eql([Aquarium::ForDescendents::NestedD3ForDescendents])
-    TypeUtils.descendents(Aquarium::ForDescendents::NestedD4ForDescendents).should   eql([Aquarium::ForDescendents::NestedD4ForDescendents])
-    TypeUtils.descendents(Aquarium::ForDescendents::NestedD31ForDescendents).should  eql([Aquarium::ForDescendents::NestedD31ForDescendents])
+    [D11ForDescendents, 
+     D2ForDescendents, 
+     Aquarium::ForDescendents::NestedD11ForDescendents,
+     Aquarium::ForDescendents::NestedD2ForDescendents,
+     Aquarium::ForDescendents::NestedD3ForDescendents,
+     Aquarium::ForDescendents::NestedD4ForDescendents,
+     Aquarium::ForDescendents::NestedD31ForDescendents].each do |t|
+      TypeUtils.descendents(t).should eql([t])
+    end
   end
 
   TypeUtils.sample_classes.each do |t|
