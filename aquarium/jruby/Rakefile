@@ -38,7 +38,7 @@ task :verify_jruby do
   unless self.class.const_defined? "JRUBY_VERSION"
     raise "ERROR: You must run these rake tasks with jruby."
   else
-    raise "WARNING: JRuby support is not provided in this release. See ../CHANGES for details."
+    #raise "WARNING: JRuby support is not provided in this release. See ../CHANGES for details."
   end
 end
 

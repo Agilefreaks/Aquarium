@@ -1425,15 +1425,15 @@ describe Pointcut, "methods" do
     end
   end
 
-  describe Pointcut, ".new (methods that end in non-alphanumeric characters)" do
-    class ClassWithFunkyMethodNames
-      def huh?; true; end
-      def yes!; true; end
-      def x= other; false; end
-      def == other; false; end
-      def =~ other; false; end
-    end
+  class ClassWithFunkyMethodNames
+    def huh?; true; end
+    def yes!; true; end
+    def x= other; false; end
+    def == other; false; end
+    def =~ other; false; end
+  end
   
+  describe Pointcut, ".new (methods that end in non-alphanumeric characters)" do
     before(:each) do
       @funky = ClassWithFunkyMethodNames.new
     end  

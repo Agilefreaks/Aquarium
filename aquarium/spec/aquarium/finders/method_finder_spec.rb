@@ -327,10 +327,10 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
   end
   
   it "should find all class methods specified by regular expression for types when :class is used." do
-    # NOTE: The list of methods defined by Kernel is different for MRI and JRuby!
+    # NOTE: The list of methods defined by Kernel is different for Ruby 1.8 and 1.9.
     expected = {}
     expected[Kernel] = [:respond_to?]
-    if RUBY_VERSION.index("1.8") and not Object.const_defined?('JRUBY_VERSION')
+    if RUBY_VERSION.index("1.8")
       expected[Kernel] += [:chomp!, :chop!] 
     end
     [Object, Module, Class].each do |clazz|
