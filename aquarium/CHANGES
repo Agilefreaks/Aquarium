@@ -21,6 +21,7 @@ Second, there was a deprecated option to the MethodFinder class, :options, that 
 
 I used the upgrade to Webgen 0.5.X as an excuse to refresh the web site's appearance. The content is mostly the same as before.
 
+
 == Version 0.4.3
 
 V0.4.3 adds a few bug fixes and enhancements, and several internal 
