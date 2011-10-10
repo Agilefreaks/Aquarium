@@ -10,6 +10,11 @@ module Aquarium
       UNKNOWN_ADVICE_KIND = "unknown"
 
       KINDS_IN_PRIORITY_ORDER = [:around, :before, :after, :after_returning, :after_raising] 
+
+      @DEBUG_BACKTRACES = false
+
+      def self.debug_backtraces; @DEBUG_BACKTRACES; end
+      def self.debug_backtraces=( val ); @DEBUG_BACKTRACES = val; end
       
       def self.kinds; KINDS_IN_PRIORITY_ORDER; end
 
@@ -126,12 +131,22 @@ module Aquarium
       end
       
       def handle_call_rescue ex, error_message_prefix, jp
-        class_or_instance_method_separater = jp.instance_method? ? "#" : "."
-        context_message = error_message_prefix + "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
-        backtrace = ex.backtrace
-        e2 = ex.exception(context_message + ex.message + " (join_point = #{jp.inspect})")
-        e2.set_backtrace backtrace
-        raise e2
+        if Aquarium::Aspects::Advice.debug_backtraces
+          class_or_instance_method_separater = jp.instance_method? ? "#" : "."
+          context_message = error_message_prefix + "Exception raised while executing \"#{jp.context.advice_kind}\" advice for \"#{jp.type_or_object.inspect}#{class_or_instance_method_separater}#{jp.method_name}\": "
+
+          # Don't prepend the same context message multiple times
+          if ex.message =~ /#{context_message}/
+            context_message = ""
+          end
+
+          backtrace = ex.backtrace
+          e2 = ex.exception(context_message + ex.message + " (join_point = #{jp.inspect})")
+          e2.set_backtrace backtrace
+          raise e2
+        else
+          raise ex
+        end
       end
     end
 
