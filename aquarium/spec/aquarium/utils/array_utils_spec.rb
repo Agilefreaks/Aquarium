@@ -27,7 +27,12 @@ describe Aquarium::Utils::ArrayUtils, "#make_array" do
   end
 
   it "should return an array with all nils removed from the input Set." do
-    make_array(Set.new([nil, 1, 2, nil, 3, 4])).should == [1, 2, 3, 4]
+    array = make_array(Set.new([nil, 1, 2, nil, 3, 4]))
+    array.should include(1)
+    array.should include(2)
+    array.should include(3)
+    array.should include(4)
+    array.should_not include(nil)
   end
 
   it "should return an 1-element array with an empty element if the input is empty." do
@@ -43,11 +48,19 @@ describe Aquarium::Utils::ArrayUtils, "#make_array" do
   end
 
   it "should return an input Set#to_a if it contains no nil elements." do
-    make_array(Set.new([1,2,"123"])).should == [1,2,"123"]
+    array = make_array(Set.new([1,2,"123"]))
+    array.should include(1)
+    array.should include(2)
+    array.should include("123")
+    array.should_not include(nil)
   end
 
   it "should be available as a class method." do
-    Aquarium::Utils::ArrayUtils.make_array(Set.new([1,2,"123"])).should == [1,2,"123"]
+    array = Aquarium::Utils::ArrayUtils.make_array(Set.new([1,2,"123"]))
+    array.should include(1)
+    array.should include(2)
+    array.should include("123")
+    array.should_not include(nil)
   end
 end
 
@@ -67,12 +80,22 @@ describe Aquarium::Utils::ArrayUtils, "#strip_array_nils" do
   end
 
   it "should return an array with all nils removed from the input Set." do
-    strip_array_nils(Set.new([nil, 1, 2, nil, 3, 4])).should == [1, 2, 3, 4]
+    array = strip_array_nils(Set.new([nil, 1, 2, nil, 3, 4]))
+    array.should include(1)
+    array.should include(2)
+    array.should include(3)
+    array.should include(4)
+    array.should_not include(nil)
   end
 end
 
 describe Aquarium::Utils::ArrayUtils, ".strip_array_nils" do
   it "should work like the instance method." do
-    Aquarium::Utils::ArrayUtils.strip_array_nils(Set.new([nil, 1, 2, nil, 3, 4])).should == [1, 2, 3, 4]
+    array = Aquarium::Utils::ArrayUtils.strip_array_nils(Set.new([nil, 1, 2, nil, 3, 4]))
+    array.should include(1)
+    array.should include(2)
+    array.should include(3)
+    array.should include(4)
+    array.should_not include(nil)
   end
 end
