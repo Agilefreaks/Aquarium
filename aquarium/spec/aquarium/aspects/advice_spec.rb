@@ -75,28 +75,39 @@ def should_raise_expected_exception_with_message message
 end
 
 describe Advice, "that raises an exception" do
-  it "should add the kind of advice to the exception message." do
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args| 
-      raise SpecExceptionForTesting.new("advice called with args: #{args.inspect}")
+  context "when debug_backtraces is true" do
+    before do
+      @debug_backtraces_orig = Aquarium::Aspects::Advice.debug_backtraces
+      Aquarium::Aspects::Advice.debug_backtraces = true
     end
-    should_raise_expected_exception_with_message("\"before\" advice") {Watchful.new.public_watchful_method(:a1, :a2)}
-    aspect.unadvise
-  end
 
-  it "should add the \"Class#method\" of the advised object's type and method to the exception message." do
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args| 
-      raise "advice called with args: #{args.inspect}"
+    after do
+      Aquarium::Aspects::Advice.debug_backtraces = @debug_backtraces_orig
     end
-    should_raise_expected_exception_with_message("Watchful#public_watchful_method") {Watchful.new.public_watchful_method(:a1, :a2)}
-    aspect.unadvise
-  end
 
-  it "should add the \"Class.method\" of the advised type's class method to the exception message." do
-    aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
-      raise "advice called with args: #{args.inspect}"
+    it "should add the kind of advice to the exception message." do
+      aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args| 
+        raise SpecExceptionForTesting.new("advice called with args: #{args.inspect}")
+      end
+      should_raise_expected_exception_with_message("\"before\" advice") {Watchful.new.public_watchful_method(:a1, :a2)}
+      aspect.unadvise
     end
-    should_raise_expected_exception_with_message("Watchful.public_class_watchful_method") {Watchful.public_class_watchful_method(:a1, :a2)}
-    aspect.unadvise
+
+    it "should add the \"Class#method\" of the advised object's type and method to the exception message." do
+      aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_watchful_method} do |jp, obj, *args| 
+        raise "advice called with args: #{args.inspect}"
+      end
+      should_raise_expected_exception_with_message("Watchful#public_watchful_method") {Watchful.new.public_watchful_method(:a1, :a2)}
+      aspect.unadvise
+    end
+
+    it "should add the \"Class.method\" of the advised type's class method to the exception message." do
+      aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
+        raise "advice called with args: #{args.inspect}"
+      end
+      should_raise_expected_exception_with_message("Watchful.public_class_watchful_method") {Watchful.public_class_watchful_method(:a1, :a2)}
+      aspect.unadvise
+    end
   end
 
   it "should rethrow an exception of the same type as the original exception." do
@@ -139,45 +150,56 @@ describe Advice, "#invoke_original_join_point that raises an exception" do
       raise IOJPRException.new(":class_raise_exception called with args: #{args.inspect}")
     end
   end
-  
-  it "should add the kind of advice to the exception message." do
-    aspect = Aspect.new :before, 
-    :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :raise_exception} do |jp, obj, *args| 
-      jp.invoke_original_join_point
-    end
-    begin
-      InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2) ; fail
-    rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
-      e.message.should include("\"before\" advice")
-    end
-    aspect.unadvise
-  end
 
-  it "should add the \"Class#method\" of the advised object's type and method to the exception message." do
-    aspect = Aspect.new :before, 
+  context "when debug_backtraces is true" do
+    before do
+      @debug_backtraces_orig = Aquarium::Aspects::Advice.debug_backtraces
+      Aquarium::Aspects::Advice.debug_backtraces = true
+    end
+
+    after do
+      Aquarium::Aspects::Advice.debug_backtraces = @debug_backtraces_orig
+    end
+
+    it "should add the kind of advice to the exception message." do
+      aspect = Aspect.new :before, 
       :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :raise_exception} do |jp, obj, *args| 
         jp.invoke_original_join_point
+      end
+      begin
+        InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2) ; fail
+      rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
+        e.message.should include("\"before\" advice")
+      end
+      aspect.unadvise
     end
-    begin
-      InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2) ; fail
-    rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
-      e.message.should include("InvokeOriginalJoinPointRaisingException#raise_exception")
-    end
-    aspect.unadvise
-  end
 
-  it "should add the \"Class.method\" of the advised type's class method to the exception message." do
-    aspect = Aspect.new :before, 
-      :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :class_raise_exception, 
-      :method_options => [:class]} do |jp, obj, *args| 
+    it "should add the \"Class#method\" of the advised object's type and method to the exception message." do
+      aspect = Aspect.new :before, 
+      :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :raise_exception} do |jp, obj, *args| 
         jp.invoke_original_join_point
+      end
+      begin
+        InvokeOriginalJoinPointRaisingException.new.raise_exception(:a1, :a2) ; fail
+      rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
+        e.message.should include("InvokeOriginalJoinPointRaisingException#raise_exception")
+      end
+      aspect.unadvise
     end
-    begin
-      InvokeOriginalJoinPointRaisingException.class_raise_exception(:a1, :a2) ; fail
-    rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
-      e.message.should include("InvokeOriginalJoinPointRaisingException.class_raise_exception")
+
+    it "should add the \"Class.method\" of the advised type's class method to the exception message." do
+      aspect = Aspect.new :before, 
+      :pointcut => {:type => InvokeOriginalJoinPointRaisingException, :methods => :class_raise_exception, 
+        :method_options => [:class]} do |jp, obj, *args| 
+        jp.invoke_original_join_point
+      end
+      begin
+        InvokeOriginalJoinPointRaisingException.class_raise_exception(:a1, :a2) ; fail
+      rescue InvokeOriginalJoinPointRaisingException::IOJPRException => e
+        e.message.should include("InvokeOriginalJoinPointRaisingException.class_raise_exception")
+      end
+      aspect.unadvise
     end
-    aspect.unadvise
   end
 
   it "should rethrow an exception of the same type as the original exception." do

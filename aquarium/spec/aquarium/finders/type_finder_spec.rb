@@ -97,7 +97,7 @@ describe Aquarium::Finders::TypeFinder, "#find with :types used to specify one o
     expected_unfound_exps = %w[TestCase Unknown1 Unknown2]
     actual = Aquarium::Finders::TypeFinder.new.find :types=> %w[Kernel Module Object Class TestCase Unknown1 Unknown2]
     actual.matched_keys.sort.should == expected_found_types.sort
-    actual.not_matched_keys.should == expected_unfound_exps
+    actual.not_matched_keys.sort.should == expected_unfound_exps.sort
   end
 
   it "should find types with :: namespace delimiters using their names." do

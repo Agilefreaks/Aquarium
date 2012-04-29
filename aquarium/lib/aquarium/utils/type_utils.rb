@@ -46,7 +46,9 @@ module Aquarium
         nested_constants = use_underscore_methods ? visiting_module.__constants__ : visiting_module.constants
         nested_constants.each do |const|
           next unless visiting_module.const_defined?(const)
-          nested_module = use_underscore_methods ? visiting_module.__const_get__(const) : visiting_module.const_get(const)
+          nested_module = ignore_warning do
+            use_underscore_methods ? visiting_module.__const_get__(const) : visiting_module.const_get(const)
+          end
           next if visited.include?(nested_module)
           next unless responds_to_ancestors?(nested_module)
           use_underscore_methods2 = use_underscore_methods? nested_module
@@ -62,6 +64,14 @@ module Aquarium
 
       def self.responds_to_ancestors? mod
         mod.respond_to?(:ancestors) or mod.respond_to?(:__ancestors__)
+      end
+
+      def self.ignore_warning
+        warning_orig = $-w
+        $-w = nil
+        res = yield
+        $-w = warning_orig
+        return res
       end
     end
   end
