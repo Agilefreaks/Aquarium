@@ -1,6 +1,6 @@
-== Version 0.5.0
+== Version 0.5.1
 
-V0.5.0 adds support for Ruby 1.8.7, Ruby 1.9.3, JRuby 1.6.7,
+V0.5.1 adds support for Ruby 1.8.7, Ruby 1.9.3, JRuby 1.6.7,
 RSpec 2.9, and Webgen (0.5.14 - for the build process).
 
 WARNING: Earlier versions of Ruby 1.8, 1.9 and JRuby 1.X are not 

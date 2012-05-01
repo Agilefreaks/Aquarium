@@ -466,7 +466,7 @@ My colleagues in the AOSD community, in particular those who developed AspectJ, 
 
 The RSpec team, in particular David Chelimsky, have really inspired my thinking about what's possible in Ruby, especially in the realm of DSLs. I also cribbed parts of the RSpec Rake process ;)
 
-Keita Yamaguchi contributed some key patches that enabled Ruby 1.9.3 and JRuby 1.6.7 support, in addition to the prior support for Ruby 1.8.7. These patches allowed me to final release version 0.5.0. Thank you!
+Keita Yamaguchi contributed some key patches that enabled Ruby 1.9.3 and JRuby 1.6.7 support, in addition to the prior support for Ruby 1.8.7. These patches allowed me to final release version 0.5.X. Thank you!
 
 Finally, a number of users have contributed valuable feedback. In particular, thanks to Brendan L., Matthew F., and Mark V. 
  
