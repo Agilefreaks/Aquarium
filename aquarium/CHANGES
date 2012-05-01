@@ -1,25 +1,38 @@
 == Version 0.5.0
 
-V0.5.0 adds support for Ruby 1.9.2, RSpec 2.5, Webgen (0.5.10 - for the build process), and partial support for JRuby 1.5.6.
+V0.5.0 adds support for Ruby 1.8.7, Ruby 1.9.3, JRuby 1.6.7,
+RSpec 2.9, and Webgen (0.5.14 - for the build process).
 
-WARNING: Ruby 1.9.1 is not supported. JRuby support is limited to "pure" Ruby code; the main RSpec specifications pass under JRuby, but not the JRuby-specific specifications in jruby/spec. Restoring full JRuby support is planned, but the timeframe is TBD.
+WARNING: Earlier versions of Ruby 1.8, 1.9 and JRuby 1.X are not 
+supported. JRuby support is limited to "pure" Ruby code; the main
+RSpec specifications pass under JRuby, but not the JRuby-specific 
+specifications in jruby/spec. Restoring full JRuby support is planned, 
+but the timeframe is TBD.
 
 It also has some minor API changes summarized below.
 
 Enhancements:
-22558	Support Ruby 1.9.1
-27235	Support RSpec 1.2.8 (latest) and and JRuby 1.3.1 (latest)
-27236	Upgrade website generation to webgen 0.5.X
+22558	Support Ruby 1.9.1 (actually 1.9.3)
+27235	Support RSpec 1.2.8 (actually 2.9) and and JRuby 1.3.1 (actually 1.6.7)
+27236	Upgrade website generation to webgen 0.5.X (X=14)
 
-The actual versions of these tools supported are more recent versions...
+The actual versions of these tools supported are more recent versions 
+shown in parentheses.
 
 There are no API changes in this release, with two exceptions. 
 
-First, Most of the code changes are minor fixes to RSpec files. The one exception is an apparent change in JRuby 1.3.1 w.r.t. the access restrictions on Java methods. It now appears that protected methods are public, that is they are in the method list returned by :public_methods, but not :protected_methods. Also, private methods are not returned by any of the :*_methods. 
+First, Most of the code changes are minor fixes to RSpec files. The one 
+exception is an apparent change that occurred in JRuby 1.3.X with respect 
+to the access restrictions on Java methods. It now appears that protected 
+methods are public, that is they are in the method list returned by 
+:public_methods, but not :protected_methods. Also, private methods are 
+not returned by any of the :*_methods. 
 
-Second, there was a deprecated option to the MethodFinder class, :options, that has been removed. Use :method_options instead.
+Second, there was a deprecated option to the MethodFinder class, 
+:options, that has been removed. Use :method_options instead.
 
-I used the upgrade to Webgen 0.5.X as an excuse to refresh the web site's appearance. The content is mostly the same as before.
+I used the upgrade to Webgen 0.5.X as an excuse to refresh the web site's 
+appearance. The content is mostly the same as before.
 
 
 == Version 0.4.3

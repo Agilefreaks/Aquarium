@@ -4,7 +4,7 @@ require 'rake'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 require 'rake/clean'
-require 'rake/rdoctask'
+require 'rdoc/task'
 require 'aquarium/version'
 
 # Use RSpec's files.
@@ -12,6 +12,7 @@ require 'rspec/core/rake_task'
 
 # Some of the tasks are in separate files since they are also part of the website documentation
 #load File.dirname(__FILE__) + '/rake_tasks/examples.rake'
+# TODO: Replace rcov with simplecov and restore this feature.
 #load File.dirname(__FILE__) + '/rake_tasks/verify_rcov.rake'
 
 PKG_NAME = "aquarium"
@@ -26,6 +27,8 @@ PKG_FILES = FileList[
 ]
 FileUtils.touch(File.dirname(__FILE__) + '/previous_failures.txt')
 
+IS_WINDOWS = (RUBY_VERSION == "1.8.7" ? PLATFORM : RUBY_PLATFORM) =~ /mswin/
+
 task :default => :spec  
 
 desc "Run all specs"
@@ -33,16 +36,16 @@ RSpec::Core::RakeTask.new do |t|
   t.rspec_opts = ['--color', '--format progress', '--profile']
 end
 
-desc "Run all specs and store html output in doc/aquarium/out/report.html"
-RSpec::Core::RakeTask.new('spec_html') do |t|
-  t.rspec_opts = ['--format html:../doc/aquarium/out/report.html','--backtrace']
-end
+# desc "Run all specs and store html output in doc/aquarium/out/report.html"
+# RSpec::Core::RakeTask.new('spec_html') do |t|
+#   t.rspec_opts = ['--format html:../doc/aquarium/out/report.html','--backtrace']
+# end
 
 desc 'Generate HTML documentation for website'
 task :webgen do
   Dir.chdir '../doc/aquarium' do
     output = nil
-    IO.popen('webgen 2>&1') do |io|
+    IO.popen('rake webgen 2>&1') do |io|
       output = io.read
     end
     raise "ERROR while running webgen: #{output}" if output =~ /ERROR/n || $? != 0
@@ -113,6 +116,7 @@ end
 
 task :clobber do
   rm_rf '../doc/aquarium/out'
+  rm_rf '../doc/aquarium/webgen.cache'
   rm_rf 'translated_specs'
 end
 
@@ -152,20 +156,20 @@ end
 # ]
 
 desc "Build the website, but do not publish it"
-task :website => [:clobber, :verify_rcov, :verify_jruby, :spec_html, :webgen, :rdoc]
+task :website => [:clobber, :rdoc, :webgen] # :spec_html, :verify_jruby, :verify_rcov,
 
 task :rdoc_rails do
   Dir.chdir '../aquarium_on_rails' do
-    rake = (PLATFORM == "i386-mswin32") ? "rake.cmd" : "rake"
+    rake = IS_WINDOWS ? "rake.cmd" : "rake"
     `#{rake} rdoc`
   end
 end
 
-desc "Verify that the Aquarium specs run under JRuby and that JRuby can advise Java types"
+desc "Verify that the Aquarium specs run under JRuby and that JRuby can advise Java types. If this task fails, try running 'jruby -S rake' separately."
 task :verify_jruby do
   puts "Verifying JRuby Support"
   Dir.chdir 'jruby' do
-    rake = (PLATFORM == "i386-mswin32") ? "rake.cmd" : "rake"
+    rake = IS_WINDOWS ? "rake.cmd" : "rake"
     sh "jruby -S #{rake}"
   end
 end

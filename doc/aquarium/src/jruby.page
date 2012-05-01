@@ -40,5 +40,5 @@ For more details, see the RSpec examples in the <code>jruby/spec</code> director
 
 [AspectJ]:http://aspectj.org
 [Spring Framework]:http://springframework.org/
-[README]:rdoc/files/README.html
+[README]:http://aquarium.rubyforge.org/rdoc/README.html
 [Rubyforge bug report]: http://rubyforge.org/tracker/index.php?func=detail&aid=18325&group&#095;id=4281&atid=16494

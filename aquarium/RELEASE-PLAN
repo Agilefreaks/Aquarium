@@ -62,6 +62,8 @@ aspects, for example.
 I'll maintain the current form for backwards compatibility and also because it is convenient for
 simpler aspects.
 
+Finally, this release will finally support Ruby 1.9.X and the latest JRuby at the time of the release.
+
 === Version 0.6+
 
 I have been thinking about higher-order abstractions that work above the "Pointcut + Advice

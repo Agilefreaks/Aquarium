@@ -13,9 +13,11 @@ sort_info: 1
  
 ### News
 
+* V0.5.0 (May 1, 2012): Now supports Ruby 1.9.3 and JRuby 1.6.7.
+
 * V0.4.4 (Oct. 4, 2009): Moved the source repository from RubyForge SVN to [GitHub]. Upgraded to latest JRuby, RSpec, and Webgen.
 
-* New in V0.4.0: Preliminary support for advising Java classes in JRuby! See the discussion [here].
+* V0.4.0: Preliminary support for advising Java classes in JRuby! See the discussion on the [JRuby page].
 
 See also the [RubyForge project home] 
 
@@ -71,11 +73,10 @@ Install (or upgrade) with [RubyGems]:
 See the [download] page for different options or go directly to the [RubyForge download] page.
 
 
-[API]: documentation/API/index.html
-[RubyForge project home]: http://rubyforge.org/projects/aquarium/.
-[RubyForge download]: http://rubyforge.org/frs/?group&#095;id=4281
-[GitHub]: http://github.com/deanwampler/Aquarium
-[RubyGems]: http://rubygems.org/
-[download]: download.html
-[here]:jruby.html
+[API]:documentation/API/index.html
+[RubyForge project home]:http://rubyforge.org/projects/aquarium/.
+[RubyForge download]:http://rubyforge.org/frs/?group&#095;id=4281
+[GitHub]:http://github.com/deanwampler/Aquarium
+[RubyGems]:http://rubygems.org/
+[JRuby page]:jruby.html
 [Examples]:examples.html

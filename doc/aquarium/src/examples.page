@@ -74,5 +74,5 @@ AspectJ lets Java programmers add new methods and attributes to types. Ruby make
 {coderay}
 <p></p>
 
-[README]:rdoc/files/README.html
-[extras]:rdoc/files/lib/aquarium/extras&#095;rb.html
+[README]:http://aquarium.rubyforge.org/rdoc/README.html
+[extras]:http://aquarium.rubyforge.org/rdoc/Aquarium/Extras.html

@@ -84,7 +84,7 @@ Finally, <span class="keyword">Aquarium</span> supports removing <span class="ke
 {coderay:: ruby}aspect.unadvise{coderay}
 <p></p>
 
-Other examples can be found in the [Documentation].
+Other examples can be found in the [RDoc pages].
 
 [DRY]:http://en.wikipedia.org/wiki/Don't_repeat_yourself
-[Documentation]:../documentation.html 
+[RDoc pages]:http://aquarium.rubyforge.org/rdoc/

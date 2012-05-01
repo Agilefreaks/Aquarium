@@ -7,4 +7,4 @@ in_menu: true
 
 Miscellaneous utilities. See [utils.rb].
 
-[utils.rb]:../../rdoc/files/lib/aquarium/utils_rb.html
+[utils.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Utils.html

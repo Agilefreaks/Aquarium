@@ -18,8 +18,8 @@ gem update aquarium
 
 or if you want an older version:
 <pre>
-gem install aquarium -v 0.3.0
-gem update aquarium -v 0.3.0
+gem install aquarium -v 0.4.0
+gem update aquarium -v 0.4.0
 </pre>  
 
 ### Notes on Updating
@@ -38,4 +38,4 @@ Aquarium is now managed at [GitHub]. The older Subversion repository is now obso
 
 [Rubyforge]:http://rubyforge.org/frs/?group&#095;id=4281
 [GitHub]:http://github.com/deanwampler/Aquarium
-[README]:rdoc/files/README.html
+[README]:http://aquarium.rubyforge.org/rdoc/README.html

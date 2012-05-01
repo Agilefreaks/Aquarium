@@ -7,4 +7,4 @@ in_menu: true
 
 Utilities for finding types, objects, methods, etc. in the current runtime. See [finders.rb].
 
-[finders.rb]:../../rdoc/files/lib/aquarium/finders_rb.html
+[finders.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Finders.html

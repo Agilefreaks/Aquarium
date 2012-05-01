@@ -380,7 +380,15 @@ If you prefer to build the gem locally, check out source from GitHub
 
 (or fork it)
 
-WARNING: The older RubyForge SVN repository (`svn://rubyforge.org/var/svn/aquarium/trunk`) is now obsolete!!    
+WARNING: The older RubyForge SVN repository (`svn://rubyforge.org/var/svn/aquarium/trunk`) is now obsolete!!
+
+As of version 0.5.0, the following Ruby versions are supported:
+
+* Ruby 1.8.7: tested on patch version p358.
+* Ruby 1.9.3: tested on patch version p125
+* JRuby 1.6.7: tested on patch version p357
+
+Newer patch releases should also be fine...
 
 Use the following commands to build everything:
 
@@ -415,7 +423,7 @@ or
 
 Note that Aquarium itself, once built, doesn't have any dependencies outside the Ruby core and stdlib.
 
-If you want to run the tests for the JRuby support, you must also have JRuby 1.1 or later installed. To run the specs for JRuby, use the command
+If you want to run the tests for the JRuby support, you must also have JRuby 1.6.7 or later installed. To run the specs for JRuby, use the command
 
     rake verify_jruby
 
@@ -484,6 +492,6 @@ My colleagues in the AOSD community, in particular those who developed *AspectJ*
 
 The *RSpec* team, in particular David Chelimsky, have really inspired my thinking about what's possible in Ruby, especially in the realm of DSLs. I also cribbed parts of the RSpec Rake process ;)
 
-My colleagues at [Object Mentor](http://objectmentor.com) are an endless source of insight and inspiration.
+Keita Yamaguchi contributed some key patches that enabled Ruby 1.9.3 and JRuby 1.6.7 support, in addition to the prior support for Ruby 1.8.7. These patches allowed me to final release version 0.5.0. Thank you!
 
 Finally, a number of users have contributed valuable feedback. In particular, thanks to Brendan L., Matthew F., and Mark V. 

@@ -20,9 +20,9 @@ For more information on <span class="keyword">Aspect-Oriented Programming/Softwa
 Finally, see the [RubyForge project page] and sign up for one of the [mailing lists].
 
 [RDoc pages]:http://aquarium.rubyforge.org/rdoc/
-[README]:../rdoc/files/README.html
-[Examples]:../examples.html
+[README]:http://aquarium.rubyforge.org/rdoc/README.html
 [Aquarium API]:API/index.html
+[Aquarium GitHub Page]:http://http://github.com/deanwampler/Aquarium
 [Polyglot Programming]:http://blog.aspectprogramming.com/
 [Aspect Programming]:http://aspectprogramming.com
 [AOSD.net]:http://www.aosd.net

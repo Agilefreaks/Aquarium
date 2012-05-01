@@ -1,4 +1,10 @@
-== Updating to Aquarium-0.4.0
+== Updating to Aquarium-0.5.0
+
+This release introduces a few small API changes that are described in CHANGES. The primary goal of the release is to add full support for Ruby 1.9.3 and JRuby 1.6.7.
+
+It was not tested on early versions of Ruby 1.9 and JRuby 1.X, so users of earlier releases should use caution upgrading. Post any issues to the GitHub project.
+
+== Updating to Aquarium-0.4.X
 
 This release is fully backwards-compatible with previous releases. It expands
 the API slightly and adds internal improvements to better support JRuby. There

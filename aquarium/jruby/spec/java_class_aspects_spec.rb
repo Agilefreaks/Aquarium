@@ -35,19 +35,27 @@ def is_java_interface? type
 end
 
 def log_should_contain_entries
-  @aspect_log.should_not be_empty
-  @aspect_log.should include("entering do_work")
-  @aspect_log.should include("leaving do_work")
+  @@aspect_log.should_not be_empty
+  @@aspect_log.should include("entering do_work")
+  @@aspect_log.should include("leaving do_work")
 end
 
-def make_advice
-  return Proc.new { |jp, object, *args|
-    @aspect_log += "entering do_work(#{args.inspect})\n"
+# def make_advice
+#   return Proc.new { |jp, object, *args|
+#     @@aspect_log += "entering do_work(#{args.inspect})\n"
+#     result = jp.proceed
+#     @@aspect_log += "leaving do_work(#{args.inspect})\n"
+#     result
+#   }
+# end
+
+canned_advice = Proc.new { |jp, object, *args|
+    @@aspect_log += "entering do_work(#{args.inspect})\n"
     result = jp.proceed
-    @aspect_log += "leaving do_work(#{args.inspect})\n"
+    @@aspect_log += "leaving do_work(#{args.inspect})\n"
     result
   }
-end
+
   
 describe "Java type without advice" do  
   it "should not be advised" do
@@ -58,18 +66,18 @@ end
 
 describe "Java instance with advice" do
   before :each do
-    @aspect_log = ""
+    @@aspect_log = ""
   end
 
   it "should invoke the advice when the advised methods on the same instance are called" do
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
-    aspect = Aspect.new :around, :calls_to => :do_work, :object => list_sorter, :advice => make_advice
+    aspect = Aspect.new :around, :calls_to => :do_work, :object => list_sorter, :advice => canned_advice
     do_sort list_sorter
     log_should_contain_entries
 
     list_sorter2 = Java::example.sorter.converter.StringListCaseConverterAndSorter.new(StringLengthListComparator.new)
-    aspect = Aspect.new :around, :calls_to => :do_work, :object => list_sorter2, :advice => make_advice
-    @aspect_log = ""
+    aspect = Aspect.new :around, :calls_to => :do_work, :object => list_sorter2, :advice => canned_advice
+    @@aspect_log = ""
     do_sort list_sorter2
     log_should_contain_entries
     aspect.unadvise
@@ -78,22 +86,22 @@ end
 
 describe "Second Java instance of the same type" do
   it "should not be advised by the advice applied to a different instance" do
-    aspect = Aspect.new :around, :calls_to => :do_work, :object => Java::example.sorter.StringListSorter.new(StringLengthListComparator.new), :advice => make_advice
+    aspect = Aspect.new :around, :calls_to => :do_work, :object => Java::example.sorter.StringListSorter.new(StringLengthListComparator.new), :advice => canned_advice
     list_sorter2 = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
-    @aspect_log = ""
+    @@aspect_log = ""
     do_sort list_sorter2
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
     aspect.unadvise
   end
 end
 
 describe "Second Java instance of a derived type" do
   it "should not be advised by the advice applied to an instance of a parent type" do
-    aspect = Aspect.new :around, :calls_to => :do_work, :object => Java::example.sorter.StringListSorter.new(StringLengthListComparator.new), :advice => make_advice
+    aspect = Aspect.new :around, :calls_to => :do_work, :object => Java::example.sorter.StringListSorter.new(StringLengthListComparator.new), :advice => canned_advice
     list_sorter2 = Java::example.sorter.converter.StringListCaseConverterAndSorter.new(StringLengthListComparator.new)
-    @aspect_log = ""
+    @@aspect_log = ""
     do_sort list_sorter2
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
     aspect.unadvise
   end
 end
@@ -101,21 +109,20 @@ end
 describe "Java instance with advice added then removed" do
   it "should not be advised after the advice is removed" do
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
-    aspect = Aspect.new :around, :calls_to => :do_work, :object => list_sorter, :advice => make_advice
-    @aspect_log = ""
+    aspect = Aspect.new :around, :calls_to => :do_work, :object => list_sorter, :advice => canned_advice
     do_sort list_sorter
-    @aspect_log = ""
+    @@aspect_log = ""
     aspect.unadvise
     do_sort list_sorter
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
 
     list_sorter2 = Java::example.sorter.converter.StringListCaseConverterAndSorter.new(StringLengthListComparator.new)
-    aspect2 = Aspect.new :around, :calls_to => :do_work, :object => list_sorter2, :advice => make_advice
+    aspect2 = Aspect.new :around, :calls_to => :do_work, :object => list_sorter2, :advice => canned_advice
     do_sort list_sorter2
-    @aspect_log = ""
+    @@aspect_log = ""
     aspect2.unadvise
     do_sort list_sorter2
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
   end
 end
 
@@ -129,9 +136,9 @@ end
 describe "Java interface used with :type_and_descendents => ... (or synonym)" do
   before :each do
     @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.Worker, 
-      # :advice => make_advice
-      :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => make_advice
-    @aspect_log = ""
+      # :advice => canned_advice
+      :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => canned_advice
+    @@aspect_log = ""
   end
   after :each do
     @aspect.unadvise
@@ -154,10 +161,10 @@ describe "Java interface used with :type_and_descendents => ... (or synonym)" do
     do_sort list_sorter
     log_should_contain_entries
     @aspect.unadvise
-    @aspect_log = ""
+    @@aspect_log = ""
     do_sort list_sorter
     do_sort Java::example.sorter.converter.StringListCaseConverterAndSorter.new(StringLengthListComparator.new)
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
   end
 
   it "should allow #unadvise to be called repeatedly" do
@@ -169,8 +176,8 @@ end
 describe "Java class used with :type_and_descendents => ..." do
   before :each do
     @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.StringListSorter, 
-      :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => make_advice
-    @aspect_log = ""
+      :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => canned_advice
+    @@aspect_log = ""
   end
   
   it "should invoke the advice when the advised methods of the class are called" do
@@ -192,24 +199,24 @@ describe "Java class used with :type_and_descendents => ..." do
     do_sort list_sorter
     log_should_contain_entries
     @aspect.unadvise
-    @aspect_log = ""
+    @@aspect_log = ""
     do_sort list_sorter
     do_sort Java::example.sorter.converter.StringListCaseConverterAndSorter.new(StringLengthListComparator.new)
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
   end
 end
 
 describe "Derived Java class used with :type_and_descendents => ..." do
   before :each do
-    @aspect_log = ""
+    @@aspect_log = ""
     @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.converter.StringListCaseConverterAndSorter, 
-      :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => make_advice
+      :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => canned_advice
   end
 
   it "should not invoke the advice when the advised methods of parent classes are called" do
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
     @aspect.unadvise
   end
 
@@ -225,16 +232,16 @@ describe "Derived Java class used with :type_and_descendents => ..." do
     do_sort list_sorter
     log_should_contain_entries
     @aspect.unadvise
-    @aspect_log = ""
+    @@aspect_log = ""
     do_sort list_sorter
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
   end
 end
 
 describe "Derived Java class used with :type_and_ancestors => ..." do
   before :each do
-    @aspect_log = ""
-    @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_ancestors => Java::example.sorter.converter.StringListCaseConverterAndSorter, :advice => make_advice
+    @@aspect_log = ""
+    @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_ancestors => Java::example.sorter.converter.StringListCaseConverterAndSorter, :advice => canned_advice
   end
 
   it "should invoke the advice when the advised methods of parent classes are called" do
@@ -256,20 +263,20 @@ describe "Derived Java class used with :type_and_ancestors => ..." do
     do_sort list_sorter
     log_should_contain_entries
     @aspect.unadvise
-    @aspect_log = ""
+    @@aspect_log = ""
     do_sort list_sorter
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
   end
 end
 
 describe "Java camel-case method name 'doFooBar'" do
   before :each do
-    @aspect_log = ""
+    @@aspect_log = ""
   end
 
   it "should be matched when using the camel-case form of the name 'doFooBar'" do
     aspect = Aspect.new :around, :calls_to => :doWork, :type_and_descendents => Java::example.sorter.StringListSorter, 
-      :restricting_methods_to => [:exclude_ancestor_methods], :advice => make_advice
+      :restricting_methods_to => [:exclude_ancestor_methods], :advice => canned_advice
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter, :doWork
     log_should_contain_entries
@@ -278,7 +285,7 @@ describe "Java camel-case method name 'doFooBar'" do
 
   it "should be matched when using the underscore form of the name 'do_foo_bar'" do
     aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.StringListSorter, 
-      :restricting_methods_to => [:exclude_ancestor_methods], :advice => make_advice
+      :restricting_methods_to => [:exclude_ancestor_methods], :advice => canned_advice
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter
     log_should_contain_entries
@@ -287,18 +294,18 @@ describe "Java camel-case method name 'doFooBar'" do
   
   it "should advise 'doFooBar' separately from 'do_foo_bar', so that invoking 'do_foo_bar' will not invoke the advice!" do
     aspect = Aspect.new :around, :calls_to => :doWork, :type_and_descendents => Java::example.sorter.StringListSorter, 
-      :restricting_methods_to => [:exclude_ancestor_methods], :advice => make_advice
+      :restricting_methods_to => [:exclude_ancestor_methods], :advice => canned_advice
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter, :do_work
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
     aspect.unadvise
   end
   it "should advise 'do_foo_bar' separately from 'doFooBar', so that invoking 'doFooBar' will not invoke the advice!" do
     aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.StringListSorter,
-      :restricting_methods_to => [:exclude_ancestor_methods], :advice => make_advice
+      :restricting_methods_to => [:exclude_ancestor_methods], :advice => canned_advice
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter, :doWork
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
     aspect.unadvise
   end
 end
@@ -379,20 +386,20 @@ end
 
 describe "JDK classes" do
   it "should be advisable by Aquarium aspects" do
-    @aspect_log = ""
+    @@aspect_log = ""
     aspect = Aspect.new :before, :calls_to => :add, :on_type => java.util.ArrayList do |jp, obj, *args|
-      @aspect_log << "adding: #{args[0]}\n"
+      @@aspect_log << "adding: #{args[0]}\n"
     end
     list = java.util.ArrayList.new
     list.add(1)
     list.add(2)
-    @aspect_log.should include("adding: 1")
-    @aspect_log.should include("adding: 2")
+    @@aspect_log.should include("adding: 1")
+    @@aspect_log.should include("adding: 2")
     aspect.unadvise
-    @aspect_log = ""
+    @@aspect_log = ""
     list.add(1)
     list.add(2)
-    @aspect_log.should be_empty
+    @@aspect_log.should be_empty
   end
 end  
 
