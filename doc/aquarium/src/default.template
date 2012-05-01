@@ -30,7 +30,7 @@
       </div>
 
       <div id="subcontent">
-        <div class="small box">V0.5.0</strong> 
+        <div class="small box">V0.5.1</strong> 
           <ul>
             <li><code>gem install aquarium</code></li>
             <li><code>gem update aquarium</code></li>
