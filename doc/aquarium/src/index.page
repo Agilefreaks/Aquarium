@@ -13,7 +13,7 @@ sort_info: 1
  
 ### News
 
-* V0.5.0 (May 1, 2012): Now supports Ruby 1.9.3 and JRuby 1.6.7.
+* V0.5.1 (May 1, 2012): Now supports Ruby 1.9.3 and JRuby 1.6.7.
 
 * V0.4.4 (Oct. 4, 2009): Moved the source repository from RubyForge SVN to [GitHub]. Upgraded to latest JRuby, RSpec, and Webgen.
 
