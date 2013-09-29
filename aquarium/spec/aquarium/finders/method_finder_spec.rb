@@ -74,7 +74,7 @@ def before_method_finder_spec
   @cpri = ClassWithPrivateClassMethod.new
   @test_objects = [@pub, @pro, @pri, @cpub, @cpri]
 
-  @other_methods_expected = []
+  @other_methods_lambdaed = []
   @empty_set = Set.new
 end
 
@@ -86,34 +86,34 @@ describe Aquarium::Finders::MethodFinder, "#find (synonymous input parameters)" 
   
   Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["types"].each do |key|
     it "should accept :#{key} as a synonym for :types." do
-      expected = Aquarium::Finders::MethodFinder.new.find :types     => Derived, :methods => [/^mbase/, /^mmodule/]
+      lambdaed = Aquarium::Finders::MethodFinder.new.find :types     => Derived, :methods => [/^mbase/, /^mmodule/]
       actual   = Aquarium::Finders::MethodFinder.new.find key.intern => Derived, :methods => [/^mbase/, /^mmodule/]
-      actual.should == expected
+      actual.should == lambdaed
     end
   end
   
   Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["objects"].each do |key|
     it "should accept :#{key} as a synonym for :objects." do
       child = Derived.new
-      expected = Aquarium::Finders::MethodFinder.new.find :objects   => child, :methods => [/^mbase/, /^mmodule/]
+      lambdaed = Aquarium::Finders::MethodFinder.new.find :objects   => child, :methods => [/^mbase/, /^mmodule/]
       actual   = Aquarium::Finders::MethodFinder.new.find key.intern => child, :methods => [/^mbase/, /^mmodule/]
-      actual.should == expected
+      actual.should == lambdaed
     end
   end
   
   Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["methods"].each do |key|
     it "should accept :#{key} as a synonym for :methods." do
-      expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods   => [/^mbase/, /^mmodule/]
+      lambdaed = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods   => [/^mbase/, /^mmodule/]
       actual   = Aquarium::Finders::MethodFinder.new.find :types => Derived, key.intern => [/^mbase/, /^mmodule/]
-      actual.should == expected
+      actual.should == lambdaed
     end
   end
   
   Aquarium::Finders::MethodFinder::CANONICAL_OPTIONS["method_options"].each do |key|
     it "should accept :#{key} as a synonym for :method_options." do
-      expected = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :method_options => [:exclude_ancestor_methods], :logger_stream => @logger_stream
+      lambdaed = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], :method_options => [:exclude_ancestor_methods], :logger_stream => @logger_stream
       actual   = Aquarium::Finders::MethodFinder.new.find :types => Derived, :methods => [/^mder/, /^mmod/], key.intern => [:exclude_ancestor_methods], :logger_stream => @logger_stream
-      actual.should == expected
+      actual.should == lambdaed
     end
   end
 end
@@ -322,24 +322,24 @@ end
 describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" do
   before(:each) do
     before_method_finder_spec
-    @expected_ClassWithPUblicClassMethod = Set.new(ClassWithPublicClassMethod.public_methods.reject{|m| m =~ /^__/}.sort.map{|m| m.intern})
-    @expected_ClassWithPrivateClassMethod = Set.new(ClassWithPrivateClassMethod.public_methods.reject{|m| m =~ /^__/}.sort.map{|m| m.intern})
+    @lambdaed_ClassWithPUblicClassMethod = Set.new(ClassWithPublicClassMethod.public_methods.reject{|m| m =~ /^__/}.sort.map{|m| m.intern})
+    @lambdaed_ClassWithPrivateClassMethod = Set.new(ClassWithPrivateClassMethod.public_methods.reject{|m| m =~ /^__/}.sort.map{|m| m.intern})
   end
   
   it "should find all class methods specified by regular expression for types when :class is used." do
     # NOTE: The list of methods defined by Kernel is different for Ruby 1.8 and 1.9.
-    expected = {}
-    expected[Kernel] = [:respond_to?]
+    lambdaed = {}
+    lambdaed[Kernel] = [:respond_to?]
     if RUBY_VERSION.index("1.8")
-      expected[Kernel] += [:chomp!, :chop!] 
+      lambdaed[Kernel] += [:chomp!, :chop!] 
     end
     [Object, Module, Class].each do |clazz|
-      expected[clazz] = [:respond_to?]
+      lambdaed[clazz] = [:respond_to?]
     end
     class_array = [Kernel, Module, Object, Class]
     actual = Aquarium::Finders::MethodFinder.new.find :types => class_array, :methods => [/^resp.*to\?$/, /^ch.*\!$/], :method_options => :class
     class_array.each do |c|
-      actual.matched[c].should == Set.new(expected[c])
+      actual.matched[c].should == Set.new(lambdaed[c])
     end
   end
   
@@ -347,8 +347,8 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
     actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all, :method_options => :class
     actual.matched.size.should == 2
     actual.not_matched.size.should == 0
-    actual.matched[ClassWithPublicClassMethod].should == @expected_ClassWithPUblicClassMethod
-    actual.matched[ClassWithPrivateClassMethod].should == @expected_ClassWithPrivateClassMethod 
+    actual.matched[ClassWithPublicClassMethod].should == @lambdaed_ClassWithPUblicClassMethod
+    actual.matched[ClassWithPrivateClassMethod].should == @lambdaed_ClassWithPrivateClassMethod 
   end
   
   it "should find any methods that start with double underscores '__' with the :include_system_methods option." do
@@ -363,16 +363,16 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
     actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all, :method_options => :class
     actual.matched.size.should == 2
     actual.not_matched.size.should == 0
-    actual.matched[ClassWithPublicClassMethod].should == @expected_ClassWithPUblicClassMethod
-    actual.matched[ClassWithPrivateClassMethod].should == @expected_ClassWithPrivateClassMethod 
+    actual.matched[ClassWithPublicClassMethod].should == @lambdaed_ClassWithPUblicClassMethod
+    actual.matched[ClassWithPrivateClassMethod].should == @lambdaed_ClassWithPrivateClassMethod 
   end
   
   it "should accept :all_methods as a synonym for :all." do
     actual = Aquarium::Finders::MethodFinder.new.find :types => [ClassWithPublicClassMethod, ClassWithPrivateClassMethod], :methods => :all_methods, :method_options => :class
     actual.matched.size.should == 2
     actual.not_matched.size.should == 0
-    actual.matched[ClassWithPublicClassMethod].should == @expected_ClassWithPUblicClassMethod
-    actual.matched[ClassWithPrivateClassMethod].should == @expected_ClassWithPrivateClassMethod 
+    actual.matched[ClassWithPublicClassMethod].should == @lambdaed_ClassWithPUblicClassMethod
+    actual.matched[ClassWithPrivateClassMethod].should == @lambdaed_ClassWithPrivateClassMethod 
   end
   
   it "should find all public class methods in types, but not ancestors, when searching with the :all method specification and the :class and :exclude_ancestor_methods options." do

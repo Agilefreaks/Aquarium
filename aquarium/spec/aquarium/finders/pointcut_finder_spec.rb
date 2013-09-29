@@ -5,26 +5,26 @@ require File.dirname(__FILE__) + '/pointcut_finder_spec_test_classes'
 
 describe Aquarium::Finders::PointcutFinder, "#find with invalid invocation parameters" do
   it "should raise if no options are specified." do
-    lambda { Aquarium::Finders::PointcutFinder.new.find}.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { Aquarium::Finders::PointcutFinder.new.find}.to raise_error(Aquarium::Utils::InvalidOptions)
   end
   it "should raise if no type options are specified." do
-    lambda { Aquarium::Finders::PointcutFinder.new.find :matching => :foo}.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { Aquarium::Finders::PointcutFinder.new.find :matching => :foo}.to raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
 
 describe Aquarium::Finders::PointcutFinder, "#find with valid type invocation parameters" do
   it "should accept :types with a single type." do
-    lambda { Aquarium::Finders::PointcutFinder.new.find :types => Aquarium::PointcutFinderTestClasses::PointcutConstantHolder1, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect { Aquarium::Finders::PointcutFinder.new.find :types => Aquarium::PointcutFinderTestClasses::PointcutConstantHolder1, :noop => true}.not_to raise_error
   end
   it "should accept :types with an array of types." do
-    lambda { Aquarium::Finders::PointcutFinder.new.find :types => [Aquarium::PointcutFinderTestClasses::PointcutConstantHolder1, Aquarium::PointcutFinderTestClasses::PointcutConstantHolder2], :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect { Aquarium::Finders::PointcutFinder.new.find :types => [Aquarium::PointcutFinderTestClasses::PointcutConstantHolder1, Aquarium::PointcutFinderTestClasses::PointcutConstantHolder2], :noop => true}.not_to raise_error
   end
   it "should accept :types with a regular expression for types." do
-    lambda { Aquarium::Finders::PointcutFinder.new.find :types => /Aquarium::PointcutFinderTestClasses::PointcutConstantHolder/, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect { Aquarium::Finders::PointcutFinder.new.find :types => /Aquarium::PointcutFinderTestClasses::PointcutConstantHolder/, :noop => true}.not_to raise_error
   end
   Aquarium::Finders::PointcutFinder::CANONICAL_OPTIONS["types"].each do |synonym|
     it "should accept :#{synonym} as a synonym for :types." do
-      lambda { Aquarium::Finders::PointcutFinder.new.find synonym.intern => /Aquarium::PointcutFinderTestClasses::PointcutConstantHolder/, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aquarium::Finders::PointcutFinder.new.find synonym.intern => /Aquarium::PointcutFinderTestClasses::PointcutConstantHolder/, :noop => true}.not_to raise_error
     end
   end
 end
@@ -51,17 +51,17 @@ variants = {'constant and class variable ' => '', 'constant ' => 'constants_', '
       Aquarium::PointcutFinderTestClasses.found_pointcuts_should_match found, eval("Aquarium::PointcutFinderTestClasses.all_#{prefix}pointcuts")
     end
     it "should accept :#{prefix}matching with a single pointcut name." do
-      lambda { Aquarium::Finders::PointcutFinder.new.find "#{prefix}matching".intern => :POINTCUT1, :types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aquarium::Finders::PointcutFinder.new.find "#{prefix}matching".intern => :POINTCUT1, :types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes, :noop => true}.not_to raise_error
     end
     it "should accept :#{prefix}matching with an array of pointcut names." do
-      lambda { Aquarium::Finders::PointcutFinder.new.find "#{prefix}matching".intern => [:POINTCUT1, :POINTCUT2], :types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aquarium::Finders::PointcutFinder.new.find "#{prefix}matching".intern => [:POINTCUT1, :POINTCUT2], :types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes, :noop => true}.not_to raise_error
     end
     it "should accept :#{prefix}matching with a regular expression for pointcut names." do
-      lambda { Aquarium::Finders::PointcutFinder.new.find "#{prefix}matching".intern => /POINTCUT/, :types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aquarium::Finders::PointcutFinder.new.find "#{prefix}matching".intern => /POINTCUT/, :types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes, :noop => true}.not_to raise_error
     end
     Aquarium::Finders::PointcutFinder::CANONICAL_OPTIONS["#{prefix}matching"].each do |synonym|
       it "should accept :#{synonym} as a synonym for :#{prefix}matching." do
-        lambda { Aquarium::Finders::PointcutFinder.new.find synonym.intern => /POINTCUT/, :types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+        expect { Aquarium::Finders::PointcutFinder.new.find synonym.intern => /POINTCUT/, :types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes, :noop => true}.not_to raise_error
       end
     end
   end

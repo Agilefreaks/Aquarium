@@ -12,11 +12,11 @@ class SubOutside < Outside; end
 describe Aquarium::Finders::TypeFinder, "#find invocation parameters" do
 
   it "should raise if an uknown option is specified." do
-    lambda { Aquarium::Finders::TypeFinder.new.find :foo => 'bar', :baz => ''}.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { Aquarium::Finders::TypeFinder.new.find :foo => 'bar', :baz => ''}.to raise_error(Aquarium::Utils::InvalidOptions)
   end
   
   it "should raise if the input parameters do not form a hash." do
-    lambda { Aquarium::Finders::TypeFinder.new.find "foo" }.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { Aquarium::Finders::TypeFinder.new.find "foo" }.to raise_error(Aquarium::Utils::InvalidOptions)
   end
   
   it "should return no matched types and no unmatched type expressions by default (i.e., the input is empty)." do
@@ -208,7 +208,7 @@ describe Aquarium::Finders::TypeFinder, "#find with :types_and_descendents" do
 
   Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["types_and_descendents"].reject{|key| key.eql?("types_and_descendents")}.each do |key|
     it "should accept :#{key} as a synonym for :types_and_descendents." do
-      lambda {actual = Aquarium::Finders::TypeFinder.new.find key.intern => Outside, :noop => true}.should_not raise_error
+      expect {actual = Aquarium::Finders::TypeFinder.new.find key.intern => Outside, :noop => true}.not_to raise_error
     end
   end  
 end
@@ -224,7 +224,7 @@ describe Aquarium::Finders::TypeFinder, "#find with :types_and_ancestors" do
 
   Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["types_and_ancestors"].reject{|key| key.eql?("types_and_ancestors")}.each do |key|
     it "should accept :#{key} as a synonym for :types_and_ancestors." do
-      lambda {actual = Aquarium::Finders::TypeFinder.new.find key.intern => SubOutside, :noop => true}.should_not raise_error
+      expect {actual = Aquarium::Finders::TypeFinder.new.find key.intern => SubOutside, :noop => true}.not_to raise_error
     end
   end  
 end
@@ -250,7 +250,7 @@ end
 # This is a spec for a protected method. It's primarily to keep the code coverage 100%, because there is rarely-invoked error handling code...
 describe Aquarium::Finders::TypeFinder, "#get_type_from_parent should" do
   it "should raise if a type doesn't exist that matches the constant" do
-    lambda {Aquarium::Finders::TypeFinder.new.send(:get_type_from_parent, Aquarium::Finders, "Nonexistent", /Non/)}.should raise_error(NameError)
+    expect {Aquarium::Finders::TypeFinder.new.send(:get_type_from_parent, Aquarium::Finders, "Nonexistent", /Non/)}.to raise_error(NameError)
   end
 end
  

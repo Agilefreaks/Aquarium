@@ -24,7 +24,7 @@ describe TypeUtils, "#find types and their nested types, using :types_and_nested
 
   Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["types_and_nested_types"].each do |synonym|
     it "should accept :#{synonym} as a synonym for :types_and_nested_types" do
-      lambda {Aquarium::Finders::TypeFinder.new.find synonym.intern => TypeUtils.sample_types, :noop => true}.should_not raise_error(InvalidOptions)
+      expect {Aquarium::Finders::TypeFinder.new.find synonym.intern => TypeUtils.sample_types, :noop => true}.not_to raise_error
     end
   end
 end
@@ -41,7 +41,7 @@ describe TypeUtils, "#find nested types subtracting out excluded types and desce
 
   Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["exclude_types_and_nested_types"].each do |synonym|
     it "should accept :#{synonym} as a synonym for :exclude_types_and_nested_types" do
-      lambda {Aquarium::Finders::TypeFinder.new.find :exclude_types_and_nested_types => ModuleForDescendents, synonym.intern => D1ForDescendents, :noop => true}.should_not raise_error(InvalidOptions)
+      expect {Aquarium::Finders::TypeFinder.new.find :exclude_types_and_nested_types => ModuleForDescendents, synonym.intern => D1ForDescendents, :noop => true}.not_to raise_error
     end
   end
 end

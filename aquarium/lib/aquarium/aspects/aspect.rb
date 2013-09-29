@@ -432,9 +432,13 @@ module Aquarium
       end
 
       #--
-      # By NOT dup'ing the join_point, we save about 25% on the overhead! However, we
-      # compromise thread safety, primarily because the join_point's context object will be changed.
-      # TODO Refactor context out of static join point part.
+      # Previous versions of Aquarium did NOT dup the join_point here, because it saved about 25% 
+      # on the overhead on circa 2005 machines. However, that seriously compromised thread safety,
+      # primarily because the join_point's context object changes during execution.
+      # We now dup the joinpoint, because the improved performance of circa 2013 machines seems to
+      # have largely made the extra overhead small enough to be inconsequential. There are possible
+      # improvements, such as decoupling the mutable and immutable parts and reusing the later. 
+      # Feedback is welcome.
       # Note that we have to assign the parameters and block to the context object in case
       # the advice calls "proceed" or "invoke_original_join_point" without arguments.
       #++
@@ -445,7 +449,7 @@ module Aquarium
         alias_method :#{alias_method_name}, :#{join_point.method_name}
         def #{join_point.method_name} *args, &block_for_method
           advice_chain = #{type_being_advised_text}.send :class_variable_get, "#{advice_chain_attr_sym}"
-          join_point = advice_chain.static_join_point
+          join_point = advice_chain.static_join_point.dup
           join_point.context.parameters = args
           join_point.context.block_for_method = block_for_method
           join_point.context.advised_object = #{target_self}

@@ -39,7 +39,7 @@ module ConcurrentAspectsSpecSupport
   end
     
   def do_invoke_raises accessed
-    lambda {accessed.invoke_raises :a1, :a2}.should raise_error(ConcurrentlyAccessed::Error)
+    expect {accessed.invoke_raises :a1, :a2}.to raise_error(ConcurrentlyAccessed::Error)
   end
 
   def do_invoke accessed

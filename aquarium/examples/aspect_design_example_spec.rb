@@ -40,7 +40,7 @@ describe "An example of an aspect referencing a particular class-defined pointcu
     observer = Aspect.new :after, 
       :pointcut => Aquarium::ClassWithStateAndBehavior::STATE_CHANGE do |jp, obj, *args|
       @new_state = obj.state
-      @new_state.should be_eql(*args)
+      @new_state.to be_eql(*args)
     end
     object = Aquarium::ClassWithStateAndBehavior.new(:a1, :a2, :a3)
     object.state = [:b1, :b2]
@@ -54,7 +54,7 @@ describe "An example of an aspect searching for class-defined pointcuts." do
     observer = Aspect.new :after, 
       :named_pointcuts => {:matching => /CHANGE/, :within_types => Aquarium::ClassWithStateAndBehavior} do |jp, obj, *args|
       @new_state = obj.state
-      @new_state.should be_eql(*args)
+      @new_state.to be_eql(*args)
     end
     object = Aquarium::ClassWithStateAndBehavior.new(:a1, :a2, :a3)
     object.state = [:b1, :b2]

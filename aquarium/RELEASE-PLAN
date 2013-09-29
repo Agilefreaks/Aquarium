@@ -64,7 +64,7 @@ simpler aspects.
 
 Finally, this release will finally support Ruby 1.9.X and the latest JRuby at the time of the release.
 
-=== Version 0.6+
+=== Version 1.0+
 
 I have been thinking about higher-order abstractions that work above the "Pointcut + Advice
 Model" of Aquarium (and AspectJ...) today. I consider the pointcut + advice model to be an 
@@ -72,8 +72,3 @@ important, maybe essential, building block of AOP, but if that's all AOP is, the
 already hit the limit of what we can expect AOP to do. That doesn't seem right to me, but it's 
 not at all clear what the higher-order abstractions should be.
 	
-=== Version 1.0.0
-
-Reasonably stable and full-featured API and DSL. Also, to justify Aquarium's existence ;), I want
-to produce some non-trivial examples of refactoring known APIs and demonstrating improved clarity,
-productivity, modularity, etc., etc.

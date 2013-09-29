@@ -141,10 +141,10 @@ describe Aquarium::Utils::MethodUtils, ".visibility" do
   end
   
   it "should return :private for private class methods on a class" do
-    Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample, :private_class_m).should == :private #expected_private
+    Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample, :private_class_m).should == :private #lambdaed_private
   end
   it "should return :private for private class methods on a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample, :private_class_m, :class_method_only).should == :private #expected_private
+    Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample, :private_class_m, :class_method_only).should == :private #lambdaed_private
   end
   it "should return nil for private class methods on a class when only instance methods are specified" do
     Aquarium::Utils::MethodUtils.visibility(MethodUtilsSpecProtectionExample, :private_class_m, :instance_method_only).should be_nil
@@ -276,7 +276,7 @@ describe Aquarium::Utils::MethodUtils, ".has_method" do
   end
   
   it "should return true for private class methods on a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m).should be_true #expected_private
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m).should be_true #lambdaed_private
   end
   it "should return true for private class methods on a class when only class methods are specified" do
     Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m, :class_method_only).should be_true 

@@ -24,7 +24,7 @@ end
   
 describe "An example using a precondition" do
   it "should fail at the call entry point if the precondition is not satisfied." do
-    lambda { Aquarium::PreCondExample.new.action }.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    expect { Aquarium::PreCondExample.new.action }.to raise_error(Aquarium::Extras::DesignByContract::ContractError)
   end
 end
 
@@ -49,7 +49,7 @@ end
 
 describe "An example using a postcondition" do
   it "should fail at the call exit point if the postcondition is not satisfied." do
-    lambda { Aquarium::PostCondExample.new.action }.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    expect { Aquarium::PostCondExample.new.action }.to raise_error(Aquarium::Extras::DesignByContract::ContractError)
   end
 end
 
@@ -79,7 +79,7 @@ end
 
 describe "An example using an invariant" do
   it "should fail at the call entry or exit point if the invariant is not satisfied." do
-    lambda { Aquarium::InvarCondExample.new.bad_action }.should    raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    expect { Aquarium::InvarCondExample.new.bad_action }.to raise_error(Aquarium::Extras::DesignByContract::ContractError)
   end
 end
 

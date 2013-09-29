@@ -1,7 +1,6 @@
 $:.unshift('lib')
 require 'rubygems'
 require 'rake'
-require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 require 'rake/clean'
 require 'rdoc/task'
@@ -90,10 +89,10 @@ aquarium = Gem::Specification.new do |s|
   s.rubyforge_project = "aquarium"
 end
 
-Rake::GemPackageTask.new(aquarium) do |pkg|
-  pkg.need_zip = true
-  pkg.need_tar = true
-end
+# Rake::GemPackageTask.new(aquarium) do |pkg|
+#   pkg.need_zip = true
+#   pkg.need_tar = true
+# end
 
 def egrep(pattern)
   Dir['**/*.rb'].each do |fn|

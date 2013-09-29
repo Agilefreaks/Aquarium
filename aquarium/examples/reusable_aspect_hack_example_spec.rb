@@ -55,26 +55,26 @@ describe "Reusable aspect defined in a module can be evaluated at 'include' time
   
   it "should not advise types that don't include the module with the aspect" do
     NotTraced1.new.doit
-    Aquarium::Reusables::TraceMethods.advice_invoked?.should be_false
+    Aquarium::Reusables::TraceMethods.advice_invoked?.to be_false
   end
   
   it "should not advise any methods if the module with the aspect is included before any methods are defined!" do
     NotTraced2.new.doit
-    Aquarium::Reusables::TraceMethods.advice_invoked?.should be_false
+    Aquarium::Reusables::TraceMethods.advice_invoked?.to be_false
   end
   
   it "should advise methods if the module with the aspect is included after the methods are defined" do
     Traced1.new.doit
-    Aquarium::Reusables::TraceMethods.advice_invoked?.should be_true
+    Aquarium::Reusables::TraceMethods.advice_invoked?.to be_true
   end
 
   it "should advise methods after the module with the aspect is included" do
     Traced2.new.doit
-    Aquarium::Reusables::TraceMethods.advice_invoked?.should be_false
+    Aquarium::Reusables::TraceMethods.advice_invoked?.to be_false
     class Traced2
       include Aquarium::Reusables::TraceMethods
     end
     Traced2.new.doit
-    Aquarium::Reusables::TraceMethods.advice_invoked?.should be_true
+    Aquarium::Reusables::TraceMethods.advice_invoked?.to be_true
   end
 end

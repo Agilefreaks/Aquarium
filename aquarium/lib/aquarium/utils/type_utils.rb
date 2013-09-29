@@ -1,4 +1,5 @@
 require 'set'
+require 'rbconfig'
 
 module Aquarium
   module Utils
@@ -59,7 +60,9 @@ module Aquarium
       end
       
       def self.use_underscore_methods? mod
-        mod.respond_to?(:__constants__)
+        #TODO
+        false
+        # mod.respond_to?(:__constants__)
       end
 
       def self.responds_to_ancestors? mod

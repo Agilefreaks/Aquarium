@@ -30,7 +30,7 @@ describe "Using TypeFinder to introduce modules in a set of other types" do
      Aquarium::TypeFinderIntroductionExampleTargetModule2,
      Aquarium::TypeFinderIntroductionExampleTargetClass1,
      Aquarium::TypeFinderIntroductionExampleTargetClass2].each do |t|
-       t.methods.should include('introduced_method')
+       t.methods.to include('introduced_method')
     end
   end
 end

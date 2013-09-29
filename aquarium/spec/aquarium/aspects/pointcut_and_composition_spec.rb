@@ -45,8 +45,8 @@ describe Pointcut, "#and (when both pointcuts are not empty)" do
     pc1 = Pointcut.new :types => [ClassWithAttribs, ClassWithPublicInstanceMethod, ClassWithPrivateInstanceMethod], :attributes => [/^attr/], :attribute_options => [:readers]
     pc2 = Pointcut.new :types => [ClassWithAttribs, ClassWithPublicInstanceMethod, ClassWithProtectedInstanceMethod], :attributes => :attrRW_ClassWithAttribs, :attribute_options => [:exclude_ancestor_methods]
     pc = pc1.and pc2
-    expected_jp = JoinPoint.new :type => ClassWithAttribs, :method => :attrRW_ClassWithAttribs
-    pc.join_points_matched.should == Set.new([expected_jp])
+    lambdaed_jp = JoinPoint.new :type => ClassWithAttribs, :method => :attrRW_ClassWithAttribs
+    pc.join_points_matched.should == Set.new([lambdaed_jp])
     pc.join_points_not_matched.should == @empty_set
   end
   
@@ -58,8 +58,8 @@ describe Pointcut, "#and (when both pointcuts are not empty)" do
     pc1 = Pointcut.new :objects => [cwa, pub, pri], :attributes => [/^attr/], :attribute_options => [:readers, :exclude_ancestor_methods]
     pc2 = Pointcut.new :objects => [cwa, pub, pro], :attributes => :attrRW_ClassWithAttribs
     pc = pc1.and pc2
-    expected_jp = JoinPoint.new :object => cwa, :method => :attrRW_ClassWithAttribs
-    pc.join_points_matched.should == Set.new([expected_jp])
+    lambdaed_jp = JoinPoint.new :object => cwa, :method => :attrRW_ClassWithAttribs
+    pc.join_points_matched.should == Set.new([lambdaed_jp])
     pc.join_points_not_matched.should == @empty_set
   end
    
@@ -67,8 +67,8 @@ describe Pointcut, "#and (when both pointcuts are not empty)" do
     pc1 = Pointcut.new :types => "ClassWithAttribs", :attributes => [/^attr/], :attribute_options => [:readers]
     pc2 = Pointcut.new :types => "ClassWithAttribs", :attributes => :attrRW_ClassWithAttribs
     pc = pc1.and pc2
-    expected_jp = JoinPoint.new :type => ClassWithAttribs, :method => :attrRW_ClassWithAttribs
-    pc.join_points_matched.should == Set.new([expected_jp])
+    lambdaed_jp = JoinPoint.new :type => ClassWithAttribs, :method => :attrRW_ClassWithAttribs
+    pc.join_points_matched.should == Set.new([lambdaed_jp])
     pc.join_points_not_matched.should == @empty_set
   end
   
@@ -77,8 +77,8 @@ describe Pointcut, "#and (when both pointcuts are not empty)" do
     pc1 = Pointcut.new :object => cwa, :attributes => [/^attr/], :attribute_options => [:readers]
     pc2 = Pointcut.new :object => cwa, :attributes => :attrRW_ClassWithAttribs
     pc = pc1.and pc2
-    expected_jp = JoinPoint.new :object => cwa, :method => :attrRW_ClassWithAttribs
-    pc.join_points_matched.should == Set.new([expected_jp])
+    lambdaed_jp = JoinPoint.new :object => cwa, :method => :attrRW_ClassWithAttribs
+    pc.join_points_matched.should == Set.new([lambdaed_jp])
     pc.join_points_not_matched.should == @empty_set
   end
 end

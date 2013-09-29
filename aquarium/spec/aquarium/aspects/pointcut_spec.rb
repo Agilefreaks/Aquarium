@@ -117,7 +117,7 @@ describe Pointcut, "methods" do
     
   describe Pointcut, ".new (invalid arguments)" do
     it "should raise if an unknown argument is specified" do
-      lambda { Pointcut.new :foo => :bar }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :foo => :bar }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
@@ -309,13 +309,13 @@ describe Pointcut, "methods" do
     
     Aspect::CANONICAL_OPTIONS["types_and_ancestors"].reject{|key| key.eql?("types_and_ancestors")}.each do |key|
       it "should accept :#{key} as a synonym for :types_and_ancestors." do
-        lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+        expect {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.not_to raise_error
       end
     end
   
     Aspect::CANONICAL_OPTIONS["types_and_descendents"].reject{|key| key.eql?("types_and_descendents")}.each do |key|
       it "should accept :#{key} as a synonym for :types_and_descendents." do
-        lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+        expect {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.not_to raise_error
       end
     end
   end
@@ -337,7 +337,7 @@ describe Pointcut, "methods" do
 
     Aspect::CANONICAL_OPTIONS["types_and_nested_types"].reject{|key| key.eql?("types_and_nested_types")}.each do |key|
       it "should accept :#{key} as a synonym for :types_and_nested_types." do
-        lambda {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+        expect {Pointcut.new key.intern => /^Module.*Method/, :methods => :all, :noop => true}.not_to raise_error
       end
     end
   end
@@ -385,12 +385,12 @@ describe Pointcut, "methods" do
   
     it "does confuse strings specified with :objects as type names." do
       string = "mystring"
-      lambda { Pointcut.new :object => string, :methods => :capitalize }.should raise_error(NameError)
+      expect { Pointcut.new :object => string, :methods => :capitalize }.to raise_error(NameError)
     end  
   
     it "does confuse symbols specified with :objects as type names." do
       symbol = :mystring
-      lambda { Pointcut.new :object => symbol, :methods => :capitalize }.should raise_error(NameError)
+      expect { Pointcut.new :object => symbol, :methods => :capitalize }.to raise_error(NameError)
     end  
   end
 
@@ -667,13 +667,13 @@ describe Pointcut, "methods" do
 
     Aspect::CANONICAL_OPTIONS["exclude_types_and_descendents"].reject{|key| key.eql?("exclude_types_and_descendents")}.each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_descendents." do
-        lambda {Pointcut.new :types => /ExcludeTest/, key.intern => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods, :noop => true}.should_not raise_error
+        expect {Pointcut.new :types => /ExcludeTest/, key.intern => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods, :noop => true}.not_to raise_error
       end
     end  
 
     Aspect::CANONICAL_OPTIONS["exclude_types_and_ancestors"].reject{|key| key.eql?("exclude_types_and_ancestors")}.each do |key|
       it "should accept :#{key} as a synonym for :exclude_types_and_ancestors." do
-        lambda {Pointcut.new :types => /ExcludeTest/, key.intern => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods, :noop => true}.should_not raise_error
+        expect {Pointcut.new :types => /ExcludeTest/, key.intern => [ExcludeTestTwo, ExcludeTestThree], :method_options => :exclude_ancestor_methods, :noop => true}.not_to raise_error
       end
     end  
   end
@@ -1282,7 +1282,7 @@ describe Pointcut, "methods" do
     end
   
     it "should only allow :reading and :writing options together if they specify the same attributes." do
-      lambda {Pointcut.new :types => "ClassWithAttribs", :reading => [/^attrRW_ClassWithAttribs/], :writing => [/^attr.*ClassWithAttribs/]}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Pointcut.new :types => "ClassWithAttribs", :reading => [/^attrRW_ClassWithAttribs/], :writing => [/^attr.*ClassWithAttribs/]}.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   
     it "should match public attribute readers and writers for types when both the :reading and :writing options are specified." do
@@ -1491,51 +1491,51 @@ describe Pointcut, "methods" do
   
   describe Pointcut, ".new (:attributes => :all option not yet supported)" do
     it "should raise if :all is used for types (not yet supported)." do
-      lambda { Pointcut.new :types => "ClassWithAttribs", :attributes => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => "ClassWithAttribs", :attributes => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   
     it "should raise if :all is used for objects (not yet supported)." do
-      lambda { Pointcut.new :object => ClassWithAttribs.new, :attributes => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :object => ClassWithAttribs.new, :attributes => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
   describe Pointcut, ".new (:accessing => :all option not yet supported)" do
     it "should raise if :all is used for types (not yet supported)." do
-      lambda { Pointcut.new :types => "ClassWithAttribs", :accessing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => "ClassWithAttribs", :accessing => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   
     it "should raise if :all is used for objects (not yet supported)." do
-      lambda { Pointcut.new :object => ClassWithAttribs.new, :accessing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :object => ClassWithAttribs.new, :accessing => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
   describe Pointcut, ".new (:changing => :all option not yet supported)" do
     it "should raise if :all is used for types (not yet supported)." do
-      lambda { Pointcut.new :types => "ClassWithAttribs", :changing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => "ClassWithAttribs", :changing => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   
     it "should raise if :all is used for objects (not yet supported)." do
-      lambda { Pointcut.new :object => ClassWithAttribs.new, :changing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :object => ClassWithAttribs.new, :changing => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
   describe Pointcut, ".new (:reading => :all option not yet supported)" do
     it "should raise if :all is used for types (not yet supported)." do
-      lambda { Pointcut.new :types => "ClassWithAttribs", :reading => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => "ClassWithAttribs", :reading => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   
     it "should raise if :all is used for objects (not yet supported)." do
-      lambda { Pointcut.new :object => ClassWithAttribs.new, :reading => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :object => ClassWithAttribs.new, :reading => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
   describe Pointcut, ".new (:writing => :all option not yet supported)" do
     it "should raise if :all is used for types (not yet supported)." do
-      lambda { Pointcut.new :types => "ClassWithAttribs", :writing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => "ClassWithAttribs", :writing => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   
     it "should raise if :all is used for objects (not yet supported)." do
-      lambda { Pointcut.new :object => ClassWithAttribs.new, :writing => :all }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :object => ClassWithAttribs.new, :writing => :all }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
@@ -1572,10 +1572,10 @@ describe Pointcut, "methods" do
     end
   
     it "should raise when specifying method options :singleton with :class, :public, :protected, or :private." do
-      lambda { Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :class]}.should     raise_error(Aquarium::Utils::InvalidOptions)
-      lambda { Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :public]}.should    raise_error(Aquarium::Utils::InvalidOptions)
-      lambda { Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :protected]}.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda { Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :private]}.should    raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :class]}.to     raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :public]}.to    raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :protected]}.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Pointcut.new :types => [NotQuiteEmpty, Empty], :methods => :all, :method_options => [:singleton, :private]}.to    raise_error(Aquarium::Utils::InvalidOptions)
     end    
   end
   

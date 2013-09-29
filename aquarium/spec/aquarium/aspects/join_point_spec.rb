@@ -26,39 +26,39 @@ include Aquarium::Aspects
 describe JoinPoint, "#initialize with invalid parameters" do
   
   it "should require either a :type or an :object parameter, but not both." do
-    lambda { JoinPoint.new :method_name => :count }.should raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { JoinPoint.new :type => String, :object => "", :method_name => :count }.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :method_name => :count }.to raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :type => String, :object => "", :method_name => :count }.to raise_error(Aquarium::Utils::InvalidOptions)
   end
   
   it "should require a :method_name." do
-    lambda { JoinPoint.new :type => String }.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :type => String }.to raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should except :method as a synonym for :method_name." do
-    lambda { JoinPoint.new :type => String, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :type => String, :method => :split }.not_to raise_error
   end
 
   it "should require a valid type name if a name is specified." do
-    lambda { JoinPoint.new :type => "String", :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { JoinPoint.new :type => "Stringgy", :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :type => "String", :method => :split }.not_to raise_error
+    expect { JoinPoint.new :type => "Stringgy", :method => :split }.to raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should require a valid type name symbol if a name is specified." do
-    lambda { JoinPoint.new :type => :String, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { JoinPoint.new :type => :Stringgy, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :type => :String, :method => :split }.not_to raise_error
+    expect { JoinPoint.new :type => :Stringgy, :method => :split }.to raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should require a valid type name regular expression if one is specified." do
-    lambda { JoinPoint.new :type => /^String$/, :method => :split }.should_not raise_error(Aquarium::Utils::InvalidOptions)
-    lambda { JoinPoint.new :type => /^Stringgy$/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :type => /^String$/, :method => :split }.not_to raise_error
+    expect { JoinPoint.new :type => /^Stringgy$/, :method => :split }.to raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should reject a regular expression that matches no types." do
-    lambda { JoinPoint.new :type => /^Stringgy$/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :type => /^Stringgy$/, :method => :split }.to raise_error(Aquarium::Utils::InvalidOptions)
   end
 
   it "should reject a regular expression that matches more than one type." do
-    lambda { JoinPoint.new :type => /^M/, :method => :split }.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint.new :type => /^M/, :method => :split }.to raise_error(Aquarium::Utils::InvalidOptions)
   end
 end
   
@@ -221,7 +221,7 @@ describe JoinPoint, "#proceed" do
     jp.context.advised_object = ioc
     jp.context.parameters = []
     jp.context.proceed_proc = nil
-    lambda { jp.proceed }.should raise_error(JoinPoint::ProceedMethodNotAvailable)
+    expect { jp.proceed }.to raise_error(JoinPoint::ProceedMethodNotAvailable)
   end
 
   it "should not raise when the advice is :around advice" do
@@ -231,7 +231,7 @@ describe JoinPoint, "#proceed" do
     jp.context.advised_object = ioc 
     jp.context.parameters = []
     jp.context.proceed_proc = Aquarium::Aspects::NoAdviceChainNode.new(:alias_method_name => :invoke)
-    lambda { jp.proceed }.should_not raise_error(JoinPoint::ProceedMethodNotAvailable)
+    expect { jp.proceed }.not_to raise_error
   end
   
   it "should invoke the actual join point" do
@@ -254,7 +254,7 @@ end
 describe JoinPoint, "#invoke_original_join_point" do
   it "should raise when the join point has an empty context" do
     jp = JoinPoint.new :type => InvokeOriginalClass, :method => :invoke
-    lambda { jp.invoke_original_join_point }.should raise_error(JoinPoint::ContextNotCorrectlyDefined)
+    expect { jp.invoke_original_join_point }.to raise_error(JoinPoint::ContextNotCorrectlyDefined)
   end
 
   it "should invoke the original join point" do
@@ -486,11 +486,11 @@ describe JoinPoint::Context, "#initialize" do
   end
 
   it "should accept a :returned_value argument." do
-    lambda { JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","], :returned_value => ["12", "34"]}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","], :returned_value => ["12", "34"]}.not_to raise_error
   end
 
   it "should accept a :raised_exception argument." do
-    lambda { JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","], :raised_exception => NameError.new}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect { JoinPoint::Context.new :advice_kind => :before, :advised_object => "object", :parameters => [","], :raised_exception => NameError.new}.not_to raise_error
   end
   
 end

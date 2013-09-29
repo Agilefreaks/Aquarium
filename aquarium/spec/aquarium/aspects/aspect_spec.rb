@@ -137,10 +137,10 @@ describe Aspect, " with :after advice" do
       context = jp.context
     end 
     block_called = 0
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') do |*args| 
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') do |*args| 
       block_called += 1 
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
-    end }.should raise_error(Watchful::WatchfulError)
+    end }.to raise_error(Watchful::WatchfulError)
     block_called.should == 1
     context.advised_object.should == watchful
     context.returned_value.should == nil
@@ -189,7 +189,7 @@ describe Aspect, " with :after advice" do
     end 
     aspect_advice_invoked.should be_false
     ctr = ClassThatRaises.new
-    lambda {ctr.raises}.should raise_error(MyError1)
+    expect {ctr.raises}.to raise_error(MyError1)
     aspect_advice_invoked.should be_true
   end
 end
@@ -268,7 +268,7 @@ describe Aspect, " with :after_raising advice" do
       jp.context.raised_exception.kind_of?(Watchful::WatchfulError).should be_true
     end 
     block_called = 0
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.to raise_error(Watchful::WatchfulError)
     block_called.should == 1
     advice_called.should be_true
   end
@@ -285,7 +285,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising => Watchful::WatchfulError, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_true
     block_invoked.should be_true
   end
@@ -295,7 +295,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising, :exceptions => Watchful::WatchfulError, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_true
     block_invoked.should be_true
   end
@@ -305,7 +305,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising => MyError1, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_false
     block_invoked.should be_true
   end
@@ -315,7 +315,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising, :exceptions => MyError1, :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_false
     block_invoked.should be_true
   end
@@ -325,7 +325,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising => [Watchful::WatchfulError, MyError1], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_true
     block_invoked.should be_true
   end
@@ -334,7 +334,7 @@ describe Aspect, " with :after_raising advice" do
     aspect_advice_invoked = false
     @aspect = Aspect.new(:after_raising => StandardError, :pointcut => {:type => ClassThatRaises, :methods => :raises}) {|jp, obj, *args| aspect_advice_invoked = true}
     ctr = ClassThatRaises.new
-    lambda {ctr.raises}.should raise_error(ClassThatRaises::CTRException)
+    expect {ctr.raises}.to raise_error(ClassThatRaises::CTRException)
     aspect_advice_invoked.should be_true
   end
   
@@ -343,7 +343,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising => [MyError1, MyError2], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_false
     block_invoked.should be_true
   end
@@ -353,7 +353,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising, :exceptions => [MyError1, MyError2], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_false
     block_invoked.should be_true
   end
@@ -363,7 +363,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising, :exception => [MyError1, MyError2], :pointcut => {:type => Watchful, :methods => /public_watchful_method/}) {|jp, obj, *args| aspect_advice_invoked = true}
     block_invoked = false
     watchful = Watchful.new
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
     aspect_advice_invoked.should be_false
     block_invoked.should be_true
   end
@@ -381,7 +381,7 @@ describe Aspect, " with :after_raising advice" do
     end 
     aspect_advice_invoked.should be_false
     ctr = ClassThatRaises.new
-    lambda {ctr.raises}.should raise_error(ClassThatRaises::CTRException)
+    expect {ctr.raises}.to raise_error(ClassThatRaises::CTRException)
     aspect_advice_invoked.should be_true
   end
 
@@ -392,7 +392,7 @@ describe Aspect, " with :after_raising advice" do
     end 
     aspect_advice_invoked.should be_false
     ctr = ClassThatRaisesString.new
-    lambda {ctr.raises}.should raise_error(RuntimeError)
+    expect {ctr.raises}.to raise_error(RuntimeError)
     aspect_advice_invoked.should be_true
   end
 
@@ -404,7 +404,7 @@ describe Aspect, " with :after_raising advice" do
     end 
     aspect_advice_invoked.should be_false
     ctr = ClassThatRaises.new
-    lambda {ctr.raises}.should raise_error(MyError1)
+    expect {ctr.raises}.to raise_error(MyError1)
     aspect_advice_invoked.should be_true
   end
 end
@@ -517,7 +517,7 @@ describe Aspect, " with :before and :after_raising advice" do
       args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
     end 
     block_called = 0
-    lambda {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.to raise_error(Watchful::WatchfulError)
     block_called.should == 1
     contexts.size.should == 2
     advice_kinds[0].should == :before
@@ -765,8 +765,8 @@ describe Aspect, "#unadvise called more than once on the same aspect" do
   it "should do nothing on the second invocation." do
     aspect = Aspect.new :around, :type => Watchful, :method => /does_not_exist/, :advice => @advice, :severity => Logger::Severity::ERROR
     aspect.unadvise
-    lambda {aspect.unadvise}.should_not raise_error
-    lambda {aspect.unadvise}.should_not raise_error
+    expect {aspect.unadvise}.not_to raise_error
+    expect {aspect.unadvise}.not_to raise_error
   end
 end
 
@@ -817,9 +817,9 @@ describe Aspect, "#unadvise clean up" do
     [public_methods, protected_methods, private_methods]
   end
   
-  def diff_methods actual, expected, private_should_not_be_equal = false
+  def diff_methods actual, expected, private_not_to_be_equal = false
     3.times do |i|
-      if i==2 && private_should_not_be_equal
+      if i==2 && private_not_to_be_equal
         actual[i].should_not == expected[i] 
       else
         actual[i].should == expected[i] 
@@ -1079,7 +1079,7 @@ def do_watchful_spec protection, raises, expected_advice_called_value, args_pass
   @advice_called = 0
   block_called = 0
   if raises
-    lambda {watchful.send("#{protection}_watchful_method#{suffix}".intern, :a1, :a2, :a3) {|*args| block_called += 1}}.should raise_error(Watchful::WatchfulError)
+    expect {watchful.send("#{protection}_watchful_method#{suffix}".intern, :a1, :a2, :a3) {|*args| block_called += 1}}.to raise_error(Watchful::WatchfulError)
   else
     watchful.send("#{protection}_watchful_method#{suffix}".intern, :a1, :a2, :a3) {|*args| block_called += 1}
   end

@@ -13,7 +13,7 @@ describe Aquarium::Extras::DesignByContract, "precondition" do
   end
   
   it "should add advice that raises if the precondition is not satisfied" do
-    lambda {PreCond.new.action}.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    expect {PreCond.new.action}.to raise_error(Aquarium::Extras::DesignByContract::ContractError)
   end
   
   it "should add advice that does not raise if the precondition is satisfied" do
@@ -33,8 +33,8 @@ describe Aquarium::Extras::DesignByContract, "postcondition" do
   end
   
   it "should add advice that raises if the postcondition is not satisfied" do
-    lambda {PostCond.new.action}.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
-    lambda {PostCond.new.action("")}.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    expect {PostCond.new.action}.to raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    expect {PostCond.new.action("")}.to raise_error(Aquarium::Extras::DesignByContract::ContractError)
   end
   
   it "should add advice that does not raise if the postcondition is satisfied" do
@@ -64,7 +64,7 @@ describe Aquarium::Extras::DesignByContract, "invariant" do
   end
   
   it "should add advice that raises if the invariant is not satisfied" do
-    lambda {InvarCond.new.bad_action}.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    expect {InvarCond.new.bad_action}.to raise_error(Aquarium::Extras::DesignByContract::ContractError)
   end
   
   it "should add advice that does not raise if the invariant is satisfied" do
@@ -90,7 +90,7 @@ describe Aquarium::Extras::DesignByContract, "global enable/disable option" do
   it "should disable creation of the contract aspects when the contracts are disabled" do
     begin
       Aquarium::Extras::DesignByContract.disable_all
-      lambda { ContractEnablement.new.action }.should_not raise_error(Aquarium::Extras::DesignByContract::ContractError)
+      expect { ContractEnablement.new.action }.not_to raise_error
     ensure
       Aquarium::Extras::DesignByContract.enable_all
     end
@@ -98,6 +98,6 @@ describe Aquarium::Extras::DesignByContract, "global enable/disable option" do
   
   it "should enable creation of the contract aspects when the contracts are enabled" do
     Aquarium::Extras::DesignByContract.enable_all
-    lambda { ContractEnablement.new.action }.should raise_error(Aquarium::Extras::DesignByContract::ContractError)
+    expect { ContractEnablement.new.action }.to raise_error(Aquarium::Extras::DesignByContract::ContractError)
   end
 end

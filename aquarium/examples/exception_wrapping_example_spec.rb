@@ -41,9 +41,9 @@ describe "Rescuing one exception type and raising a second type" do
   end
   
   it "should intercept the specified type of exception" do
-    lambda { @raiser.raise_exception1 }.should raise_error(Aquarium::NewException)
+    expect { @raiser.raise_exception1 }.to raise_error(Aquarium::NewException)
   end
   it "should not intercept other types of exceptions" do
-    lambda { @raiser.raise_exception2 }.should raise_error(Aquarium::Exception2)
+    expect { @raiser.raise_exception2 }.to raise_error(Aquarium::Exception2)
   end
 end

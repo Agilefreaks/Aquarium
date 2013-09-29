@@ -21,7 +21,7 @@ describe "Matching on a private method in a Java type" do
     aspect = Aspect.new :around, :calls_to => "private_method", :in_object => @visibility, 
       :ignore_no_matching_join_points => true do |jp|
     end
-    aspect.join_points_matched.should be_empty
+    aspect.join_points_matched.to be_empty
     aspect.unadvise
   end
 
@@ -29,7 +29,7 @@ describe "Matching on a private method in a Java type" do
     aspect = Aspect.new :around, :calls_to => "private_method", :in_object => @visibility, 
       :method_options => [:private], :ignore_no_matching_join_points => true do |jp|
     end
-    aspect.join_points_matched.should be_empty
+    aspect.join_points_matched.to be_empty
     aspect.unadvise
   end
 end
@@ -43,8 +43,8 @@ describe "Matching on a protected method in a Java type" do
     aspect = Aspect.new :around, :calls_to => "protected_method", :in_object => @visibility, 
       :ignore_no_matching_join_points => false do |jp|
     end
-    aspect.join_points_matched.size.should eql(1)
-    aspect.join_points_matched.each {|jp| jp.method_name.should eql(:protected_method) }
+    aspect.join_points_matched.size.to eql(1)
+    aspect.join_points_matched.each {|jp| jp.method_name.to eql(:protected_method) }
     aspect.unadvise
   end
 
@@ -52,7 +52,7 @@ describe "Matching on a protected method in a Java type" do
     aspect = Aspect.new :around, :calls_to => "protected_method", :in_object => @visibility, 
       :method_options => [:protected], :ignore_no_matching_join_points => true do |jp|
     end
-    aspect.join_points_matched.should be_empty
+    aspect.join_points_matched.to be_empty
     aspect.unadvise
   end
 
@@ -67,8 +67,8 @@ describe "Matching on a public method in a Java type" do
     aspect = Aspect.new :around, :calls_to => "public_method", :in_object => @visibility, 
       :ignore_no_matching_join_points => false do |jp|
     end
-    aspect.join_points_matched.size.should eql(1)
-    aspect.join_points_matched.each {|jp| jp.method_name.should eql(:public_method) }
+    aspect.join_points_matched.size.to eql(1)
+    aspect.join_points_matched.each {|jp| jp.method_name.to eql(:public_method) }
     aspect.unadvise
   end
 
@@ -76,8 +76,8 @@ describe "Matching on a public method in a Java type" do
     aspect = Aspect.new :around, :calls_to => "public_method", :in_object => @visibility, 
       :method_options => [:public], :ignore_no_matching_join_points => false do |jp|
     end
-    aspect.join_points_matched.size.should eql(1)
-    aspect.join_points_matched.each {|jp| jp.method_name.should eql(:public_method) }
+    aspect.join_points_matched.size.to eql(1)
+    aspect.join_points_matched.each {|jp| jp.method_name.to eql(:public_method) }
     aspect.unadvise
   end
 end
@@ -101,10 +101,10 @@ end
         :ignore_no_matching_join_points => ignore_no_matches do |jp|
       end
       if vis == "public"
-        aspect.join_points_matched.size.should eql(1)
-        aspect.join_points_matched.each {|jp| jp.method_name.should eql("#{vis}_method".intern) }
+        aspect.join_points_matched.size.to eql(1)
+        aspect.join_points_matched.each {|jp| jp.method_name.to eql("#{vis}_method".intern) }
       else
-        aspect.join_points_matched.should be_empty
+        aspect.join_points_matched.to be_empty
       end
       aspect.unadvise
     end
@@ -113,8 +113,8 @@ end
       aspect = Aspect.new :around, :calls_to => "#{vis}_method", :in_object => @visibility, 
       :method_options => [vis.intern], :ignore_no_matching_join_points => ignore_no_matches do |jp|
       end
-      aspect.join_points_matched.size.should eql(1)
-      aspect.join_points_matched.each {|jp| jp.method_name.should eql("#{vis}_method".intern) }
+      aspect.join_points_matched.size.to eql(1)
+      aspect.join_points_matched.each {|jp| jp.method_name.to eql("#{vis}_method".intern) }
       aspect.unadvise
     end
   end

@@ -73,15 +73,15 @@ describe Aspect, "methods" do
     end
   
     it "should warn about no join point matches if the :ignore_no_matching_join_points is not specified." do
-      lambda {Aspect.new(:after, :logger_stream => @log_stream) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :logger_stream => @log_stream) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
       @log_stream.string.should_not be_empty
     end
     it "should warn about no join point matches if :ignore_no_matching_join_points => false is specified." do
-      lambda {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => false) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => false) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
       @log_stream.string.should_not be_empty
     end
     it "should not warn about no join point matches if :ignore_no_matching_join_points => true is specified." do
-      lambda {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => true) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :logger_stream => @log_stream, :ignore_no_matching_join_points => true) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
       @log_stream.string.should be_empty
     end
   end
@@ -92,48 +92,48 @@ describe Aspect, "methods" do
     end
     
     it "should require the kind of advice as the first parameter." do
-      lambda { Aspect.new :pointcut => @pointcut_opts }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :pointcut => @pointcut_opts }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should contain no other advice types if :around advice specified." do
-      lambda { Aspect.new :around, :before,          :pointcut => @pointcut_opts }.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda { Aspect.new :around, :after,           :pointcut => @pointcut_opts }.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda { Aspect.new :around, :after_returning, :pointcut => @pointcut_opts }.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda { Aspect.new :around, :after_raising,   :pointcut => @pointcut_opts }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :around, :before,          :pointcut => @pointcut_opts }.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :around, :after,           :pointcut => @pointcut_opts }.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :around, :after_returning, :pointcut => @pointcut_opts }.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :around, :after_raising,   :pointcut => @pointcut_opts }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should allow only one of :after, :after_returning, or :after_raising advice to be specified." do
-      lambda { Aspect.new :after, :after_returning, :pointcut => @pointcut_opts }.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda { Aspect.new :after, :after_raising,   :pointcut => @pointcut_opts }.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda { Aspect.new :after_returning, :after_raising, :pointcut => @pointcut_opts }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :after, :after_returning, :pointcut => @pointcut_opts }.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :after, :after_raising,   :pointcut => @pointcut_opts }.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :after_returning, :after_raising, :pointcut => @pointcut_opts }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should allow :before to be specified with :after." do
-      lambda { Aspect.new :before, :after, :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :before, :after, :pointcut => @pointcut_opts, :noop => true }.not_to raise_error
     end
 
     it "should allow :before to be specified with :after_returning." do
-      lambda { Aspect.new :before, :after_returning, :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :before, :after_returning, :pointcut => @pointcut_opts, :noop => true }.not_to raise_error
     end
 
     it "should allow :before to be specified with :after_raising." do
-      lambda { Aspect.new :before, :after_raising,   :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :before, :after_raising,   :pointcut => @pointcut_opts, :noop => true }.not_to raise_error
     end
 
     it "should accept a single exception specified with :after_raising." do
-      lambda { Aspect.new :before, :after_raising => Exception, :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :before, :after_raising => Exception, :pointcut => @pointcut_opts, :noop => true }.not_to raise_error
     end
   
     it "should accept a list of exceptions specified with :after_raising." do
-      lambda { Aspect.new :before, :after_raising => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :before, :after_raising => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.not_to raise_error
     end
 
     it "should accept a separate :exceptions => list of exceptions specified with :after_raising." do
-      lambda { Aspect.new :before, :after_raising, :exceptions => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :before, :after_raising, :exceptions => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.not_to raise_error
     end
 
     it "should reject the :exceptions argument unless specified with :after_raising." do
-      lambda { Aspect.new :before, :after, :exceptions => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :before, :after, :exceptions => [Exception, String], :pointcut => @pointcut_opts, :noop => true }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
@@ -143,7 +143,7 @@ describe Aspect, "methods" do
     end
     
     it "should contain at least one of :method(s), :pointcut(s), :named_pointcut(s), :type(s), or :object(s)." do
-      lambda {Aspect.new(:after, :ignore_no_matching_join_points => true) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :ignore_no_matching_join_points => true) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should contain at least one of :pointcut(s), :named_pointcut(s), :type(s), or :object(s) unless :default_objects => object is given." do
@@ -227,15 +227,15 @@ describe Aspect, "methods" do
     end
   
     it "should not contain :pointcut(s) and either :type(s) or :object(s)." do
-      lambda {Aspect.new(:after, :pointcuts => @pointcut_opts, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda {Aspect.new(:after, :pointcuts => @pointcut_opts, :object => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :pointcuts => @pointcut_opts, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :pointcuts => @pointcut_opts, :object => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
 
   describe Aspect, ".new (parameters that specify named constant and/or class variable pointcuts)" do
     it "should contain at least one :types or TypeFinder synonym for :types." do
-      lambda {Aspect.new(:after, :named_pointcuts => {}, :noop => true) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda {Aspect.new(:after, :named_pointcuts => {:types => all_pointcut_classes}, :noop => true) {true}}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :named_pointcuts => {}, :noop => true) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses.all_pointcut_classes}, :noop => true) {true}}.not_to raise_error
     end
 
     it "should ignore the :default_objects if at least one :named_pointcut is given even if the :default_objects => object are given." do
@@ -261,8 +261,8 @@ describe Aspect, "methods" do
     end
 
     it "should not contain :named_pointcut(s) and either :type(s) or :object(s)." do
-      lambda {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
-      lambda {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}, :object => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method) {true}}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}, :type => Aquarium::AspectInvocationTestClass, :method => :public_test_method) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new(:after, :named_pointcuts => {:types => Aquarium::PointcutFinderTestClasses::PointcutClassVariableHolder1}, :object => Aquarium::AspectInvocationTestClass.new, :method => :public_test_method) {true}}.to raise_error(Aquarium::Utils::InvalidOptions)
     end
   end
   
@@ -348,14 +348,14 @@ describe Aspect, "methods" do
 
     it "should require the values for :reading => ... and :writing => ... to be equal if both are specified." do
       @advice = Proc.new {}
-      lambda {Aspect.new :before, :type => Aquarium::AspectInvocationTestClass3, 
-        :reading => :public_test_method_args, :writing => :public_test_method_args2, :advice => @advice}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new :before, :type => Aquarium::AspectInvocationTestClass3, 
+        :reading => :public_test_method_args, :writing => :public_test_method_args2, :advice => @advice}.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should require the values for :reading => ... and :changing => ... to be equal if both are specified." do
       @advice = Proc.new {}
-      lambda {Aspect.new :before, :type => Aquarium::AspectInvocationTestClass3, 
-        :reading => :public_test_method_args, :changing => :public_test_method_args2, :advice => @advice}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new :before, :type => Aquarium::AspectInvocationTestClass3, 
+        :reading => :public_test_method_args, :changing => :public_test_method_args2, :advice => @advice}.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should accept :reading => ... as a synonym for :attributes => ..., :attribute_options => [:readers]." do
@@ -1464,7 +1464,7 @@ describe Aspect, "methods" do
       advice_called = false
       advice1 = Proc.new {|jp, obj, *args| fail "advice1"}
       advice2 = Proc.new {|jp, obj, *args| fail "advice2"}
-      lambda {Aspect.new :before, :object => object, :methods => :public_test_method, :advice => advice1, :invoke => advice2}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect {Aspect.new :before, :object => object, :methods => :public_test_method, :advice => advice1, :invoke => advice2}.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should allow ignore an :advice option if a block is given." do
@@ -1483,11 +1483,11 @@ describe Aspect, "methods" do
 
   describe Aspect, ".new (advice block or proc parameter list)" do  
     it "should raise unless an advice block or :advice => advice parameter is specified." do
-      lambda { Aspect.new(:after, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method)}.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new(:after, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method)}.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should raise if obsolete |jp, *args| list is used." do
-      lambda { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method do |jp, *args|; end }.should raise_error(Aquarium::Utils::InvalidOptions)
+      expect { Aspect.new :before, :type => Aquarium::AspectInvocationTestClass, :methods => :public_test_method do |jp, *args|; end }.to raise_error(Aquarium::Utils::InvalidOptions)
     end
 
     it "should accept an argument list matching |jp, object, *args|." do
@@ -2151,7 +2151,7 @@ describe Aspect, "methods" do
         @excluded_types.each do |type|
           advice_called = false
           type.new(1).doit3
-          advice_called.should_not be_true
+          advice_called.should be_false
         end
       end
       (@included_objects + @excluded_objects).each do |object|

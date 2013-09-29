@@ -205,15 +205,15 @@ end
 
 describe OptionsUtils, "and options handling" do
   it "should raise if an unknown option is specified" do
-    lambda {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :unknown => true}.should raise_error(Aquarium::Utils::InvalidOptions)
+    expect {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :unknown => true}.to raise_error(Aquarium::Utils::InvalidOptions)
   end
   it "should not raise if a known canonical option is specified" do
-    lambda {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :foos => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :foos => true}.not_to raise_error
   end
   it "should not raise if a known canonical option synonym is specified" do
-    lambda {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :foo1 => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :foo1 => true}.not_to raise_error
   end
   it "should not raise if an known additional allowed option is specified" do
-    lambda {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :baz => true}.should_not raise_error(Aquarium::Utils::InvalidOptions)
+    expect {Aquarium::OptionsUtilsExampleWithAdditionalAllowedOptions.new :baz => true}.not_to raise_error
   end
 end

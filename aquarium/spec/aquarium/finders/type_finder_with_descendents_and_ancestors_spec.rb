@@ -26,7 +26,7 @@ describe Aquarium::Finders::TypeFinder, "#find types and their descendents, usin
 
   Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["types_and_descendents"].each do |synonym|
     it "should accept :#{synonym} as a synonym for :types_and_descendents" do
-      lambda {Aquarium::Finders::TypeFinder.new.find synonym.intern => TypeUtils.sample_types, :noop => true}.should_not raise_error(InvalidOptions)
+      expect {Aquarium::Finders::TypeFinder.new.find synonym.intern => TypeUtils.sample_types, :noop => true}.not_to raise_error
     end
   end
 end
@@ -44,7 +44,7 @@ describe Aquarium::Finders::TypeFinder, "#find types subtracting out excluded ty
 
   Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["exclude_types_and_descendents"].each do |synonym|
     it "should accept :#{synonym} as a synonym for :exclude_types_and_descendents" do
-      lambda {Aquarium::Finders::TypeFinder.new.find :types_and_descendents => ModuleForDescendents, synonym.intern => D1ForDescendents, :noop => true}.should_not raise_error(InvalidOptions)
+      expect {Aquarium::Finders::TypeFinder.new.find :types_and_descendents => ModuleForDescendents, synonym.intern => D1ForDescendents, :noop => true}.not_to raise_error
     end
   end
 end
@@ -62,7 +62,7 @@ describe Aquarium::Finders::TypeFinder, "#find types and their ancestors, using 
 
   Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["types_and_ancestors"].each do |synonym|
     it "should accept :#{synonym} as a synonym for :types_and_ancestors" do
-      lambda {Aquarium::Finders::TypeFinder.new.find synonym.intern => TypeUtils.sample_types, :noop => true}.should_not raise_error(InvalidOptions)
+      expect {Aquarium::Finders::TypeFinder.new.find synonym.intern => TypeUtils.sample_types, :noop => true}.not_to raise_error
     end
   end
 end
@@ -81,7 +81,7 @@ describe Aquarium::Finders::TypeFinder, "#find types subtracting out excluded ty
 
   Aquarium::Finders::TypeFinder::CANONICAL_OPTIONS["exclude_types_and_ancestors"].each do |synonym|
     it "should accept :#{synonym} as a synonym for :exclude_types_and_ancestors" do
-      lambda {Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => D1ForDescendents, synonym.intern => ModuleForDescendents, :noop => true}.should_not raise_error(InvalidOptions)
+      expect {Aquarium::Finders::TypeFinder.new.find :types_and_ancestors => D1ForDescendents, synonym.intern => ModuleForDescendents, :noop => true}.not_to raise_error
     end
   end
 end

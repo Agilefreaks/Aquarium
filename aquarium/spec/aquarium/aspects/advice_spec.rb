@@ -115,7 +115,7 @@ describe Advice, "that raises an exception" do
     aspect = Aspect.new :before, :pointcut => {:type => Watchful, :methods => :public_class_watchful_method, :method_options => [:class]} do |jp, obj, *args| 
       raise MyException1.new("advice called with args: #{args.inspect}")
     end
-    lambda { Watchful.public_class_watchful_method :a1, :a2 }.should raise_error(MyException1)
+    expect { Watchful.public_class_watchful_method :a1, :a2 }.to raise_error(MyException1)
     aspect.unadvise
   end
 
@@ -208,7 +208,7 @@ describe Advice, "#invoke_original_join_point that raises an exception" do
       :method_options => [:class]} do |jp, obj, *args| 
         jp.invoke_original_join_point
     end
-    lambda { InvokeOriginalJoinPointRaisingException.class_raise_exception :a1, :a2 }.should raise_error(InvokeOriginalJoinPointRaisingException::IOJPRException)
+    expect { InvokeOriginalJoinPointRaisingException.class_raise_exception :a1, :a2 }.to raise_error(InvokeOriginalJoinPointRaisingException::IOJPRException)
     aspect.unadvise
   end
 
@@ -272,7 +272,7 @@ end
 
 describe AdviceChainNodeFactory, "#make_node" do
   it "should raise if an unknown advice kind is specified" do
-    lambda {AdviceChainNodeFactory.make_node :advice_kind => :foo}.should raise_error(Aquarium::Utils::InvalidOptions)    
+    expect {AdviceChainNodeFactory.make_node :advice_kind => :foo}.to raise_error(Aquarium::Utils::InvalidOptions)    
   end
 
   it "should return a node of the type corresponding to the input advice kind" do
