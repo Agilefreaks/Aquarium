@@ -1,7 +1,7 @@
 module Aquarium
   module VERSION
     def self.build_tag
-      tag = [MAJOR, MINOR, TINY].join('.')
+      tag = "REL_" + [MAJOR, MINOR, TINY].join('_')
       tag << "_" << RELEASE_CANDIDATE  unless RELEASE_CANDIDATE.nil? or RELEASE_CANDIDATE.empty?
       tag
     end

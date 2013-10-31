@@ -44,7 +44,7 @@ end
 
 desc 'Generate HTML documentation for website'
 task :webgen do
-  Dir.chdir '../doc/aquarium' do
+  Dir.chdir '../doc/aquarium/webgen' do
     output = nil
     IO.popen('rake webgen 2>&1') do |io|
       output = io.read
@@ -56,45 +56,14 @@ end
 desc 'Generate RDoc'
 rd = Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = '../doc/aquarium/out/rdoc'
-  rdoc.options << '--title' << 'Aquarium' << '--line-numbers' << '--inline-source' << '--main' << 'README'
+  rdoc.options << '--title' << 'Aquarium' << '--line-numbers' << '--main' << 'README'
   rdoc.rdoc_files.include('README', 'CHANGES', 'MIT_LICENSE', 'examples/**/*.rb', 'UPGRADE', 'lib/**/*.rb') # 'EXAMPLES.rd'
 end
 
-# desc "Generate EXAMPLES.rb"
-# task :rdoc do
-#   core.rdoc
-# end
-
-# aquarium = Gem::Specification.new do |s|
-#   s.name = PKG_NAME
-#   s.version = PKG_VERSION
-#   s.summary = Aquarium::VERSION::DESCRIPTION
-#   s.description = <<-EOF
-#     Aquarium is a full-featured Aspect-Oriented Programming (AOP) framework for Ruby that is 
-#     designed to provide an intuitive syntax and support for large-scale, dynamic aspects.
-#   EOF
-
-#   s.files = PKG_FILES.to_a
-#   s.require_path = 'lib'
-
-#   s.has_rdoc = true
-#   s.rdoc_options = rd.options
-#   s.extra_rdoc_files = rd.rdoc_files.reject { |fn| fn =~ /\.rb$|^EXAMPLES.rd$/ }.to_a
-  
-#   s.autorequire = 'aquarium'
-#   s.bindir = 'bin'
-#   s.executables = []
-#   s.default_executable = ''
-#   s.authors = ["Aquarium Development Team"]
-#   s.email = "aquarium-devel@rubyforge.org"
-#   s.homepage = "http://aquarium.rubyforge.org"
-#   s.rubyforge_project = "aquarium"
-# end
-
-Rake::PackageTask.new("aquarium", "#{Aquarium::VERSION::TAG}") do |p|
+Rake::PackageTask.new("aquarium", "#{Aquarium::VERSION::STRING}") do |p|
    p.need_zip = true
-   p.need_tar_gz = true
-   p.package_files = `git ls-files -- {test,spec,features}/*`.split("\n")
+   p.need_tar = true
+   p.package_files = `git ls-files`.split("\n")
    # .include("lib/**/*.rb").include("spec/**/*.rb").include("examples/**/*.rb").include("jruby/**/*").include("rake_tasks/**/*")
    # p.package_files += ["CHANGES", "EXAMPLES.rd", "MIT_LICENSE", "README", "RELEASE-PLAN",
    #  "Rakefile", "UPGRADE"]
@@ -121,13 +90,14 @@ end
 
 task :clobber do
   rm_rf '../doc/aquarium/out'
-  rm_rf '../doc/aquarium/webgen.cache'
+  rm_rf '../doc/aquarium/webgen/out'
+  rm_rf '../doc/aquarium/webgen/tmp'
   rm_rf 'translated_specs'
 end
 
 task :release => [:clobber, :verify_committed, :verify_user, :spec, :package_release]
 
-task :package_release => [:rdoc, :install, :package, :publish_packages, :tag, :publish_website, :publish_news]
+task :package_release => [:website, :install, :package, :publish_packages, :tag, :publish_website, :publish_news]
 
 # TODO!
 desc "Verifies that there is no uncommitted code"
@@ -139,9 +109,9 @@ task :verify_committed do
   end
 end
 
-# TODO!
 desc "Creates a tag in git"
 task :tag do
+  `git tag #{Aquarium::VERSION::TAG}`
 end
 
 desc "Creates a tag in svn (obsolete)"
@@ -154,13 +124,6 @@ task :svntag do
   `#{tag_cmd}`
   raise "Tagging failed" unless $? == 0
 end
-
-# TODO: adapt from rspec.
-# desc "Run this task before you commit. You should see 'OK TO COMMIT'"
-# task :pre_commit => [
-#   :website,
-#   :examples
-# ]
 
 desc "Build the website, but do not publish it"
 task :website => [:clobber, :rdoc, :webgen] # :spec_html, :verify_jruby, :verify_rcov,

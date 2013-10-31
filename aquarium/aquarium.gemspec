@@ -32,9 +32,17 @@ Gem::Specification.new do |s|
 
   s.require_paths = ["lib"]
 
-  # Specify dependencies:
-  s.add_development_dependency "rspec"
-  # s.add_runtime_dependency "rest-client"
+  # Specify dependencies. Some of these are for building the documentation.
+  s.add_development_dependency('bundler', '>= 1.3.5')
+  s.add_development_dependency('coderay', '>= 1.0.0')
+  s.add_development_dependency('meta_project', '>= 0.4.15')
+  s.add_development_dependency('rake', '>= 10.1.0')
+  s.add_development_dependency('rdoc', '>= 4.0.1')
+  s.add_development_dependency('RedCloth', '>= 4.2.9')
+  s.add_development_dependency("rspec", '>= 2.14.1')
+  s.add_development_dependency("rspec-core", '>= 2.14.1')
+  s.add_development_dependency("rspec-expectations", '>= 2.14.1')
+  s.add_development_dependency('webgen', '>= 1.0.0')
 
   # s.has_rdoc = true
   # s.rdoc_options = rd.options

@@ -7,9 +7,9 @@ Aquarium is a toolkit for Aspect-Oriented Programming (AOP) whose goals include:
 * A user-friendly DSL.
 * Support for advising Java types through JRuby.
 
-*SOMEBODY ADOPT ME!!*
+=== SOMEBODY ADOPT ME!!
 
-_While I've enjoyed working on Aquarium, I no longer do Ruby development. I just don't have the time to keep updating Aquarium as Ruby evolves. If you like this project, please consider adoption. Thanks._
+While I've enjoyed working on Aquarium, I no longer do Ruby development. I just don't have the time to keep updating Aquarium as Ruby evolves. If you like this project, please consider adoption. Thanks.
 
 === Why Is an AOP Framework Useful in Ruby?
 
