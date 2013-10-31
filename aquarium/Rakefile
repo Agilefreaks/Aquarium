@@ -30,6 +30,8 @@ FileUtils.touch(File.dirname(__FILE__) + '/previous_failures.txt')
 
 IS_WINDOWS = (RUBY_VERSION == "1.8.7" ? PLATFORM : RUBY_PLATFORM) =~ /mswin/
 
+WEBSITE_ROOT = "../doc/aquarium"
+
 task :default => :spec  
 
 desc "Run all specs"
@@ -37,36 +39,10 @@ RSpec::Core::RakeTask.new do |t|
   t.rspec_opts = ['--color', '--format progress', '--profile']
 end
 
-# desc "Run all specs and store html output in doc/aquarium/out/report.html"
-# RSpec::Core::RakeTask.new('spec_html') do |t|
-#   t.rspec_opts = ['--format html:../doc/aquarium/out/report.html','--backtrace']
-# end
-
-desc 'Generate HTML documentation for website'
-task :webgen do
-  Dir.chdir '../doc/aquarium/webgen' do
-    output = nil
-    IO.popen('rake webgen 2>&1') do |io|
-      output = io.read
-    end
-    raise "ERROR while running webgen: #{output}" if output =~ /ERROR/n || $? != 0
-  end
-end
-
-desc 'Generate RDoc'
-rd = Rake::RDocTask.new do |rdoc|
-  rdoc.rdoc_dir = '../doc/aquarium/out/rdoc'
-  rdoc.options << '--title' << 'Aquarium' << '--line-numbers' << '--main' << 'README'
-  rdoc.rdoc_files.include('README', 'CHANGES', 'MIT_LICENSE', 'examples/**/*.rb', 'UPGRADE', 'lib/**/*.rb') # 'EXAMPLES.rd'
-end
-
 Rake::PackageTask.new("aquarium", "#{Aquarium::VERSION::STRING}") do |p|
    p.need_zip = true
    p.need_tar = true
    p.package_files = `git ls-files`.split("\n")
-   # .include("lib/**/*.rb").include("spec/**/*.rb").include("examples/**/*.rb").include("jruby/**/*").include("rake_tasks/**/*")
-   # p.package_files += ["CHANGES", "EXAMPLES.rd", "MIT_LICENSE", "README", "RELEASE-PLAN",
-   #  "Rakefile", "UPGRADE"]
  end
 
 def egrep(pattern)
@@ -89,9 +65,9 @@ task :todo do
 end
 
 task :clobber do
-  rm_rf '../doc/aquarium/out'
-  rm_rf '../doc/aquarium/webgen/out'
-  rm_rf '../doc/aquarium/webgen/tmp'
+  rm_rf "#{WEBSITE_ROOT}/out"
+  rm_rf "#{WEBSITE_ROOT}/webgen/out"
+  rm_rf "#{WEBSITE_ROOT}/webgen/tmp"
   rm_rf 'translated_specs'
 end
 
@@ -114,25 +90,50 @@ task :tag do
   `git tag #{Aquarium::VERSION::TAG}`
 end
 
-desc "Creates a tag in svn (obsolete)"
-task :svntag do
-  from = `svn info #{File.dirname(__FILE__)}`.match(/URL: (.*)\/aquarium/n)[1]
-  to = from.gsub(/trunk/, "tags/#{Aquarium::VERSION::TAG}")
-  tag_cmd = "svn cp #{from} #{to} -m \"Tag release #{Aquarium::VERSION::FULL_VERSION}\""
-  raise "Can't tag to the same place: #{tag_cmd}" if to == from
-  puts "Creating tag in SVN"
-  `#{tag_cmd}`
-  raise "Tagging failed" unless $? == 0
-end
+# desc "Creates a tag in svn (obsolete)"
+# task :svntag do
+#   from = `svn info #{File.dirname(__FILE__)}`.match(/URL: (.*)\/aquarium/n)[1]
+#   to = from.gsub(/trunk/, "tags/#{Aquarium::VERSION::TAG}")
+#   tag_cmd = "svn cp #{from} #{to} -m \"Tag release #{Aquarium::VERSION::FULL_VERSION}\""
+#   raise "Can't tag to the same place: #{tag_cmd}" if to == from
+#   puts "Creating tag in SVN"
+#   `#{tag_cmd}`
+#   raise "Tagging failed" unless $? == 0
+# end
 
 desc "Build the website, but do not publish it"
-task :website => [:clobber, :rdoc, :webgen] # :spec_html, :verify_jruby, :verify_rcov,
+task :website => [:clobber, :rdoc, :webgen, :stage_website]
 
-task :rdoc_rails do
-  Dir.chdir '../aquarium_on_rails' do
-    rake = IS_WINDOWS ? "rake.cmd" : "rake"
-    `#{rake} rdoc`
+desc 'Generate HTML documentation for website'
+task :webgen do
+  puts "In #{WEBSITE_ROOT}, running 'rake webgen':"
+  Dir.chdir "#{WEBSITE_ROOT}" do
+    output = nil
+    IO.popen('rake webgen 2>&1') do |io|
+      output = io.read
+    end
+    if $? != 0
+      puts "ERROR while running webgen: #{output}"
+      raise "ERROR while running webgen"
+    end
   end
+end
+
+desc 'Generate RDoc'
+rd = Rake::RDocTask.new do |rdoc|
+  rdoc.rdoc_dir = "#{WEBSITE_ROOT}/out/rdoc"
+  rdoc.options << '--title' << 'Aquarium' << '--line-numbers' << '--main' << 'README'
+  rdoc.rdoc_files.include('README', 'CHANGES', 'MIT_LICENSE', 'examples/**/*.rb', 'UPGRADE', 'lib/**/*.rb') # 'EXAMPLES.rd'
+end
+
+task :stage_website do
+  # Hack so that cp_r works correctly:
+  mv "#{WEBSITE_ROOT}/out/", "#{WEBSITE_ROOT}/out-tmp/"
+  puts "cp_r #{WEBSITE_ROOT}/webgen/out, #{WEBSITE_ROOT}/out"
+  cp_r "#{WEBSITE_ROOT}/webgen/out", "#{WEBSITE_ROOT}/out"
+  mv "#{WEBSITE_ROOT}/out-tmp/rdoc", "#{WEBSITE_ROOT}/out"
+  rmdir "#{WEBSITE_ROOT}/out-tmp/"
+
 end
 
 desc "Verify that the Aquarium specs run under JRuby and that JRuby can advise Java types. If this task fails, try running 'jruby -S rake' separately."
@@ -159,7 +160,7 @@ task :do_publish_website do
     publisher = Rake::SshDirPublisher.new(
       "#{host}",
       "/var/www/gforge-projects/#{PKG_NAME}",
-      "../doc/aquarium/out"
+      "#{WEBSITE_ROOT}/out"
     )
     publisher.upload
   else
@@ -174,7 +175,7 @@ task :archive_website => [:verify_user, :website] do
   publisher = Rake::SshDirPublisher.new(
     "#{host}",
     "/var/www/gforge-projects/#{PKG_NAME}/#{Spec::VERSION::TAG}",
-    "../doc/aquarium/out"
+    "#{WEBSITE_ROOT}/out"
   )
   publisher.upload
 end

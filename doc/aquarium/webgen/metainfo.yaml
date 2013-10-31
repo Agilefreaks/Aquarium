@@ -1,0 +1,7 @@
+---
+---
+aquarium.html:
+  inMenu: true
+  orderInfo: 100
+  url: http://aquarium.rubyforge.org
+  title: aquarium
