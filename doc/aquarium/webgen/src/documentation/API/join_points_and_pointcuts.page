@@ -1,0 +1,13 @@
+---
+title: Join Points and Pointcuts
+order_info: 5
+in_menu: true
+---
+## Join Points and Pointcuts
+
+### TODO
+
+For now, look at the [join\_point.rb] and the [pointcut.rb] files for documentation and look at the <code>examples</code> directory in the distribution for usage examples.
+
+[join_point.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Aspects/JoinPoint.html
+[pointcut.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Aspects/Pointcut.html

@@ -1,0 +1,84 @@
+---
+title: Home
+name: Aquarium
+routed_title: Aquarium Website
+in_menu: true
+sort_info: 1
+---
+## Overview of Aquarium
+
+<p><span class="keyword">Aquarium</span> is a framework that implements <span class="keyword">Aspect-Oriented Programming</span> (AOP) for Ruby. The premise of AOP is that some <span class="keyword">concerns</span> in an application will cut across the natural object boundaries of the problem domain. Rather than scatter duplicated code in each object to handle the <span class="keyword">cross-cutting concern</span>, AOP modularizes the specification of which execution points are affected (called <span class="keyword">join points</span>) and the actions that should be invoked at those points.</p>
+
+<p>For example, persistence of <span class="keyword">model</span> objects is a cross-cutting concern, in the  sense that the desired persistence approach (database, flat files, replication, etc.) is independent of the domain logic represented by the model. So, why should the model code have any persistence logic? Instead, capture the details of mapping the domain to the persistence approach in separate <span class="keyword">components</span> and programmatically or declaratively modify the model objects to synchronize state changes with the persistent memory of the state.</p>
+ 
+### News
+
+* V0.6.0 (October 31, 2013): Now supports Ruby 2.0.0 and eliminates a known thread-safety issue.
+
+* V0.5.1 (May 1, 2012): Now supports Ruby 1.9.3 and JRuby 1.6.7.
+
+* V0.4.4 (Oct. 4, 2009): Moved the source repository from RubyForge SVN to [GitHub]. Upgraded to latest JRuby, RSpec, and Webgen.
+
+* V0.4.0: Preliminary support for advising Java classes in JRuby! See the discussion on the [JRuby page].
+
+See also the [RubyForge project home] 
+
+## How to Use Aquarium
+
+<p><span class="keyword">Aquarium</span> provides a <span class="keyword">Domain Specific Language</span> (DSL) with which you can express "aspectual" system behaviour in a modular way, i.e. using a succinct language and without repeating yourself all over your code base!</p>
+
+<p>Imagine you want to trace all invocations of the public, instance methods in all classes whose names end with "Service". Here's how you can implement that behavior in <span class="keyword">Aquarium</span>:</p>
+
+{coderay:: ruby}class ServiceTracer
+  include Aquarium::DSL
+  # jp => the current "join point"
+  before :calls_to => :all_methods, :in_types => /Service$/ do |jp, object, *args|
+    names = "#{jp.target_type.name}##{jp.method_name}"
+    log "Entering: #{names}: object = #{object}, args = #{args}" 
+  end
+  after :calls_to => :all_methods, :in_types => /Service$/ do |jp, object, *args|
+    names = "#{jp.target_type.name}##{jp.method_name}"
+    log "Leaving: #{names}: object = #{object}, args = #{args}" 
+  end
+end
+{coderay}
+<p></p>
+
+<p>The <code>#before</code> advice adds behavior that is invoked before each method is invoked, in this case, it logs a message with the name of the executing class and method, followed by the list of arguments passed to the method.</p>
+
+<p>The <code>#after</code> advice adds similar behavior the is invoked after each method is invoked.</p>
+
+<p>A more succinct implementation of this behavior uses <code>#around</code> advice:</p>
+
+{coderay:: ruby}class ServiceTracer
+  include Aquarium::DSL
+  around :calls_to => :all_methods, :in_types => /Service$/ do |jp, object, *args|
+    names = "#{jp.target_type.name}##{jp.method_name}"
+    log "Entering: #{names}: object = #{object}, args = #{args}" 
+    result = join_point.proceed
+    log "Leaving: #{names}: object = #{object}, args = #{args}" 
+    result  # block needs to return the result of the "proceed"!
+  end
+end
+{coderay}
+<p></p>
+
+<p>The special method <code>#proceed</code> invokes the advised method, passing it the args list (by default). For <code>#around</code> advice, you must call <code>#proceed</code> unless you specifically don't want the original method called!</p>
+
+See the [Examples] and the [API] section for more details.
+
+## Start Here
+
+Install (or upgrade) with [RubyGems]:
+<pre>$ gem install aquarium</pre>
+
+See the [download] page for different options or go directly to the [RubyForge download] page.
+
+
+[API]:documentation/API/index.html
+[RubyForge project home]:http://rubyforge.org/projects/aquarium/.
+[RubyForge download]:http://rubyforge.org/frs/?group&#095;id=4281
+[GitHub]:http://github.com/deanwampler/Aquarium
+[RubyGems]:http://rubygems.org/
+[JRuby page]:jruby.html
+[Examples]:examples.html

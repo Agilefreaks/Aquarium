@@ -1,0 +1,9 @@
+---
+title: Changes
+sort_info: 6
+in_menu: true
+---
+
+## Change Notes
+
+<pre>{include_file: {filename: ../../../aquarium/CHANGES, process_output: false}}</pre>

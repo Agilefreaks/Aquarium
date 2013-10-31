@@ -1,0 +1,44 @@
+---
+title: JRuby
+sort_info: 5
+in_menu: true
+---
+## JRuby Support
+
+Aquarium runs under JRuby. The <code>rake website</code> target runs all the specs under JRuby to ensure that they work as expected.
+
+In addition, JRuby can now advise Java types (with some limitations...)!
+
+### Advising Java Types in JRuby
+
+While you might normally turn to [AspectJ] or the [Spring Framework] to advise Java classes, if you are using JRuby, you can now use Aquarium! The advantages and disadvantages of Aquarium compared to AspectJ are listed in the [README]. Briefly, Aquarium lets you add *and* remove <span class="keyword">advice</span> dynamically at runtime, you can advise JDK types easily, and Aquarium lets you advise individual objects. The disadvantages of Aquarium are that it will be slower than using AspectJ, Aquarium's <span class="keyword">pointcut language</span> is not as full-featured as AspectJ's, and there are some bugs and limitations in this initial support (V0.4.0).
+
+Here is an example of adding tracing calls to a method <code>doIt</code> in all classes that implement the Java interface <code>com.foo.Work</code>.
+
+{coderay:: ruby}Aspect.new :before, :calls_to => [:doIt, :do_it], 
+    :in_types_and_descendents => Java::com.foo.Work do |jp, obj, *args|
+  names = "#{jp.target_type.name}##{jp.method_name}"
+  log "Entering: #{names}: object = #{object}, args = #{args}" 
+end
+{coderay}
+
+There are two important points to notice in this example:
+
+* You can choose to refer to the method as <code>do_it</code> (Ruby style) or <code>doIt</code>, but these variants are effectively treated as *separate* methods; advice on one will not affect invocations of the other. So, if you want to be sure to catch *all* invocations, use *both* forms. There is a bug (18326) that happens in certain conditions if you use just the Java naming convention.
+* If the type is an interface, you must use <code>:types_and_descendents</code> (or one of the variants on the word <code>types</code>). Since interfaces don't have method implementations, you will match no join points unless you use the <code>and_descendents</code> clause. (By default, Aquarium warns you when no join points are matched by an aspect.) However, there is a bug (18325) with this approach if Java types are subtyped in Ruby.
+
+### Limitations and Bugs
+
+(Here's the "fine print"...) In this (V0.4.0) release, there are some important limitations and a few bugs (either in Aquarium or JRuby??). 
+
+* Aquarium advice on a method in a Java type will only be invoked when the method is called directly from Ruby. 
+* To have the advice invoked when the method is called from either Java or Ruby, it is necessary to create a subclass of the Java type in Ruby and an override of the method, which can just call "super". Note that it will be necessary for instances of this Ruby type to be used throughout, not instances of a Java parent type.
+* BUG #18325: If you have Ruby subclasses of Java types *and* you advise a Java method in the hierarchy using <code>:types_and_descendents => MyJavaBaseClassOrInterface</code> *and* you call unadvise on the aspect, the advice "infrastructure" is not correctly removed from the Ruby types. Workaround: Only advise methods in Ruby subclasses of Java types where the method is explicitly overridden in the Ruby class. (The spec and the [Rubyforge bug report] provide examples.)
+* BUG #18326: Normally, you can use either Java- or Ruby-style method names (e.g., <code>doSomething</code> vs. <code>do_something</code>), for Java types. However, if you write an aspect using the Java-style for a method name and a Ruby subclass of the Java type where the method is actually defined (i.e., the Ruby class doesn't override the method), it appears that the JoinPoint was advised, but the advice is never called. Workaround: Use the Ruby-style name in this scenario.
+
+For more details, see the RSpec examples in the <code>jruby/spec</code> directory.
+
+[AspectJ]:http://aspectj.org
+[Spring Framework]:http://springframework.org/
+[README]:http://aquarium.rubyforge.org/rdoc/README.html
+[Rubyforge bug report]: http://rubyforge.org/tracker/index.php?func=detail&aid=18325&group&#095;id=4281&atid=16494

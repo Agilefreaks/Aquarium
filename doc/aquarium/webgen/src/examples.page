@@ -1,0 +1,78 @@
+---
+title: Examples
+sort_info: 3
+in_menu: true
+---
+## Examples
+
+These examples are all in the "examples" directory that is part of the distribution. Other examples can be found in the [README], in particular, different ways of expressing the same ideas (for readability...).
+
+### Tracing Method Calls
+
+Want to trace invocations of certain methods? This example demonstrates how to do it.
+
+{coderay:: ruby}{include_file: {filename: ../../../aquarium/examples/method_tracing_example.rb, process_output: false, escape_html: false}}
+{coderay}
+<p></p>
+
+### "Enhancing" <code>method&#095;missing</code> Without Overriding
+
+Here is an example of "advising" <code>method&#095;missing</code> to add behavior, rather than overriding it, which can increase the risk of collisions with overrides from other toolkits:
+
+{coderay:: ruby}{include_file: {filename: ../../../aquarium/examples/method_missing_example.rb, process_output: false, escape_html: false}}
+{coderay}
+<p></p>
+
+### "Wrapping" an Exception: Rescuing one type and raising another
+
+While it's tempting to try this with <code>:after&#095;raising</code> advice, this won't work, because you can't change the control flow with any form of advice, except for <code>:around</code> advice. (See, however, feature request #19119.) Here is the idiom to use.
+
+{coderay:: ruby}{include_file: {filename: ../../../aquarium/examples/exception_wrapping_example.rb, process_output: false, escape_html: false}}
+{coderay}
+<p></p>
+
+### "Hack" to Create a Reusable Aspect that Is Defined When a Module is Included in Another
+
+It's actually harder than it should be to define a reusable aspect, because the aspect is evaluated when it's defined, which means the pointcut needs to be known at that time. Feature request #19122 will address this issue. For now, here's a hack that works around the limitation. Make sure you heed the warning!
+
+{coderay:: ruby}{include_file: {filename: ../../../aquarium/examples/reusable_aspect_hack_example.rb, process_output: false, escape_html: false}}
+{coderay}
+<p></p>
+
+### Aspect Design
+
+The AOP community is still discovering good design principles. However, simple extensions of good OOD principles are an important step. Many of those principles focus on minimal coupling between components and, in particular, coupling through abstractions, rather than concrete details. 
+
+In this example, we demonstrate how one module defines a pointcut representing an object's state changes. An "observer" aspect watches for those changes and prints a message when updates occur. Hence, the example demonstrates one implementation of the Observer Pattern.
+
+Notice how the aspect is independent of the details of the pointcut, so it won't require change as the observed class evolves.
+
+{coderay:: ruby}{include_file: {filename: ../../../aquarium/examples/aspect_design_example.rb, process_output: false, escape_html: false}}
+{coderay}
+<p></p>
+
+### Design by Contract &#153;
+
+It is easy to use <span class="keyword">Aquarium</span> to implement a "contract" for a Module, in the sense of Bertrand Meyer's _Design by Contract_&#153;. In fact, there is a simple DbC module (not a complete implementation...) in the [extras], which this example uses:
+
+{coderay:: ruby}{include_file: {filename: ../../../aquarium/examples/design_by_contract_example.rb, process_output: false, escape_html: false}}
+{coderay}
+<p></p>
+
+Other examples can be found in the [README].
+
+### Testing Uses of Aspects
+
+Aspects are sometimes used for "fault injection", to enable easier testing of error handling logic, and for stubbing expensive methods, using around advice. The latter technique complements mocking frameworks. You can see an example of stubbing the expensive <code>TypeUtils#descendents</code> in <code>Aquarium::TypeUtilsStub</code> (in <code>spec&#095;example&#095;types.rb</code>) and the use of it in <code>spec/aquarium/aspects/pointcut&#095;spec.rb</code>.
+
+### Mimicking <i>Introductions</i> (a.k.a. <i>Intertype Declarations</i>)
+
+AspectJ lets Java programmers add new methods and attributes to types. Ruby makes this easy however, so Aquarium doesn't provide a similar facility. However, if you need to extend a set of types, Aquarium's <code>TypeFinder</code> can be helpful, as shown here:
+
+<ruby file="../../../aquarium/examples/introductions&#095;example.rb" />
+{coderay:: ruby}{include_file: {filename: ../../../aquarium/examples/introductions_example.rb, process_output: false, escape_html: false}}
+{coderay}
+<p></p>
+
+[README]:http://aquarium.rubyforge.org/rdoc/README.html
+[extras]:http://aquarium.rubyforge.org/rdoc/Aquarium/Extras.html

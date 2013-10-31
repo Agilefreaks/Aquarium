@@ -1,0 +1,30 @@
+---
+title: Aquarium API
+order_info: 1
+in_menu: true
+---
+## Aquarium API
+
+Aquarium::Aspects contains the [Aquarium::Aspects::Aspect] class and supporting classes [Aquarium::Aspects::Pointcut],
+[Aquarium::Aspects::JoinPoint], etc.
+
+[Aquarium::Finders] provides tools for locating types, objects, and methods in the runtime, using names, symbols, or regular expressions.
+
+[Aquarium::Extensions] provides extensions to several Ruby core library routines.
+
+[Aquarium::Utils] provides general-purpose utilities for manipulating Strings, Sets, Hashes, etc. as well as some generic types.
+
+[Aquarium::Extras] provides add-ons for <span class="keyword">Aquarium</span>, such as a <span class="keyword">Design by Contract</span> implementation. Note that these extras are <b>not</b> included when you require the general [aquarium.rb] file. You have to explicitly include [aquarium::extras.rb] file to use them.
+
+More details are discussed in the [README].
+
+[Aquarium::Aspects::Aspect]:aspects.html
+[Aquarium::Aspects::Pointcut]:join_points_and_pointcuts.html
+[Aquarium::Aspects::JoinPoint]:join_points_and_pointcuts.html
+[Aquarium::Finders]:finders.html
+[Aquarium::Utils]:utils.html
+[Aquarium::Extras]:extras.html
+[aquarium.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium.html
+[aquarium::Extras.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Extras.html
+[Aquarium::Extensions]:http://aquarium.rubyforge.org/rdoc/Aquarium/Extensions.html
+[README]:http://aquarium.rubyforge.org/rdoc/README.html
