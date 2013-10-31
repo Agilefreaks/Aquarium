@@ -3,6 +3,7 @@ require 'rubygems'
 require 'rake'
 require 'rake/contrib/rubyforgepublisher'
 require 'rake/clean'
+require 'rake/packagetask'
 require 'rdoc/task'
 require 'aquarium/version'
 
@@ -89,10 +90,14 @@ aquarium = Gem::Specification.new do |s|
   s.rubyforge_project = "aquarium"
 end
 
-# Rake::GemPackageTask.new(aquarium) do |pkg|
-#   pkg.need_zip = true
-#   pkg.need_tar = true
-# end
+Rake::PackageTask.new("aquarium", "#{Aquarium::VERSION::TAG}") do |p|
+   p.need_gem = true
+   p.need_zip = true
+   p.need_tar_gz = true
+   p.package_files.include("lib/**/*.rb").include("spec/**/*.rb").include("examples/**/*.rb").include("jruby/**/*").include("rake_tasks/**/*")
+   p.package_files += ["CHANGES", "EXAMPLES.rd", "MIT_LICENSE", "README", "RELEASE-PLAN",
+    "Rakefile", "UPGRADE"]
+ end
 
 def egrep(pattern)
   Dir['**/*.rb'].each do |fn|
@@ -119,7 +124,7 @@ task :clobber do
   rm_rf 'translated_specs'
 end
 
-task :release => [:clobber, :verify_committed, :verify_user, :spec, :publish_packages, :tag, :publish_website, :publish_news]
+task :release => [:clobber, :verify_committed, :verify_user, :spec, :package, :publish_packages, :tag, :publish_website, :publish_news]
 
 # TODO!
 desc "Verifies that there is no uncommitted code"
