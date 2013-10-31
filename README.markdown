@@ -8,6 +8,11 @@ Aquarium is a toolkit for Aspect-Oriented Programming (AOP) whose goals include:
 * A user-friendly DSL.
 * Support for advising Java types through JRuby.
 
+**SOMEBODY ADOPT ME!!**
+
+While I've enjoyed working on Aquarium, I no longer do Ruby development. I just don't have the time to keep updating Aquarium as Ruby evolves. If you like this project, please consider adoption. Thanks.
+
+
 ## Why Is an AOP Framework Useful in Ruby?
 
 Ruby's metaprogramming facilities already provide some of the capabilities for which static-language AOP toolkits like AspectJ are typically used. With Ruby, you can easily add new methods and attributes to existing classes and objects. You can alias and redefine existing methods, which provides the method interception and "wrapping" needed to extend or modify existing behavior.
@@ -15,6 +20,12 @@ Ruby's metaprogramming facilities already provide some of the capabilities for w
 However, what is missing in Ruby is an expressive language for describing systemic modifications, a so-called *pointcut language*. If you have simple needs for method interception and wrapping, then Aquarium will be overkill. However, if you have system-wide concerns that cross the boundaries of many objects, then an AOP tookit like Aquarium can help you implement these concerns in a more modular way.
 
 So, if you are designing with aspects, wouldn't you like to write your code using the same language? Without AOP support, you have to map your aspect designs to metaprogramming idioms, which will often be slower to implement and harder to maintain. Imagine writing objects without native support for OOP!
+
+## Supported Ruby Versions (and Caveats)
+
+Version 0.6.0 supports only Ruby 2.0.0p247. JRuby 1.7.4 (1.9.3p392) does *not* currently pass all the custom Java specs in the `jruby/spec` directory, which specifically test working with Java classes. However, JRuby does pass all the Ruby specs in the `spec` directory. I didn't want to release v0.6.0 with the Java-specific specs not working, but I didn't have time to resolve the issues. Patches are welcome.
+
+If you need support for earlier versions of Ruby and JRuby, use Aquarium v0.5.0.
 
 ## Terminology
 
@@ -382,14 +393,6 @@ If you prefer to build the gem locally, check out source from GitHub
 
 WARNING: The older RubyForge SVN repository (`svn://rubyforge.org/var/svn/aquarium/trunk`) is now obsolete!!
 
-As of version 0.5.0, the following Ruby versions are supported:
-
-* Ruby 1.8.7: tested on patch version p358.
-* Ruby 1.9.3: tested on patch version p125
-* JRuby 1.6.7: tested on patch version p357
-
-Newer patch releases should also be fine...
-
 Use the following commands to build everything:
 
     rake gem
@@ -417,13 +420,9 @@ Once those are all installed, you should be able to run the suite with the follo
     cd aquarium
     rake spec
 
-or
-
-    rake spec_rcov      # also runs rcov
-
 Note that Aquarium itself, once built, doesn't have any dependencies outside the Ruby core and stdlib.
 
-If you want to run the tests for the JRuby support, you must also have JRuby 1.6.7 or later installed. To run the specs for JRuby, use the command
+If you want to run the tests for the JRuby support, you must also have a supported version of JRuby installed (see above). To run the specs for JRuby, use the command
 
     rake verify_jruby
 

@@ -7,6 +7,10 @@ Aquarium is a toolkit for Aspect-Oriented Programming (AOP) whose goals include:
 * A user-friendly DSL.
 * Support for advising Java types through JRuby.
 
+*SOMEBODY ADOPT ME!!*
+
+_While I've enjoyed working on Aquarium, I no longer do Ruby development. I just don't have the time to keep updating Aquarium as Ruby evolves. If you like this project, please consider adoption. Thanks._
+
 === Why Is an AOP Framework Useful in Ruby?
 
 Ruby's metaprogramming facilities already provide some of the capabilities for which static-language AOP toolkits like AspectJ are typically used. With Ruby, you can easily add new methods and attributes to existing classes and objects. You can alias and redefine existing methods, which provides the method interception and "wrapping" needed to extend or modify existing behavior.
@@ -35,12 +39,17 @@ Only around advice can prevent execution of the join point, except for the speci
 * You cannot advice "String", "Symbol" or instances there of, because trying to specify either one will be confused with naming a type.
 * Concurrent advice on type AND advice on objects of the type can't be removed cleanly.
 * The pointcut language is still limited, compared to AspectJ's. See also the comparison with AspectJ behavior next.
-* The API and wrapper DSL will probably evolve until the 1.0.0 release. Backwards compatibility will be maintained between releases as much as possible. When it is necessary to break backwards compatibility, translation tools will be provided, if possible.
 * There are limitations when advising Java types through JRuby. The separate RSpec suite in the "jruby" directory documentations the details on how to use Aquarium with JRuby-wrapped Java types and the limitations thereof. Here we summarize what works and what doesn't:
   * Aquarium advice on a method in a Java type will only be invoked when the method is called directly from Ruby.
   * To have the advice invoked when the method is called from either Java or Ruby, it is necessary to create a subclass of the Java type in Ruby and an override of the method, which can just call "super". Note that it will be necessary for instances of this Ruby type to be used throughout, not instances of a Java parent type.
   * BUG #18325: If you have Ruby subclasses of Java types *and* you advise a Java method in the hierarchy using @:types_and_descendents => MyJavaBaseClassOrInterface@ *and* you call unadvise on the aspect, the advice "infrastructure" is not correctly removed from the Ruby types. Workaround: Only advise methods in Ruby subclasses of Java types where the method is explicitly overridden in the Ruby class. (The spec and the "Rubyforge bug report":http://rubyforge.org/tracker/index.php?func=detail&aid=18325&group_id=4281&atid=16494 provide examples.)
   * BUG #18326: Normally, you can use either Java- or Ruby-style method names (e.g., "doSomething" vs. "do_something"), for Java types. However, if you write an aspect using the Java-style for a method name and a Ruby subclass of the Java type where the method is actually defined (i.e., the Ruby class doesn't override the method), it appears that the JoinPoint was advised, but the advice is never called. Workaround: Use the Ruby-style name in this scenario.
+
+=== Supported Ruby Versions (and Caveats)
+
+Version 0.6.0 supports only Ruby 2.0.0p247. JRuby 1.7.4 (1.9.3p392) does *not* currently pass all the custom Java specs in the jruby/spec directory, which specifically test working with Java classes. However, JRuby does pass all the Ruby specs in the spec directory. I didn't want to release v0.6.0 with the Java-specific specs not working, but I didn't have time to resolve the issues. Patches are welcome.
+
+If you need support for earlier versions of Ruby, use Aquarium v0.5.0.
 
 === Differences With Other Ruby AOP Toolkits
 
@@ -452,7 +461,7 @@ or
 
 Note that Aquarium itself - once built - doesn't have any dependencies outside the Ruby core and stdlib.
 
-If you want to run the tests for the JRuby support, you must also have JRuby 1.1RC2 or later installed. To run the specs for JRuby, use the command
+If you want to run the tests for the JRuby support, you must also have JRuby 1.7.4 or later installed. To run the specs for JRuby, use the command
 
 * rake verify_jruby
 
