@@ -97,7 +97,7 @@ describe Aspect, " with :before advice" do
     block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 
   it "should evaluate the advice before the method body and its block (if any)." do
@@ -127,7 +127,7 @@ describe Aspect, " with :after advice" do
     block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 
   it "should pass the context information to the advice, including self, the method parameters, and the rescued exception when an exception is raised." do
@@ -144,7 +144,7 @@ describe Aspect, " with :after advice" do
     block_called.should == 1
     context.advised_object.should == watchful
     context.returned_value.should == nil
-    context.raised_exception.kind_of?(Watchful::WatchfulError).should be_true
+    context.raised_exception.kind_of?(Watchful::WatchfulError).should be_truthy
   end
 
   it "should evaluate the advice after the method body and its block (if any)." do
@@ -187,10 +187,10 @@ describe Aspect, " with :after advice" do
       aspect_advice_invoked = true
       jp.context.raised_exception = MyError1
     end 
-    aspect_advice_invoked.should be_false
+    aspect_advice_invoked.should be_falsey
     ctr = ClassThatRaises.new
     expect {ctr.raises}.to raise_error(MyError1)
-    aspect_advice_invoked.should be_true
+    aspect_advice_invoked.should be_truthy
   end
 end
 
@@ -213,7 +213,7 @@ describe Aspect, " with :after_returning advice" do
     block_called = 0
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 
   it "should evaluate the advice after the method body and its block (if any)." do
@@ -265,12 +265,12 @@ describe Aspect, " with :after_raising advice" do
       jp.context.advised_object.should == watchful
       jp.context.advice_kind.should == :after_raising
       jp.context.returned_value.should == nil
-      jp.context.raised_exception.kind_of?(Watchful::WatchfulError).should be_true
+      jp.context.raised_exception.kind_of?(Watchful::WatchfulError).should be_truthy
     end 
     block_called = 0
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }}.to raise_error(Watchful::WatchfulError)
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 
   it "should evaluate the advice after the method body and its block (if any)." do
@@ -286,8 +286,8 @@ describe Aspect, " with :after_raising advice" do
     block_invoked = false
     watchful = Watchful.new
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
-    aspect_advice_invoked.should be_true
-    block_invoked.should be_true
+    aspect_advice_invoked.should be_truthy
+    block_invoked.should be_truthy
   end
   
   it "should invoke advice when exceptions of the specified type are raised, which were specified with :exceptions => ..." do
@@ -296,8 +296,8 @@ describe Aspect, " with :after_raising advice" do
     block_invoked = false
     watchful = Watchful.new
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
-    aspect_advice_invoked.should be_true
-    block_invoked.should be_true
+    aspect_advice_invoked.should be_truthy
+    block_invoked.should be_truthy
   end
   
   it "should not invoke advice when exceptions of types that don't match the specified exception type are raised" do
@@ -306,8 +306,8 @@ describe Aspect, " with :after_raising advice" do
     block_invoked = false
     watchful = Watchful.new
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
-    aspect_advice_invoked.should be_false
-    block_invoked.should be_true
+    aspect_advice_invoked.should be_falsey
+    block_invoked.should be_truthy
   end
   
   it "should not invoke advice when exceptions of types that don't match the specified exception type are raised, which were specified with :exceptions => ..." do
@@ -316,8 +316,8 @@ describe Aspect, " with :after_raising advice" do
     block_invoked = false
     watchful = Watchful.new
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
-    aspect_advice_invoked.should be_false
-    block_invoked.should be_true
+    aspect_advice_invoked.should be_falsey
+    block_invoked.should be_truthy
   end
   
   it "should invoke advice when one exception in the list of the specified types is raised" do
@@ -326,8 +326,8 @@ describe Aspect, " with :after_raising advice" do
     block_invoked = false
     watchful = Watchful.new
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
-    aspect_advice_invoked.should be_true
-    block_invoked.should be_true
+    aspect_advice_invoked.should be_truthy
+    block_invoked.should be_truthy
   end
   
   it "should invoke advice when an exception that subclasses a specified exception type is raised" do
@@ -335,7 +335,7 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new(:after_raising => StandardError, :pointcut => {:type => ClassThatRaises, :methods => :raises}) {|jp, obj, *args| aspect_advice_invoked = true}
     ctr = ClassThatRaises.new
     expect {ctr.raises}.to raise_error(ClassThatRaises::CTRException)
-    aspect_advice_invoked.should be_true
+    aspect_advice_invoked.should be_truthy
   end
   
   it "should not invoke advice when exceptions of types that don't match the specified list of exception types are raised" do
@@ -344,8 +344,8 @@ describe Aspect, " with :after_raising advice" do
     block_invoked = false
     watchful = Watchful.new
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
-    aspect_advice_invoked.should be_false
-    block_invoked.should be_true
+    aspect_advice_invoked.should be_falsey
+    block_invoked.should be_truthy
   end
   
   it "should not invoke advice when exceptions of types that don't match the specified list of exception types are raised, which were specified with :exceptions => ..." do
@@ -354,8 +354,8 @@ describe Aspect, " with :after_raising advice" do
     block_invoked = false
     watchful = Watchful.new
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
-    aspect_advice_invoked.should be_false
-    block_invoked.should be_true
+    aspect_advice_invoked.should be_falsey
+    block_invoked.should be_truthy
   end
   
   it "should treat :exception as a synonym for :exceptions" do
@@ -364,8 +364,8 @@ describe Aspect, " with :after_raising advice" do
     block_invoked = false
     watchful = Watchful.new
     expect {watchful.public_watchful_method_that_raises(:a1, :a2, :a3) {|*args| block_invoked = true}}.to raise_error(Watchful::WatchfulError)
-    aspect_advice_invoked.should be_false
-    block_invoked.should be_true
+    aspect_advice_invoked.should be_falsey
+    block_invoked.should be_truthy
   end
   
   it "should merge exceptions specified with :exception(s) and :after_raising" do
@@ -379,10 +379,10 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new :after_raising, :pointcut => {:type => ClassThatRaises, :methods => :raises} do |jp, obj, *args|
       aspect_advice_invoked = true
     end 
-    aspect_advice_invoked.should be_false
+    aspect_advice_invoked.should be_falsey
     ctr = ClassThatRaises.new
     expect {ctr.raises}.to raise_error(ClassThatRaises::CTRException)
-    aspect_advice_invoked.should be_true
+    aspect_advice_invoked.should be_truthy
   end
 
   it "should advise all methods that raise strings (which are converted to RuntimeError) when no specific exceptions are specified" do
@@ -390,10 +390,10 @@ describe Aspect, " with :after_raising advice" do
     @aspect = Aspect.new :after_raising, :pointcut => {:type => ClassThatRaisesString, :methods => :raises} do |jp, obj, *args|
       aspect_advice_invoked = true
     end 
-    aspect_advice_invoked.should be_false
+    aspect_advice_invoked.should be_falsey
     ctr = ClassThatRaisesString.new
     expect {ctr.raises}.to raise_error(RuntimeError)
-    aspect_advice_invoked.should be_true
+    aspect_advice_invoked.should be_truthy
   end
 
   it "should allow advice to change the exception raised" do
@@ -402,10 +402,10 @@ describe Aspect, " with :after_raising advice" do
       aspect_advice_invoked = true
       jp.context.raised_exception = MyError1
     end 
-    aspect_advice_invoked.should be_false
+    aspect_advice_invoked.should be_falsey
     ctr = ClassThatRaises.new
     expect {ctr.raises}.to raise_error(MyError1)
-    aspect_advice_invoked.should be_true
+    aspect_advice_invoked.should be_truthy
   end
 end
 
@@ -523,7 +523,7 @@ describe Aspect, " with :before and :after_raising advice" do
     advice_kinds[0].should == :before
     advice_kinds[1].should == :after_raising
     raised_exceptions[0].should == nil
-    raised_exceptions[1].kind_of?(Watchful::WatchfulError).should be_true
+    raised_exceptions[1].kind_of?(Watchful::WatchfulError).should be_truthy
     contexts.each do |context|
       context.advised_object.should == watchful
       context.returned_value.should == nil
@@ -560,10 +560,10 @@ describe Aspect, " with :around advice" do
     watchful.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| public_block_called = true }
     watchful.send(:protected_watchful_method, :b1, :b2, :b3) {|*args| protected_block_called = true}
     watchful.send(:private_watchful_method, :c1, :c2, :c3) {|*args| private_block_called = true}
-    public_block_called.should be_false  # proceed is never called!
-    protected_block_called.should be_true
-    private_block_called.should be_true
-    advice_called.should be_true
+    public_block_called.should be_falsey  # proceed is never called!
+    protected_block_called.should be_truthy
+    private_block_called.should be_truthy
+    advice_called.should be_truthy
   end
 
   module AdvisingSuperClass
@@ -601,10 +601,10 @@ describe Aspect, " with :around advice" do
     child.public_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| fail }
     child.send(:protected_method, :b1, :b2, :b3) {|*args| protected_block_called = true}
     child.send(:private_method, :c1, :c2, :c3) {|*args| private_block_called = true}
-    public_block_called.should be_false  # proceed is never called!
-    protected_block_called.should be_true
-    private_block_called.should be_true
-    advice_called.should be_true
+    public_block_called.should be_falsey  # proceed is never called!
+    protected_block_called.should be_truthy
+    private_block_called.should be_truthy
+    advice_called.should be_truthy
   end
 
   module AdvisingSubClass
@@ -642,10 +642,10 @@ describe Aspect, " with :around advice" do
     child.public_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| fail }
     child.send(:protected_method, :b1, :b2, :b3) {|*args| protected_block_called = true}
     child.send(:private_method, :c1, :c2, :c3) {|*args| private_block_called = true}
-    public_block_called.should be_false  # proceed is never called!
-    protected_block_called.should be_true
-    private_block_called.should be_true
-    advice_called.should be_true
+    public_block_called.should be_falsey  # proceed is never called!
+    protected_block_called.should be_truthy
+    private_block_called.should be_truthy
+    advice_called.should be_truthy
   end
 
   class WatchfulChild2 < Watchful
@@ -665,7 +665,7 @@ describe Aspect, " with :around advice" do
     child = WatchfulChild2.new
     public_block_called = false
     child.public_watchful_method(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| public_block_called = true }
-    public_block_called.should be_true  # advice never called
+    public_block_called.should be_truthy  # advice never called
   end
 
   it "should evaluate the advice and only evaluate the method body and its block (if any) when JoinPoint#proceed is called." do
@@ -692,8 +692,8 @@ describe Aspect, " with :around advice" do
     watchful = Watchful.new
     orig_block_called = false
     watchful.public_watchful_method(:a1, :a2, :a3) {|*args| orig_block_called = true}
-    override_block_called.should be_true
-    orig_block_called.should be_false
+    override_block_called.should be_truthy
+    orig_block_called.should be_falsey
     watchful.public_watchful_method_args.should == [:a4, :a5, :a6]
   end
   
@@ -840,8 +840,8 @@ describe Aspect, "#unadvise clean up" do
       advice_called = false
       block_called = false
       @watchful.send("#{protection}_watchful_method".intern, :a1, :a2, :a3) {|*args| block_called = true}
-      advice_called.should be_false
-      block_called.should be_true
+      advice_called.should be_falsey
+      block_called.should be_truthy
     end
   end
   
@@ -949,7 +949,7 @@ describe Aspect, " when unadvising methods for instance-type pointcuts for type-
     aspect = Aspect.new(:before, :object => object, :method => :m) {true}
     aspect.unadvise
     object.m
-    object.called.should be_true
+    object.called.should be_truthy
   end
 end
 
@@ -960,7 +960,7 @@ describe Aspect, " when unadvising methods for instance-type pointcuts for insta
     aspect = Aspect.new(:before, :object => object, :method => :m) {true}
     aspect.unadvise
     object.m
-    object.called.should be_true
+    object.called.should be_truthy
   end
 end
 

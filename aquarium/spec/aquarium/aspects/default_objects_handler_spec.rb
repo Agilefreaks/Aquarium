@@ -45,31 +45,31 @@ end
 
 describe Aquarium::Aspects::DefaultObjectsHandler, "#default_objects_given?" do
   it "should return false if the specification contains no :default_object or :default_objects key." do
-    Aquarium::DefaultObjectsClass.new.default_objects_given?.should be_false
+    Aquarium::DefaultObjectsClass.new.default_objects_given?.should be_falsey
   end
 
   it "should return true if one or more objects were specified with the :default_object key." do
     defaults = ["1", "2"]
     doc = Aquarium::DefaultObjectsClass.new :default_object => defaults
-    doc.default_objects_given?.should be_true
+    doc.default_objects_given?.should be_truthy
   end
   
   it "should return true if one or more objects were specified with the :default_objects key." do
     defaults = ["1", "2"]
     doc = Aquarium::DefaultObjectsClass.new :default_objects => defaults
-    doc.default_objects_given?.should be_true
+    doc.default_objects_given?.should be_truthy
   end
 
   it "should return true if a single objects was specified with the :default_object key." do
     default = "1"
     doc = Aquarium::DefaultObjectsClass.new :default_object => default
-    doc.default_objects_given?.should be_true
+    doc.default_objects_given?.should be_truthy
   end
 
   it "should return true if a single objects was specified with the :default_objects key." do
     default = "1"
     doc = Aquarium::DefaultObjectsClass.new :default_objects => default
-    doc.default_objects_given?.should be_true
+    doc.default_objects_given?.should be_truthy
   end
 end
 

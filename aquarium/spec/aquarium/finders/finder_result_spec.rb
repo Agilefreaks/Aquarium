@@ -37,7 +37,7 @@ describe Aquarium::Finders::FinderResult, "#empty?" do
     result = Aquarium::Finders::FinderResult.new
     result.matched.should == {}
     result.not_matched.should == {}
-    result.empty?.should be_true
+    result.empty?.should be_truthy
   end
 
   it "should be true if there are no matches, even if there are not_matched values." do
@@ -45,7 +45,7 @@ describe Aquarium::Finders::FinderResult, "#empty?" do
     result.matched.should == {}
     empty_set = Set.new
     result.not_matched.should == {:a => empty_set, :b => empty_set}
-    result.empty?.should be_true
+    result.empty?.should be_truthy
   end
 end
 

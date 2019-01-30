@@ -42,7 +42,7 @@ describe Aspect, ".new when advising methods in a nested class" do
     block_called = 0
     myclass.do1(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 
   it "should correctly advise methods in an instance of the nested class." do
@@ -59,7 +59,7 @@ describe Aspect, ".new when advising methods in a nested class" do
     block_called = 0
     myclass.do1(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 end
 
@@ -86,7 +86,7 @@ describe Aspect, ".new when advising methods in a nested module included by a cl
     block_called = 0
     myclass.do2(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 
   it "should correctly advise the module's methods when the class is specified." do
@@ -107,7 +107,7 @@ describe Aspect, ".new when advising methods in a nested module included by a cl
     block_called = 0
     myclass.do2(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 
   it "should correctly advise the module's methods when an instance of the class is specified." do
@@ -129,7 +129,7 @@ describe Aspect, ".new when advising methods in a nested module included by a cl
     block_called = 0
     myclass.do2(:a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2') { |*args| block_called += 1 }
     block_called.should == 1
-    advice_called.should be_true
+    advice_called.should be_truthy
   end
 end
 

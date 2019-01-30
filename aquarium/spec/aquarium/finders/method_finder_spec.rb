@@ -356,7 +356,7 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for class methods)" 
       def self.__foo__; end
     end
     actual = Aquarium::Finders::MethodFinder.new.find :types => [WithUnderScores], :methods => :all, :method_options => [:class, :include_system_methods]
-    actual.matched[WithUnderScores].include?(:__foo__).should be_true
+    actual.matched[WithUnderScores].include?(:__foo__).should be_truthy
   end
   
   it "should find all public class methods in types when searching with the :all method specification and the :class option." do
@@ -450,7 +450,7 @@ describe Aquarium::Finders::MethodFinder, "#find (searching for instance methods
       def __foo__; end
     end
     actual = Aquarium::Finders::MethodFinder.new.find :types => [WithUnderScores], :methods => :all, :method_options => [:include_system_methods]
-    actual.matched[WithUnderScores].include?(:__foo__).should be_true
+    actual.matched[WithUnderScores].include?(:__foo__).should be_truthy
   end
   
   it "should find all public instance methods in classes when searching with the :all method specification." do

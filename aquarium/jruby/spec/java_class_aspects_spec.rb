@@ -318,7 +318,7 @@ describe "Java method advice" do
       @advise_called = true
     end
     do_sort list_sorter
-    @advise_called.should be_false
+    @advise_called.should be_falsey
     aspect.unadvise
   end
 
@@ -329,7 +329,7 @@ describe "Java method advice" do
       @advise_called = true
     end
     do_sort list_sorter
-    @advise_called.should be_true
+    @advise_called.should be_truthy
     aspect.unadvise
   end
 
@@ -340,7 +340,7 @@ describe "Java method advice" do
       @advise_called = true
     end
     list_sorter.convertCase(java.util.ArrayList.new)
-    @advise_called.should be_true
+    @advise_called.should be_truthy
     aspect.unadvise
   end
 end
@@ -353,8 +353,8 @@ describe "Ruby subclass with advice on method in a Java parent class" do
       @advise_called = true
     end
     do_sort list_sorter
-    @advise_called.should be_false
-    # @advise_called.should be_true
+    @advise_called.should be_falsey
+    # @advise_called.should be_truthy
     aspect.unadvise
   end
 
@@ -365,7 +365,7 @@ describe "Ruby subclass with advice on method in a Java parent class" do
       @advise_called = true
     end
     do_sort list_sorter
-    @advise_called.should be_true
+    @advise_called.should be_truthy
     aspect.unadvise
   end
 
@@ -376,11 +376,11 @@ describe "Ruby subclass with advice on method in a Java parent class" do
       @advise_called = true
     end
     do_sort list_sorter
-    @advise_called.should be_true
+    @advise_called.should be_truthy
     aspect.unadvise
     @advise_called = false
     do_sort list_sorter
-    @advise_called.should be_false
+    @advise_called.should be_falsey
   end
 end
 

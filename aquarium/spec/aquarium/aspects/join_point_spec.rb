@@ -65,41 +65,41 @@ end
 describe JoinPoint, "#initialize with parameters that specify class vs. instance methods" do
   it "should assume the :method_name refers to an instance method, by default." do
     jp = JoinPoint.new :type => String, :method => :split
-    jp.instance_method?.should be_true
-    jp.class_method?.should be_false
+    jp.instance_method?.should be_truthy
+    jp.class_method?.should be_falsey
   end
   
   it "should treat the :method_name as refering to an instance method if :instance_method is specified as true." do
     jp = JoinPoint.new :type => String, :method => :split, :instance_method => true
-    jp.instance_method?.should be_true
-    jp.class_method?.should be_false
+    jp.instance_method?.should be_truthy
+    jp.class_method?.should be_falsey
   end
   
   it "should treat the :method_name as refering to a class method if :instance_method is specified as false." do
     jp = JoinPoint.new :type => String, :method => :split, :instance_method => false
-    jp.instance_method?.should be_false
-    jp.class_method?.should be_true
+    jp.instance_method?.should be_falsey
+    jp.class_method?.should be_truthy
   end
 
   it "should treat the :method_name as refering to an instance method if :class_method is specified as false." do
     jp = JoinPoint.new :type => String, :method => :split, :class_method => false
-    jp.instance_method?.should be_true
-    jp.class_method?.should be_false
+    jp.instance_method?.should be_truthy
+    jp.class_method?.should be_falsey
   end
   
   it "should treat the :method_name as refering to a class method if :class_method is specified as true." do
     jp = JoinPoint.new :type => String, :method => :split, :class_method => true
-    jp.instance_method?.should be_false
-    jp.class_method?.should be_true
+    jp.instance_method?.should be_falsey
+    jp.class_method?.should be_truthy
   end
   
   it "should treat give precedence to :instance_method if appears with :class_method." do
     jp = JoinPoint.new :type => String, :method => :split, :instance_method => false, :class_method => true
-    jp.instance_method?.should be_false
-    jp.class_method?.should be_true
+    jp.instance_method?.should be_falsey
+    jp.class_method?.should be_truthy
     jp = JoinPoint.new :type => String, :method => :split, :instance_method => true, :class_method => false
-    jp.instance_method?.should be_true
-    jp.class_method?.should be_false
+    jp.instance_method?.should be_truthy
+    jp.class_method?.should be_falsey
   end
 end
   
@@ -242,7 +242,7 @@ describe JoinPoint, "#proceed" do
     jp.context.parameters = []
     jp.context.proceed_proc = Aquarium::Aspects::NoAdviceChainNode.new(:alias_method_name => :invoke)
     jp.proceed
-    ioc.called.should be_true
+    ioc.called.should be_truthy
   end
 end
 
@@ -265,7 +265,7 @@ describe JoinPoint, "#invoke_original_join_point" do
     jp.context.parameters = []
     jp.context.current_advice_node = Aquarium::Aspects::NoAdviceChainNode.new(:alias_method_name => :invoke)
     jp.invoke_original_join_point
-    ioc.called.should be_true
+    ioc.called.should be_truthy
   end
 end
 
@@ -423,37 +423,37 @@ end
 describe JoinPoint, "#exists?" do
   it "should return false if the join point represents a non-existent join point for an instance method in the runtime environment" do
     jp = JoinPoint.new :type => ProtectionExample, :method_name => :foo
-    jp.exists?.should be_false
+    jp.exists?.should be_falsey
   end
 
   it "should return false if the join point represents a non-existent join point for a class method in the runtime environment" do
     jp = JoinPoint.new :type => ProtectionExample, :method_name => :foo, :class_method => true
-    jp.exists?.should be_false
+    jp.exists?.should be_falsey
   end
 
   it "should return true if the join point represents a real join point for a public instance method in the runtime environment" do
     jp = JoinPoint.new :type => ProtectionExample, :method_name => :public_instance_m
-    jp.exists?.should be_true
+    jp.exists?.should be_truthy
   end
 
   it "should return true if the join point represents a real join point for a protected instance method in the runtime environment" do
     jp = JoinPoint.new :type => ProtectionExample, :method_name => :protected_instance_m
-    jp.exists?.should be_true
+    jp.exists?.should be_truthy
   end
 
   it "should return true if the join point represents a real join point for a private instance method in the runtime environment" do
     jp = JoinPoint.new :type => ProtectionExample, :method_name => :private_instance_m
-    jp.exists?.should be_true
+    jp.exists?.should be_truthy
   end
 
   it "should return true if the join point represents a real join point for a public class method in the runtime environment" do
     jp = JoinPoint.new :type => ProtectionExample, :method_name => :public_class_m, :class_method => true
-    jp.exists?.should be_true
+    jp.exists?.should be_truthy
   end
 
   it "should return true if the join point represents a real join point for a private class method in the runtime environment" do
     jp = JoinPoint.new :type => ProtectionExample, :method_name => :private_class_m, :class_method => true
-    jp.exists?.should be_true
+    jp.exists?.should be_truthy
   end
 
   class ProtectionExample2

@@ -22,7 +22,7 @@ describe OptionsUtils, "with no 'universal' options specified" do
 
   it "should set noop to false." do
     object = Aquarium::OptionsUtilsUser.new
-    object.noop.should be_false
+    object.noop.should be_falsey
   end
 end
 
@@ -102,12 +102,12 @@ end
 describe OptionsUtils, "#noop" do
   it "should return false if :noop was not specified." do
     object = Aquarium::OptionsUtilsUser.new 
-    object.noop.should be_false
+    object.noop.should be_falsey
   end
 
   it "should return the value specified with :noop." do
     object = Aquarium::OptionsUtilsUser.new :noop => true
-    object.noop.should be_true
+    object.noop.should be_truthy
   end
 end
 
@@ -115,7 +115,7 @@ describe OptionsUtils, "#noop=" do
   it "should set the noop value." do
     object = Aquarium::OptionsUtilsUser.new :noop => true
     object.noop = false
-    object.noop.should be_false
+    object.noop.should be_falsey
   end
 end
 

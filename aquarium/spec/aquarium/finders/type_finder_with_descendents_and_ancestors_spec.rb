@@ -10,7 +10,8 @@ def purge_actuals actuals
     t2.name.include?("Spec::") or 
     t2.name =~ /Aquarium::(Utils|Extras|Examples|Aspects|PointcutFinderTestClasses)/ or 
     t2.name =~ /^PP/ or
-    t2.name =~ /InstanceExecHelper/
+    t2.name =~ /InstanceExecHelper/ or
+    t2.name =~ /JSON/ # JSON::Ext::Generator::GeneratorMethods::Object is included somewhere
   end
 end
 

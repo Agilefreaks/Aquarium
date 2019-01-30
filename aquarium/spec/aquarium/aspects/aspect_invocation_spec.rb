@@ -272,7 +272,7 @@ describe Aspect, "methods" do
       aspect = Aspect.new :before, :types => Aquarium::AspectInvocationTestClass, :method => :public_test_method do; @advice_called = true; end
       Aquarium::AspectInvocationTestClass.new.public_test_method
       aspect.unadvise
-      @advice_called.should be_true
+      @advice_called.should be_truthy
     end
 
     Aspect::CANONICAL_OPTIONS["types"].each do |key|
@@ -289,7 +289,7 @@ describe Aspect, "methods" do
       aspect = Aspect.new :before, :pointcuts => {:types => Aquarium::AspectInvocationTestClass, :method => :public_test_method} do; @advice_called = true; end
       Aquarium::AspectInvocationTestClass.new.public_test_method
       aspect.unadvise
-      @advice_called.should be_true
+      @advice_called.should be_truthy
     end
 
     Aspect::CANONICAL_OPTIONS["pointcuts"].each do |key|
@@ -307,7 +307,7 @@ describe Aspect, "methods" do
       aspect = Aspect.new :before, :objects => object, :method => :public_test_method do; @advice_called = true; end
       object.public_test_method
       aspect.unadvise
-      @advice_called.should be_true
+      @advice_called.should be_truthy
     end
 
     Aspect::CANONICAL_OPTIONS["objects"].each do |key|
@@ -325,7 +325,7 @@ describe Aspect, "methods" do
       aspect = Aspect.new :before, :types => Aquarium::AspectInvocationTestClass, :methods => :public_test_method do; @advice_called = true; end
       Aquarium::AspectInvocationTestClass.new.public_test_method
       aspect.unadvise
-      @advice_called.should be_true
+      @advice_called.should be_truthy
     end
 
     Aspect::CANONICAL_OPTIONS["methods"].each do |key|
@@ -411,7 +411,7 @@ describe Aspect, "methods" do
       else
         Aquarium::AspectInvocationTestClass.new.method("#{@protection}_test_method").call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
       end
-      advice_called.should be_true
+      advice_called.should be_truthy
       aspect.unadvise
     end
 
@@ -599,7 +599,7 @@ describe Aspect, "methods" do
       object.method("#{@protection}_test_method_args".intern).call 
       @expected_args = :a1
       object.method("#{@protection}_test_method_args=".intern).call @expected_args
-      advice_called.should be_true
+      advice_called.should be_truthy
       aspect.unadvise
     end
 
@@ -733,7 +733,7 @@ describe Aspect, "methods" do
       make_array(@object_spec).each do |object|
         object.method("#{@protection}_test_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
       end
-      advice_called.should be_true
+      advice_called.should be_truthy
       aspect.unadvise
     end
 
@@ -829,7 +829,7 @@ describe Aspect, "methods" do
         object.method("#{@protection}_test_method_args".intern).call 
         @expected_args = :a1
         object.method("#{@protection}_test_method_args=".intern).call @expected_args
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       aspect.unadvise
     end
@@ -926,7 +926,7 @@ describe Aspect, "methods" do
       else
         Aquarium::AspectInvocationTestClass.new.method("#{@protection}_test_method".intern).call :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
       end
-      advice_called.should be_true
+      advice_called.should be_truthy
       aspect.unadvise
     end
 
@@ -1117,7 +1117,7 @@ describe Aspect, "methods" do
         args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       end 
       Aquarium::AspectInvocationTestClass.new.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-      advice_called.should be_true
+      advice_called.should be_truthy
       aspect.unadvise
     end
 
@@ -1423,7 +1423,7 @@ describe Aspect, "methods" do
         args.should == [:a1, :a2, :a3, {:h1 => 'h1', :h2 => 'h2'}]
       end 
       object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-      advice_called.should be_true
+      advice_called.should be_truthy
       aspect.unadvise
     end
 
@@ -1438,7 +1438,7 @@ describe Aspect, "methods" do
       }
       aspect = Aspect.new :before, :object => object, :methods => :public_test_method, :advice => advice
       object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-      advice_called.should be_true
+      advice_called.should be_truthy
       aspect.unadvise
     end
   
@@ -1454,7 +1454,7 @@ describe Aspect, "methods" do
         }
         aspect = Aspect.new :before, :object => object, :methods => :public_test_method, key.intern => advice
         object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-        advice_called.should be_true
+        advice_called.should be_truthy
         aspect.unadvise
       end
     end
@@ -1476,7 +1476,7 @@ describe Aspect, "methods" do
         advice_called = true
       end
       object.public_test_method :a1, :a2, :a3, :h1 => 'h1', :h2 => 'h2'
-      advice_called.should be_true
+      advice_called.should be_truthy
       aspect.unadvise
     end
   end
@@ -1566,12 +1566,12 @@ describe Aspect, "methods" do
       @included_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1644,12 +1644,12 @@ describe Aspect, "methods" do
       @included_objects.each do |object|
         advice_called = false
         object.doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_objects.each do |object|
         advice_called = false
         object.doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1688,12 +1688,12 @@ describe Aspect, "methods" do
       @included_objects.each do |object|
         advice_called = false
         object.doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_objects.each do |object|
         advice_called = false
         object.doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1723,12 +1723,12 @@ describe Aspect, "methods" do
       included_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       excluded_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1747,10 +1747,10 @@ describe Aspect, "methods" do
 
       advice_called = false
       ClassWithPublicInstanceMethod.new.public_instance_test_method
-      advice_called.should be_false
+      advice_called.should be_falsey
       advice_called = false
       ClassIncludingModuleWithPublicInstanceMethod.new.public_instance_module_test_method
-      advice_called.should be_false
+      advice_called.should be_falsey
       aspect.unadvise
     end
   end
@@ -1768,10 +1768,10 @@ describe Aspect, "methods" do
 
       advice_called = false
       ClassWithPublicInstanceMethod.new.public_instance_test_method
-      advice_called.should be_false
+      advice_called.should be_falsey
       advice_called = false
       ClassIncludingModuleWithPublicInstanceMethod.new.public_instance_module_test_method
-      advice_called.should be_false
+      advice_called.should be_falsey
       aspect.unadvise
     end
   end
@@ -1789,10 +1789,10 @@ describe Aspect, "methods" do
 
       advice_called = false
       ClassWithPublicInstanceMethod.new.public_instance_test_method
-      advice_called.should be_false
+      advice_called.should be_falsey
       advice_called = false
       ClassIncludingModuleWithPublicInstanceMethod.new.public_instance_module_test_method
-      advice_called.should be_false
+      advice_called.should be_falsey
       aspect.unadvise
     end
   end
@@ -1815,12 +1815,12 @@ describe Aspect, "methods" do
       included_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       excluded_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1851,12 +1851,12 @@ describe Aspect, "methods" do
       @included_objects.each do |object|
         advice_called = false
         object.doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_objects.each do |object|
         advice_called = false
         object.doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1890,12 +1890,12 @@ describe Aspect, "methods" do
       @included_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1924,12 +1924,12 @@ describe Aspect, "methods" do
       @included_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1947,12 +1947,12 @@ describe Aspect, "methods" do
       Aquarium::PointcutFinderTestClasses.all_class_variables_pointcut_classes.each do |type|
         advice_called = false
         type.new.doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       Aquarium::PointcutFinderTestClasses.all_constants_pointcut_classes.each do |type|
         advice_called = false
         type.new.doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -1985,12 +1985,12 @@ describe Aspect, "methods" do
       @included_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_types.each do |type|
         advice_called = false
         type.new(1).doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -2096,12 +2096,12 @@ describe Aspect, "methods" do
       @included_objects.each do |object|
         advice_called = false
         object.doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_objects.each do |object|
         advice_called = false
         object.doit
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -2146,23 +2146,23 @@ describe Aspect, "methods" do
         (@included_types + @excluded_types).each do |type|
           advice_called = false
           type.new(1).doit
-          advice_called.should be_true
+          advice_called.should be_truthy
         end
         @excluded_types.each do |type|
           advice_called = false
           type.new(1).doit3
-          advice_called.should be_false
+          advice_called.should be_falsey
         end
       end
       (@included_objects + @excluded_objects).each do |object|
         advice_called = false
         object.doit
-        advice_called.should be_true
+        advice_called.should be_truthy
       end
       @excluded_objects.each do |object|
         advice_called = false
         object.doit3
-        advice_called.should_not be_true
+        advice_called.should_not be_truthy
       end
       aspect.unadvise
     end
@@ -2205,7 +2205,7 @@ describe Aspect, "methods" do
     #   (@excluded_objects).each do |object|
     #     advice_called = false
     #     object.doit
-    #     advice_called.should be_true
+    #     advice_called.should be_truthy
     #   end
     #   aspect.unadvise
     # end

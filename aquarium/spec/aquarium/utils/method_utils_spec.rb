@@ -216,103 +216,103 @@ end
 
 describe Aquarium::Utils::MethodUtils, ".has_method" do
   it "should return true for public class methods on a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_class_m).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_class_m).should be_truthy
   end
   it "should return true for public class methods on a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_class_m, :class_method_only).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_class_m, :class_method_only).should be_truthy
   end
   it "should return false for public class methods on a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_class_m, :instance_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_class_m, :instance_method_only).should be_falsey
   end
 
   it "should return true for public instance methods on a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_instance_m).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_instance_m).should be_truthy
   end
   it "should return false for public instance methods on a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_instance_m, :class_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_instance_m, :class_method_only).should be_falsey
   end
   it "should return true for public instance methods on a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_instance_m, :instance_method_only).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :public_instance_m, :instance_method_only).should be_truthy
   end
 
   it "should return false for public class methods on an instance of a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_class_m).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_class_m).should be_falsey
   end
   it "should return false for public class methods on an instance of a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_class_m, :class_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_class_m, :class_method_only).should be_falsey
   end
   it "should return false for public class methods on an instance of a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_class_m, :instance_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_class_m, :instance_method_only).should be_falsey
   end
 
   it "should return true for public instance methods on an instance of a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_instance_m).should be_true    
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_instance_m).should be_truthy    
   end
   it "should return false for public instance methods on an instance of a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_instance_m, :class_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_instance_m, :class_method_only).should be_falsey
   end
   it "should return true for public instance methods on an instance of a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_instance_m, :instance_method_only).should be_true    
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :public_instance_m, :instance_method_only).should be_truthy    
   end
   
   it "should return true for protected instance methods on a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :protected_instance_m).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :protected_instance_m).should be_truthy
   end
   it "should return false for protected instance methods on a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :protected_instance_m, :class_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :protected_instance_m, :class_method_only).should be_falsey
   end
   it "should return true for protected instance methods on a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :protected_instance_m, :instance_method_only).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :protected_instance_m, :instance_method_only).should be_truthy
   end
 
   it "should return true for protected instance methods on an instance of a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :protected_instance_m).should be_true    
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :protected_instance_m).should be_truthy    
   end
   it "should return false for protected instance methods on an instance of a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :protected_instance_m, :class_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :protected_instance_m, :class_method_only).should be_falsey
   end
   it "should return true for protected instance methods on an instance of a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :protected_instance_m, :instance_method_only).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :protected_instance_m, :instance_method_only).should be_truthy
   end
   
   it "should return true for private class methods on a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m).should be_true #lambdaed_private
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m).should be_truthy #lambdaed_private
   end
   it "should return true for private class methods on a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m, :class_method_only).should be_true 
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m, :class_method_only).should be_truthy 
   end
   it "should return false for private class methods on a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m, :instance_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_class_m, :instance_method_only).should be_falsey
   end
 
   it "should return true for private instance methods on a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_instance_m).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_instance_m).should be_truthy
   end
   it "should return false for private instance methods on a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_instance_m, :class_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_instance_m, :class_method_only).should be_falsey
   end
   it "should return true for private instance methods on a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_instance_m, :instance_method_only).should be_true
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample, :private_instance_m, :instance_method_only).should be_truthy
   end
 
   it "should return false for private class methods on an instance of a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_class_m).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_class_m).should be_falsey
   end
   it "should return false for private class methods on an instance of a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_class_m, :class_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_class_m, :class_method_only).should be_falsey
   end
   it "should return false for private class methods on an instance of a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_class_m, :instance_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_class_m, :instance_method_only).should be_falsey
   end
 
   it "should return true for private instance methods on an instance of a class" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_instance_m).should be_true    
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_instance_m).should be_truthy    
   end
   it "should return false for private instance methods on an instance of a class when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_instance_m, :class_method_only).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_instance_m, :class_method_only).should be_falsey
   end
   it "should return true for private instance methods on an instance of a class when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_instance_m, :instance_method_only).should be_true    
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :private_instance_m, :instance_method_only).should be_truthy    
   end
   
   not_string, true_or_false, ruby_name = Object.const_defined?('JRUBY_VERSION') ? ['NOT ', false, 'JRuby'] : ['', true, 'MRI'] 
@@ -322,23 +322,23 @@ describe Aquarium::Utils::MethodUtils, ".has_method" do
   end
   
   it "should return false for public instance methods on a subclass when the exclude_ancestors flag is false" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_instance_m, :instance_method_only, false).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :public_instance_m, :instance_method_only, false).should be_falsey
   end
   it "should return false for protected instance methods on a subclass when the exclude_ancestors flag is false" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :protected_instance_m, :instance_method_only, false).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :protected_instance_m, :instance_method_only, false).should be_falsey
   end
   it "should return false for private instance methods on a subclass when the exclude_ancestors flag is false" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :private_instance_m, :instance_method_only, false).should be_false
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample2, :private_instance_m, :instance_method_only, false).should be_falsey
   end
     
   it "should return false for an unknown method" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :nonexistent_method).should be_false    
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :nonexistent_method).should be_falsey    
   end
   it "should return false for an unknown method when only class methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :nonexistent_method, :class_method_only).should be_false    
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :nonexistent_method, :class_method_only).should be_falsey    
   end
   it "should return false for an unknown method when only instance methods are specified" do
-    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :nonexistent_method, :instance_method_only).should be_false    
+    Aquarium::Utils::MethodUtils.has_method(MethodUtilsSpecProtectionExample.new, :nonexistent_method, :instance_method_only).should be_falsey    
   end
 end
 

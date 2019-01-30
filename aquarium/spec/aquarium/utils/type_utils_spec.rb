@@ -7,15 +7,15 @@ include Aquarium::Utils
 
 describe TypeUtils, ".is_type?" do
   it "should be true for a class" do
-    TypeUtils.is_type?(String).should be_true
+    TypeUtils.is_type?(String).should be_truthy
   end
 
   it "should be true for a Module" do
-    TypeUtils.is_type?(Kernel).should be_true
+    TypeUtils.is_type?(Kernel).should be_truthy
   end
 
   it "should be false for an Object" do
-    TypeUtils.is_type?("Object").should be_false
+    TypeUtils.is_type?("Object").should be_falsey
   end
 end
 
