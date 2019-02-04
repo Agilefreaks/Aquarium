@@ -276,13 +276,13 @@ describe AdviceChainNodeFactory, "#make_node" do
   end
 
   it "should return a node of the type corresponding to the input advice kind" do
-    AdviceChainNodeFactory.make_node(:advice_kind => :no).kind_of?(NoAdviceChainNode).should be_true
-    AdviceChainNodeFactory.make_node(:advice_kind => :none).kind_of?(NoAdviceChainNode).should be_true
-    AdviceChainNodeFactory.make_node(:advice_kind => :before).kind_of?(BeforeAdviceChainNode).should be_true
-    AdviceChainNodeFactory.make_node(:advice_kind => :after).kind_of?(AfterAdviceChainNode).should be_true
-    AdviceChainNodeFactory.make_node(:advice_kind => :after_raising).kind_of?(AfterRaisingAdviceChainNode).should be_true
-    AdviceChainNodeFactory.make_node(:advice_kind => :after_returning).kind_of?(AfterReturningAdviceChainNode).should be_true
-    AdviceChainNodeFactory.make_node(:advice_kind => :around).kind_of?(AroundAdviceChainNode).should be_true
+    AdviceChainNodeFactory.make_node(:advice_kind => :no).kind_of?(NoAdviceChainNode).should be_truthy
+    AdviceChainNodeFactory.make_node(:advice_kind => :none).kind_of?(NoAdviceChainNode).should be_truthy
+    AdviceChainNodeFactory.make_node(:advice_kind => :before).kind_of?(BeforeAdviceChainNode).should be_truthy
+    AdviceChainNodeFactory.make_node(:advice_kind => :after).kind_of?(AfterAdviceChainNode).should be_truthy
+    AdviceChainNodeFactory.make_node(:advice_kind => :after_raising).kind_of?(AfterRaisingAdviceChainNode).should be_truthy
+    AdviceChainNodeFactory.make_node(:advice_kind => :after_returning).kind_of?(AfterReturningAdviceChainNode).should be_truthy
+    AdviceChainNodeFactory.make_node(:advice_kind => :around).kind_of?(AroundAdviceChainNode).should be_truthy
   end
 end
 

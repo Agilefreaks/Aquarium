@@ -1479,12 +1479,12 @@ describe Pointcut, "methods" do
 
       it "should match the #{method} instance method for types when using a regular expressions, if you don't suppress ancestor methods, even if the method is defined in the class!" do
         pc = Pointcut.new :types => ClassWithFunkyMethodNames, :methods => /#{Regexp.escape(char)}$/, :method_options => [:instance]
-        pc.join_points_matched.any? {|jp| jp.method_name == method}.should be_true
+        pc.join_points_matched.any? {|jp| jp.method_name == method}.should be_truthy
       end
 
       it "should match the #{method} instance method for objects when using a regular expressions, if you don't suppress ancestor methods, even if the method is defined in the class!" do
         pc = Pointcut.new :object => @funky, :methods => /#{Regexp.escape(char)}$/, :method_options => [:instance]
-        pc.join_points_matched.any? {|jp| jp.method_name == method}.should be_true
+        pc.join_points_matched.any? {|jp| jp.method_name == method}.should be_truthy
       end
     end
   end

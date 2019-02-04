@@ -4,18 +4,18 @@ require 'aquarium/extensions/regexp'
 describe Regexp, "#empty?" do
   
   it "should return true for an empty regular expression" do
-    //.empty?.should be_true
-    Regexp.new("").empty?.should be_true
+    //.empty?.should be_truthy
+    Regexp.new("").empty?.should be_truthy
   end
   
   it "should return true for an empty regular expression with whitespace" do
-    /   /.empty?.should be_true
-    Regexp.new("   ").empty?.should be_true
+    /   /.empty?.should be_truthy
+    Regexp.new("   ").empty?.should be_truthy
   end
   
   it "should return false for a non-empty regular expression" do
-    /x/.empty?.should be_false
-    Regexp.new("x").empty?.should be_false
+    /x/.empty?.should be_falsey
+    Regexp.new("x").empty?.should be_falsey
   end
 end
 
