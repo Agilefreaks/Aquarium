@@ -69,10 +69,11 @@ describe "An example with advice on the public instance methods (excluding ances
     foo = Aquarium::Foo.new :a5, :a6
     foo.do_it :b5, :b6
     foo.logged_messages.size.should == 4
-    foo.logged_messages[0].to include("Inside: Aquarium::Foo#initialize")
-    foo.logged_messages[1].to include("Entering")
-    foo.logged_messages[2].to include("Inside: Aquarium::Foo#do_it")
-    foo.logged_messages[3].to include("Leaving")
+    
+    expect(foo.logged_messages[0]).to include("Inside: Aquarium::Foo#initialize")
+    expect(foo.logged_messages[1]).to include("Entering")
+    expect(foo.logged_messages[2]).to include("Inside: Aquarium::Foo#do_it")
+    expect(foo.logged_messages[3]).to include("Leaving")
     aspect.unadvise    
   end
 end
@@ -114,10 +115,10 @@ describe "An example with advice on the public instance methods (including ances
     bar = Aquarium::Bar.new :a9, :a10
     bar.do_something_else :b9, :b10
     bar.logged_messages.size.should == 4
-    bar.logged_messages[0].to include("Inside: Aquarium::BarModule#initialize")
-    bar.logged_messages[1].to include("Entering: Aquarium::Bar#do_something_else")
-    bar.logged_messages[2].to include("Inside: Aquarium::BarModule#do_something_else")
-    bar.logged_messages[3].to include("Leaving: Aquarium::Bar#do_something_else")
+    expect(bar.logged_messages[0]).to include("Inside: Aquarium::BarModule#initialize")
+    expect(bar.logged_messages[1]).to include("Entering: Aquarium::Bar#do_something_else")
+    expect(bar.logged_messages[2]).to include("Inside: Aquarium::BarModule#do_something_else")
+    expect(bar.logged_messages[3]).to include("Leaving: Aquarium::Bar#do_something_else")
     aspect.unadvise    
   end
 end
@@ -139,18 +140,18 @@ describe "An example with advice on the private initialize method of Foo and Bar
     foo = Aquarium::Foo.new :a11, :a12
     foo.do_it :b11, :b12
     foo.logged_messages.size.should == 4
-    foo.logged_messages[0].to include("Entering: Aquarium::Foo#initialize")
-    foo.logged_messages[1].to include("Inside: Aquarium::Foo#initialize")
-    foo.logged_messages[2].to include("Leaving: Aquarium::Foo#initialize")
-    foo.logged_messages[3].to include("Inside: Aquarium::Foo#do_it")
+    expect(foo.logged_messages[0]).to include("Entering: Aquarium::Foo#initialize")
+    expect(foo.logged_messages[1]).to include("Inside: Aquarium::Foo#initialize")
+    expect(foo.logged_messages[2]).to include("Leaving: Aquarium::Foo#initialize")
+    expect(foo.logged_messages[3]).to include("Inside: Aquarium::Foo#do_it")
 
     bar = Aquarium::Bar.new :a13, :a14
     bar.do_something_else :b13, :b14
     bar.logged_messages.size.should == 4
-    bar.logged_messages[0].to include("Entering: Aquarium::Bar#initialize")
-    bar.logged_messages[1].to include("Inside: Aquarium::BarModule#initialize")
-    bar.logged_messages[2].to include("Leaving: Aquarium::Bar#initialize")
-    bar.logged_messages[3].to include("Inside: Aquarium::BarModule#do_something_else")
+    expect(bar.logged_messages[0]).to include("Entering: Aquarium::Bar#initialize")
+    expect(bar.logged_messages[1]).to include("Inside: Aquarium::BarModule#initialize")
+    expect(bar.logged_messages[2]).to include("Leaving: Aquarium::Bar#initialize")
+    expect(bar.logged_messages[3]).to include("Inside: Aquarium::BarModule#do_something_else")
     aspect.unadvise    
     after_methods = Aquarium::Foo.private_instance_methods.sort #- Object.private_methods.sort
     (before_methods - after_methods).should == []
