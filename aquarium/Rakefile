@@ -1,7 +1,6 @@
 $:.unshift('lib')
 require 'rubygems'
 require 'rake'
-require 'rake/contrib/rubyforgepublisher'
 require 'rake/clean'
 require "bundler/gem_tasks"
 require 'rake/packagetask'
@@ -21,8 +20,8 @@ PKG_VERSION   = Aquarium::VERSION::STRING
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 PKG_FILES = FileList[
   '[A-Z]*',
-  'lib/**/*.rb', 
-  'spec/**/*.rb', 
+  'lib/**/*.rb',
+  'spec/**/*.rb',
   'examples/**/*.rb',
   'rake_tasks/**/*.rake'
 ]
@@ -32,7 +31,7 @@ IS_WINDOWS = (RUBY_VERSION == "1.8.7" ? PLATFORM : RUBY_PLATFORM) =~ /mswin/
 
 WEBSITE_ROOT = "../doc/aquarium"
 
-task :default => :spec  
+task :default => :spec
 
 desc "Run all specs"
 RSpec::Core::RakeTask.new do |t|
@@ -144,7 +143,7 @@ task :verify_jruby do
     sh "jruby -S #{rake}"
   end
 end
-    
+
 
 task :verify_user do
   raise "RUBYFORGE_USER environment variable not set!" unless ENV['RUBYFORGE_USER']
@@ -212,7 +211,7 @@ task :publish_packages => [:verify_user, :package] do
       *release_files
     )
     publisher.upload
-    
+
     puts "UPLADED THE FOLLOWING FILES:"
     release_files.each do |file|
       name = file.match(/pkg\/(.*)/)[1]
