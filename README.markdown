@@ -1,4 +1,7 @@
-# Aquarium README #
+# Aquarium README
+
+* [Home Page](https://deanwampler.github.io/open-source/aquarium/index.html)
+* [Rubygems](https://rubygems.org/gems/aquarium)
 
 Aquarium is a toolkit for Aspect-Oriented Programming (AOP) whose goals include:
 
@@ -458,8 +461,15 @@ WARNING: The older RubyForge SVN repository (`svn://rubyforge.org/var/svn/aquari
 
 Use the following commands to build everything:
 
-    rake gem
-    gem install pkg/aquarium-x.y.z.gem   # sudo may be required
+    rake install
+
+This builds the gem file, `pkg/aquarium-0.7.0.gem`, and installs it locally.
+
+If you are a maintainer and want to upload a new version to RubyGems.org, first see [this page](https://guides.rubygems.org/make-your-own-gem/) for creating a `~/.gem/credentials` file, then run this command to publish a new version.
+
+    gem push pkg/aquarium-0.7.0.gem
+
+At this time, with the demise of RubyForge, the docs and home page are temporarily hosted [here](https://deanwampler.github.io/open-source/aquarium/index.html). I'll move them to a better location soon.
 
 ### Running Aquarium's RSpecs
 

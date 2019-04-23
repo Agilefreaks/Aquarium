@@ -439,6 +439,12 @@ Then do the following:
 
 This builds the gem file, pkg/aquarium-x.y.z.gem, and installs it locally.
 
+If you are a maintainer and want to upload a new version to RubyGems.org, first see [this page](https://guides.rubygems.org/make-your-own-gem/) for creating a `~/.gem/credentials` file, then run this command to publish a new version.
+
+    gem push pkg/aquarium-0.7.0.gem
+
+At this time, with the demise of RubyForge, the docs and home page are temporarily hosted at https://deanwampler.github.io/open-source/aquarium/index.html. I'll move them to a better location soon.
+
 == Running Aquarium's RSpec Specs
 
 In order to run Aquarium's full suite of specs (rake pre_commit) you must install the following gems and tools:
