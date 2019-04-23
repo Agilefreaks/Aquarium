@@ -5,6 +5,8 @@ in_menu: true
 ---
 ## Finders
 
-Utilities for finding types, objects, methods, etc. in the current runtime. See [finders.rb].
+See also the <a href="../../rdoc/index.html" target="rdoc">Aquarium Rdocs</a>.
 
-[finders.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Finders.html
+Utilities for finding types, objects, methods, etc. in the current runtime. See [Aquarium::Finders].
+
+[Aquarium::Finders]:https://github.com/deanwampler/Aquarium/blob/master/aquarium/lib/aquarium/finders.rb

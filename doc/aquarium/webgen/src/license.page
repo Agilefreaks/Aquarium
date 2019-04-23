@@ -6,6 +6,6 @@ in_menu: true
 
 ## Aquarium License
 
-<br/>
+Aquarium uses the MIT License:
+
 <pre>{include_file: {filename: ../../../aquarium/MIT_LICENSE, process_output: false}}</pre>
-<br/>

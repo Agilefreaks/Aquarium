@@ -14,28 +14,34 @@ This is the preferred approach. Non-windows users may have to use <code>sudo</co
 <pre>
 gem install aquarium
 gem update aquarium
-</pre>  
+
+</pre>
 
 or if you want an older version:
 <pre>
-gem install aquarium -v 0.4.0
-gem update aquarium -v 0.4.0
-</pre>  
+gem install aquarium -v 0.6.0
+gem update aquarium -v 0.6.0
 
-### Notes on Updating
+</pre>
 
-<pre>{include_file: {filename: ../../../aquarium/UPGRADE, process_output: false}}</pre>
-<p></p>
-### Direct download
+## Notes on Updating
 
-Get it from [Rubyforge].
+### Updating to Aquarium-0.7.X
 
-### GitHub
+Version 0.7.0 supports only Ruby 2.6. It was tested with 2.6.3p62 (2019-04-16 revision 67580). Basic JRuby 9.2.7.0 (2.5.3) 2019-04-09 8a269e3 support is provided, but using JRuby currently does *not* pass all the custom Java specs in the `jruby/spec` directory, which specifically test working with Java classes. However, JRuby does pass all the Ruby specs in the `spec` directory. This is a long-standing issue with JRuby support in Aquarium. Patches are welcome!
 
-Aquarium is now managed at [GitHub]. The older Subversion repository is now obsolete!
+**TODO:** There are currently a _lot_ of deprecation warnings.
+
+### Updating to Aquarium-0.6.X
+
+Version 0.6.0 supports only Ruby 2.0.0p247. Basic JRuby 1.7.4 (1.9.3p392) support is provided, but using JRuby currently does *not* pass all the custom Java specs in the `jruby/spec` directory, which specifically test working with Java classes. However, JRuby does pass all the Ruby specs in the `spec` directory. I didn't want to release v0.6.0 with the Java-specific specs not working, but I didn't have time to resolve the issues. Patches are welcome.
+
+See [UPGRADE] for details for older releases.
+
+### Notes on Building Aquarium
 
 <p>See the [README] for details about how to build <span class="keyword">Aquarium</span>.</p>
 
-[Rubyforge]:http://rubyforge.org/frs/?group&#095;id=4281
-[GitHub]:http://github.com/deanwampler/Aquarium
-[README]:http://aquarium.rubyforge.org/rdoc/README.html
+[GitHub]:https://github.com/deanwampler/Aquarium
+[README]:https://github.com/deanwampler/Aquarium
+[UPGRADE]:https://github.com/deanwampler/Aquarium/blob/master/aquarium/UPGRADE

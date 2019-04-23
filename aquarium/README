@@ -443,7 +443,7 @@ If you are a maintainer and want to upload a new version to RubyGems.org, first 
 
     gem push pkg/aquarium-0.7.0.gem
 
-At this time, with the demise of RubyForge, the docs and home page are temporarily hosted at https://deanwampler.github.io/open-source/aquarium/index.html. I'll move them to a better location soon.
+At this time, with the demise of RubyForge, the docs and home page are temporarily hosted at https://deanwampler.github.io/open-source/aquarium/index.html. I'll move them to a better location soon. I build them by running `rake website`, then copying the entire output of `../doc/aquarium/out/` to my GitHub site under the `open-source/Aquarium` directory. TBD - move somewhere better!
 
 == Running Aquarium's RSpec Specs
 

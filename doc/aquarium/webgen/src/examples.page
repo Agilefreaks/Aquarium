@@ -41,7 +41,7 @@ It's actually harder than it should be to define a reusable aspect, because the 
 
 ### Aspect Design
 
-The AOP community is still discovering good design principles. However, simple extensions of good OOD principles are an important step. Many of those principles focus on minimal coupling between components and, in particular, coupling through abstractions, rather than concrete details. 
+The AOP community is still discovering good design principles. However, simple extensions of good OOD principles are an important step. Many of those principles focus on minimal coupling between components and, in particular, coupling through abstractions, rather than concrete details.
 
 In this example, we demonstrate how one module defines a pointcut representing an object's state changes. An "observer" aspect watches for those changes and prints a message when updates occur. Hence, the example demonstrates one implementation of the Observer Pattern.
 
@@ -53,7 +53,7 @@ Notice how the aspect is independent of the details of the pointcut, so it won't
 
 ### Design by Contract &#153;
 
-It is easy to use <span class="keyword">Aquarium</span> to implement a "contract" for a Module, in the sense of Bertrand Meyer's _Design by Contract_&#153;. In fact, there is a simple DbC module (not a complete implementation...) in the [extras], which this example uses:
+It is easy to use <span class="keyword">Aquarium</span> to implement a "contract" for a Module, in the sense of Bertrand Meyer's _Design by Contract_&#153;. In fact, there is a simple DbC module (not a complete implementation...) in the [Aquarium::Extras], which this example uses:
 
 {coderay:: ruby}{include_file: {filename: ../../../aquarium/examples/design_by_contract_example.rb, process_output: false, escape_html: false}}
 {coderay}
@@ -74,5 +74,5 @@ AspectJ lets Java programmers add new methods and attributes to types. Ruby make
 {coderay}
 <p></p>
 
-[README]:http://aquarium.rubyforge.org/rdoc/README.html
-[extras]:http://aquarium.rubyforge.org/rdoc/Aquarium/Extras.html
+[README]:https://github.com/deanwampler/Aquarium
+[Aquarium::Extras]:https://github.com/deanwampler/Aquarium/blob/master/aquarium/lib/aquarium/extras.rb
