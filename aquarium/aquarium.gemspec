@@ -9,9 +9,9 @@ Gem::Specification.new do |s|
   s.name = "aquarium"
   s.version = Aquarium::VERSION::STRING
   s.summary = Aquarium::VERSION::DESCRIPTION
-  s.authors = ["Aquarium Development Team"]
-  s.email = "aquarium-devel@rubyforge.org"
-  s.homepage = "http://aquarium.rubyforge.org"
+  s.authors = ["Dean Wampler and other contributors"]
+  s.email = "deanwampler@gmail.com"
+  s.homepage = "https://rubygems.org/gems/aquarium"
   s.rubyforge_project = "aquarium"
   s.description = <<-EOF
     Aquarium is a full-featured Aspect-Oriented Programming (AOP) framework for Ruby that is
@@ -28,8 +28,6 @@ Gem::Specification.new do |s|
   # These go in bin by convention. In our case, we have none.
   # s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.executables = []
-  s.default_executable = ''
-
   s.require_paths = ["lib"]
 
   # Specify dependencies. Some of these are for building the documentation.
