@@ -8,10 +8,10 @@ module Aquarium
 
     unless defined? MAJOR
       MAJOR  = 0
-      MINOR  = 6
+      MINOR  = 7
       TINY   = 0
       RELEASE_CANDIDATE = nil
-      
+
       # RANDOM_TOKEN: 0.598704893979657
       REV = "$LastChangedRevision: 7 $".match(/LastChangedRevision: (\d+)/)[1]
 
@@ -20,9 +20,10 @@ module Aquarium
       TAG = build_tag
 
       NAME   = "Aquarium"
-      URL    = "http://aquarium.rubyforge.org"  
-    
+      URL    = "http://aquarium.rubyforge.org"
+
       DESCRIPTION = "#{NAME}-#{FULL_VERSION} - Aspect-Oriented Programming toolkit for Ruby\n#{URL}"
     end
   end
 end
+
