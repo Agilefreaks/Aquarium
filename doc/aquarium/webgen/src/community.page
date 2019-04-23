@@ -6,18 +6,11 @@ in_menu: true
 
 ## Contributing to Aquarium
 
-There are several ways in which you can contribute to Aquarium. 
-
-## Mailing Lists
-
-One easy way you can contribute is to join and participate in our [mailing lists]:
-
-* *aquarium-users* is for anyone who uses Aquarium. Use this list to discuss any topics related to the use of Aquarium.
-* *aquarium-devel* is for those interested in the ongoing development of Aquarium, including those who wish to contribute to the development effort.
+There are several ways in which you can contribute to Aquarium.
 
 ## Bugs, Enhancement Requests, etc.
 
-Please use the [RubyForge tracker] to submit bug reports and enhancement requests, rather than using the mailing lists. Discussion of issues on the mailing list is welcome, but the tracker is the best way to capture issues.
+Please use the [project GitHub issues] to submit bug reports and enhancement requests. Discussion of issues on the mailing list is welcome, but the tracker is the best way to capture issues.
 
 It helps greatly if you fork the [Aquarium GitHub repository] and commit changes (see below).
 
@@ -35,7 +28,7 @@ This will make us more likely to look at it quickly.
 ### Feature Requests
 
 Interested in a new feature that you would find useful but don't wish
-to develop yourself? Please submit it in a *Feature Request* to [RubyForge tracker].
+to develop yourself? Please submit it to the [project GitHub issues].
 
 ### Patches
 
@@ -46,7 +39,7 @@ Please submit a patch, but please follow these guidelines.
 * Include updated specs (as appropriate)!
 * Include updated docs (as appropriate)!
 * Run <code>rake website</code> on your patched source (it runs the specs and generates the docs).
-* Create a new ticket in the [RubyForge tracker].
+* Create a new ticket in the [project GitHub issues].
 * Mention your GitHub fork.
 
 ## The Core Team
@@ -70,9 +63,8 @@ Please submit a patch, but please follow these guidelines.
 
 Thanks to Brendan L., Matthew F., Mark V. and others for helpful feedback.
 
-[mailing lists]:http://rubyforge.org/mail/?group&#095;id=4281
-[RubyForge tracker]:http://rubyforge.org/tracker/?group&#095;id=4281
-[Aquarium GitHub repository]: http://github.com/deanwampler/Aquarium
+[Aquarium GitHub repository]:http://github.com/deanwampler/Aquarium
+[project GitHub issues]:https://github.com/deanwampler/Aquarium/issues
 [web]:http://polyglotprogramming.com
 [twitter]:http://twitter.com/deanwampler
 [blog]:http://blog.polyglotprogramming.com/

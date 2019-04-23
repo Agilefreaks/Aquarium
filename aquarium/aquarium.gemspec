@@ -12,7 +12,6 @@ Gem::Specification.new do |s|
   s.authors = ["Dean Wampler and other contributors"]
   s.email = "deanwampler@gmail.com"
   s.homepage = "https://deanwampler.github.io/open-source/aquarium/index.html"
-  s.rubyforge_project = "aquarium"
   s.description = <<-EOF
     Aquarium is a full-featured Aspect-Oriented Programming (AOP) framework for Ruby that is
     designed to provide an intuitive syntax and support for large-scale, dynamic aspects.

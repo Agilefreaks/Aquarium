@@ -1,6 +1,6 @@
-== Updating to Aquarium-0.7.X
+== Updating to Aquarium-0.7.1
 
-Version 0.7.0 supports only Ruby 2.6. It was tested with 2.6.3p62 (2019-04-16 revision 67580). Basic JRuby 9.2.7.0 (2.5.3) 2019-04-09 8a269e3 support is provided, but using JRuby currently does *not* pass all the custom Java specs in the `jruby/spec` directory, which specifically test working with Java classes. However, JRuby does pass all the Ruby specs in the `spec` directory. This is a long-standing issue with JRuby support in Aquarium. Patches are welcome!
+Version 0.7.1 supports only Ruby 2.6. It was tested with 2.6.3p62 (2019-04-16 revision 67580). Basic JRuby 9.2.7.0 (2.5.3) 2019-04-09 8a269e3 support is provided, but using JRuby currently does *not* pass all the custom Java specs in the `jruby/spec` directory, which specifically test working with Java classes. However, JRuby does pass all the Ruby specs in the `spec` directory. This is a long-standing issue with JRuby support in Aquarium. Patches are welcome!
 
 > TODO: There are currently a _lot_ of deprecation warnings.
 
