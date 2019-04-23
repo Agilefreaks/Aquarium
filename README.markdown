@@ -8,10 +8,11 @@ Aquarium is a toolkit for Aspect-Oriented Programming (AOP) whose goals include:
 * A user-friendly DSL.
 * Support for advising Java types through JRuby.
 
-**SOMEBODY ADOPT ME!!**
+## SOMEBODY ADOPT ME!!
 
-While I've enjoyed working on Aquarium, I no longer do Ruby development. I just don't have the time to keep updating Aquarium as Ruby evolves. If you like this project, please consider adoption. Thanks.
+While I've enjoyed working on Aquarium, I no longer do Ruby development. I just don't have the time to keep updating Aquarium as Ruby evolves. There are plenty of deprecation warnings now when you build Aquarium and JRuby support has been spotty since Aquarium v0.6.0.
 
+So, if you like this project, _please_ consider adopting it. Thanks!
 
 ## Why Is an AOP Framework Useful in Ruby?
 
@@ -23,9 +24,11 @@ So, if you are designing with aspects, wouldn't you like to write your code usin
 
 ## Supported Ruby Versions (and Caveats)
 
-Version 0.6.0 supports only Ruby 2.0.0p247. JRuby 1.7.4 (1.9.3p392) does *not* currently pass all the custom Java specs in the `jruby/spec` directory, which specifically test working with Java classes. However, JRuby does pass all the Ruby specs in the `spec` directory. I didn't want to release v0.6.0 with the Java-specific specs not working, but I didn't have time to resolve the issues. Patches are welcome.
+Aquarium v0.7.0 was tested with Ruby 2.6.3p62 (2019-04-16 revision 67580) and JRuby 9.2.7.0 (Ruby 2.5.3) 2019-04-09 8a269e3. There are many deprecation warnings about constants that have been renamed, all of which appear to be in old libraries still used by Aquarium.
 
-If you need support for earlier versions of Ruby and JRuby, use Aquarium v0.5.0.
+Aquarium v0.6.0 supports only Ruby 2.0.0p247. JRuby 1.7.4 (Ruby 1.9.3p392) does *not* currently pass all the custom Java specs in the `jruby/spec` directory, which specifically test working with Java classes. However, JRuby does pass all the Ruby specs in the `spec` directory. I didn't want to release v0.6.0 with the Java-specific specs not working, but I didn't have time to resolve the issues. Patches are welcome.
+
+If you need support for even earlier versions of Ruby and JRuby, use Aquarium v0.5.0.
 
 ## Terminology
 
@@ -54,9 +57,9 @@ The simplest approach is to install the gem:
 
 Several complete examples are provided in the *examples* directory.
 
-In most cases, you can either declare the appropriate classes or use the optional DSL, which adds convenience methods to classes, objects, or even Object itself. The API also supports many synonyms for things like types, objects, and methods. The best place to see the full list of synonyms is the output of `pointcut_spec.rb`.
+In most cases, you can either declare the appropriate classes or use the optional DSL, which adds convenience methods to classes, objects, or even `Object` itself. The API also supports many synonyms for things like types, objects, and methods. The best place to see the full list of synonyms is the output of `pointcut_spec.rb`.
 
-Here is an example that traces invocations of all public instance methods (included inherited ones) of the classes or modules Foo and Bar.
+Here is an example that traces invocations of all public instance methods (included inherited ones) of the classes or modules `Foo` and `Bar`.
 ```ruby
 require 'aquarium'
 Aspect.new :around, :calls_to => :all_methods, :on_types => [Foo, Bar] do |join_point, object, *args|
@@ -66,7 +69,7 @@ Aspect.new :around, :calls_to => :all_methods, :on_types => [Foo, Bar] do |join_
 	result  # block needs to return the result of the "proceed"!
 end
 ```
-The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in Foo and Bar. (There are additional options available for specifying class methods, protected methods, excluding inherited (ancestor) methods, etc.) Here is the same example using the convenience DSL that adds aspect methods to Object (available only if you require aquarium/dsl/object_dsl', since other toolkits, like Rails, define similar methods on Object!).
+The advice to execute at each join point is the block. The pointcut is the set of all public instance methods in `Foo` and `Bar`. (There are additional options available for specifying class methods, protected methods, excluding inherited (ancestor) methods, etc.) Here is the same example using the convenience DSL that adds aspect methods to `Object` (available only if you require aquarium/dsl/object_dsl', since other toolkits, like Rails, define similar methods on `Object`!).
 ```ruby
 require 'aquarium/dsl/object_dsl'
 around :calls_to => :all_methods, :on_types => [Foo, Bar] do |join_point, object, *args|
@@ -78,7 +81,7 @@ end
 ```
 See `examples/method_tracing_example.rb` for a more detailed version of this example.
 
-If you don't want to add these methods to Object, you can also add them individually to modules, classes, or objects:
+If you don't want to add these methods to `Object`, you can also add them individually to modules, classes, or objects:
 ```ruby
 require 'aquarium'
 ...
@@ -115,7 +118,7 @@ end
 It is important to note that aspect *instances* usually behave like class (static) variables, in terms of the lifetime of their effects. In the example shown, class Foo is permanently modified to do the print statements shown for all *critical methods*, unless you save the result of calling `around` to a variable, e.g., critical_operation_logging, and you explicitly call `critical_operation_logging.unadvise` at some future time. Put another way, the effects scope just like changes made when you reopen a class or module.
 
 A common mistake is to create an aspect in an initialize method and assign it to an attribute. This usually means that you are creating long-lived, redundant aspects every time an instance of your class is created. The aspect modifications remain in effect even when the instances themselves are garbage collected!
- 
+
 Here are some more succinct examples, illustrating the API (using the DSL methods) and some of the various synonyms for methods, types, etc.
 
 You can pass in pointcuts defined elsewhere:
@@ -128,8 +131,8 @@ As a convenience, since a `JoinPoint` is a `Pointcut` with one element, you can 
 ```ruby
 my_join_point1 = JoinPoint.new :type => Foo::Bar, :method => do_this
 my_join_point2 = JoinPoint.new :type => Foo::Bar, :method => do_that
-around :pointcuts => my_join_point1 do |jp, obj, *args| ...         
-around :pointcuts => [my_join_point1, my_join_point2, ...] do |jp, obj, *args| ...  
+around :pointcuts => my_join_point1 do |jp, obj, *args| ...
+around :pointcuts => [my_join_point1, my_join_point2, ...] do |jp, obj, *args| ...
 ```
 You can specify a single type, a type name, a type regular expression, or an array of the same. Note that `:type` and `:types` are synonymous. Use the singular form for better readability when you are specifying just one type. Other synonyms include `:on_types`, `:within_types`, and `:in_types`, plus the singular forms.
 ```ruby
@@ -171,7 +174,7 @@ around :calls_to => :all_methods, :in_types_and_ancestors => A, ...
 around :calls_to => :all_methods, :within_types_and_ancestors => A, ...
 and similarly for descendents
 ```
-You can specify a single object or an array of objects. As for `:types`, you can use `:object`, `:objects`, `:on_objects`, `:within_object`, `:in_objects`, and the singular forms synonymously. 
+You can specify a single object or an array of objects. As for `:types`, you can use `:object`, `:objects`, `:on_objects`, `:within_object`, `:in_objects`, and the singular forms synonymously.
 ```ruby
 a1 = A.new
 a2 = A.new
@@ -213,15 +216,15 @@ You can specify method options. By default, public instance methods only are mat
 ```ruby
 around :methods => /foo/, :method_options => [:instance], ...  # match instance methods (default)
 around :methods => /foo/, :method_options => [:class], ...     # match class methods
-around :methods => /foo/, :method_options => [:public, :protected, :private], ... 
+around :methods => /foo/, :method_options => [:public, :protected, :private], ...
 # match public, protected, and private instance methods
 around :methods => /foo/, :method_options => [:singleton], ... # match singleton methods
-around :methods => /foo/, :method_options => [:exclude_ancestor_methods], ... 
-# ignore methods defined in ancestors, inherited classes and included modules 
+around :methods => /foo/, :method_options => [:exclude_ancestor_methods], ...
+# ignore methods defined in ancestors, inherited classes and included modules
 ```
 With synonyms:
 ```ruby
-around :calls_to => /foo/, :restricting_methods_to => [:singleton_methods], ... 
+around :calls_to => /foo/, :restricting_methods_to => [:singleton_methods], ...
 ```
 You can specify attributes, which are actually convenience methods for the attribute accessors. They work very much like the `:method` options. Note that `:all` is NOT supported in this case. The available synonyms are slightly more complicated, as shown in these examples.
 ```ruby
@@ -229,11 +232,11 @@ around :attribute  => :foo, ...                                 # defaults to me
 around :attributes => :foo, ...                                 # the same
 around :accessing  => :foo, ...                                 # the same
 
-around :attribute => :foo, :attribute_options => [:readers]...  # only matches #foo 
+around :attribute => :foo, :attribute_options => [:readers]...  # only matches #foo
 around :reading   => :foo                                       # the same
-	
-	
-around :attribute => :foo, :attribute_options => [:writers]...  # only matches #foo= 
+
+
+around :attribute => :foo, :attribute_options => [:writers]...  # only matches #foo=
 around :writing   => :foo                                       # the same
 
 around :attributes => [:foo, :bar, :baz], ...
@@ -263,10 +266,10 @@ in an around advice aspect will match all of them:
 ```ruby
 around :named_pointcuts => { :constants_matching => :STATE_CHANGE, :in_types => /App::.*/ } ...
 ```
-For the type specification, which is required, any valid option for the TypeFinder class is allowed. 
+For the type specification, which is required, any valid option for the TypeFinder class is allowed.
 
 You can also match on class variables, using `:class_variables_matching`. To match on either kind of definition, use just
-`:matching`. If no :*matching is specified, then any class constant or variable Pointcut found will be matched. 
+`:matching`. If no :*matching is specified, then any class constant or variable Pointcut found will be matched.
 
 Here are the various `:*matching` options and their synonyms:
 ```ruby
@@ -334,15 +337,15 @@ You can advice methods after raising exceptions:
 after_raising :types => ...              # After any exception is thrown
 after_raising_within :types => ...       # synonym
 after_raising => MyError, :types => ...  # Only invoke advice if "MyError" is raised.
-after_raising => [MyError1, MyError2], :types => ...  
+after_raising => [MyError1, MyError2], :types => ...
 # Only invoke advice if "MyError1" or "MyError2" is raised.
-```	 
+```
 You can advice methods after returning successfully or raising exceptions. (You can't specify
 a set of exceptions in this case.):
 ```ruby
 after :types => ...
 after_raising_within_or_returning_from :types =>	# synonym
-```	
+```
 You can advice methods both before after. This is different from around advice, where the around advice has to explicitly invoke the join point (using JoinPoint#proceed). Instead, the before-and-after methods are convenience wrappers around the creation of separate before advice and the corresponding after advice.
 ```ruby
 before_and_after :types =>, ...
@@ -352,10 +355,10 @@ before_and_after_raising :types =>, ...
 before_and_after_raising_within :types =>, ...	# synonym
 before_and_after_raising_within_or_returning_from :types =>, ...	# synonym
 ```
-If you pass a block to Aspect.new, it will be the advice. When invoked, the advice will be passed the following three arguments, 
-	1) the JoinPoint, which will contain a `JoinPoint::Context` object with useful context information, 
-	2) the object being sent the current message, and 
-	3) the parameters passed with the original message. 
+If you pass a block to Aspect.new, it will be the advice. When invoked, the advice will be passed the following three arguments,
+	1) the JoinPoint, which will contain a `JoinPoint::Context` object with useful context information,
+	2) the object being sent the current message, and
+	3) the parameters passed with the original message.
 Recall that a Proc doesn't check the number of arguments (while lambdas do), so if you don't care about any of the trailing parameters, you can leave them out of the parameter list. Recall that the other difference between the two is that a return statement in a Proc returns from the method that contains it. As rule, do NOT use return statements in advices!
 ```ruby
 around :type => [...], :methods => :all do |join_point, object, *args|
@@ -369,10 +372,10 @@ around(:type => [...], :methods => :all) {|join_point, object, *args| ...}  # (.
 In the example, we show that you must be careful to return the correct value, usually the value returned by `proceed` or a value created by the block itself.
 
 **NOTE:** prior to V0.2.0, the advice argument list was `|join_point, *args|`. Aquarium will look for such obsolete signatures (by looking at the arity of the proc) and raise an exception, if found. This check will be removed in a future release.
- 
+
 Rather than passing a block as the advice, you can pass a previously-created Proc:
-```ruby	
-around :type => [...], :methods => :all, :advice => advice 
+```ruby
+around :type => [...], :methods => :all, :advice => advice
 around :type => [...], :methods => :all, :advise_with => advice  # synonym for advice. Note the "s"!
 around :type => [...], :methods => :all, :call => advice         # synonym for advice.
 around :type => [...], :methods => :all, :invoke => advice       # synonym for advice.
@@ -455,19 +458,19 @@ The goal of Aquarium is to provide a superset of the functionality provided by t
 ### Differences With AspectJ Behavior
 
 Many of AspectJ's features are not currently supported by Aquarium, but some of them are planned for future releases.
- 
-* Attribute reading and writing join points are not supported. The `:attributes` and `:attributes_options` parameters (and their synonyms) for Aspect.new are actually *syntactic sugar* for the corresponding accessor methods. 
+
+* Attribute reading and writing join points are not supported. The `:attributes` and `:attributes_options` parameters (and their synonyms) for Aspect.new are actually *syntactic sugar* for the corresponding accessor methods.
 * More advanced AspectJ pointcut language features are not supported, such as the runtime pointcut designators like `if` conditionals and `cflow` (context flow) and the compile time `within` and `withincode` designators. Most of AspectJ pointcut language features are planned, however.
 * While AspectJ provides *intertype declaration* capabilities (i.e., adding state and behavior to existing classes), Ruby's native metaprogramming support satisfies this need. There may be convenience hooks added in a future release, however.
-* User defined advice precedence is not supported. However, advice precedence is unambiguous; the last aspects created while modules are loaded at runtime have higher precedence than earlier aspects. Ensuring a particular order is not always easy, of course. 
+* User defined advice precedence is not supported. However, advice precedence is unambiguous; the last aspects created while modules are loaded at runtime have higher precedence than earlier aspects. Ensuring a particular order is not always easy, of course.
 
 However, Aquarium does have a few advantages over AspectJ, especially when advising Java types when running in JRuby.
 
 * Aquarium can add and remove advice dynamically, at runtime.
 * Aquarium can advise individual objects, not just classes.
 * Aquarium can advise JDK classes. AspectJ can also do this, but not by default.
-* Aquarium supports named advice that can be defined separately from the aspects that use the advice. 
-* Aquarium can advise ancestor (parent) types, not just derived (descendent) types of specified types. 
+* Aquarium supports named advice that can be defined separately from the aspects that use the advice.
+* Aquarium can advise ancestor (parent) types, not just derived (descendent) types of specified types.
 
 Note: at the time of this writing (V0.4.0 release), there is an important limitation of Aquarium when used with java code; it appears that advice is only invoked if an advised method is called directly from Ruby code. If the advised method is called by other Java code, the advice is *not* invoked. Whether or not this limitation can be removed is under investigation.
 
@@ -493,4 +496,4 @@ The *RSpec* team, in particular David Chelimsky, have really inspired my thinkin
 
 Keita Yamaguchi contributed some key patches that enabled Ruby 1.9.3 and JRuby 1.6.7 support, in addition to the prior support for Ruby 1.8.7. These patches allowed me to final release version 0.5.0. Thank you!
 
-Finally, a number of users have contributed valuable feedback. In particular, thanks to Brendan L., Matthew F., and Mark V. 
+Finally, a number of users have contributed valuable feedback. In particular, thanks to Brendan L., Matthew F., and Mark V.
