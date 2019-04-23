@@ -5,6 +5,8 @@ in_menu: true
 ---
 ## Extensions
 
-Extensions to Ruby the core library. See [aquarium/extensions] for more information.
+See also the <a href="../../rdoc/index.html" target="rdoc">Aquarium Rdocs</a>.
 
-[aquarium/extensions]:http://aquarium.rubyforge.org/rdoc/Aquarium/Extensions.html
+Extensions to Ruby the core library. See [Aquarium::Extensions] for more information.
+
+[Aquarium::Extensions]:https://github.com/deanwampler/Aquarium/blob/master/aquarium/lib/aquarium/extensions.rb

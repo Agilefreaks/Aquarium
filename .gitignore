@@ -1,0 +1,6 @@
+*.class
+*.jar
+pkg/
+doc/aquarium/out/
+doc/aquarium/webgen/out/
+doc/aquarium/webgen/tmp/

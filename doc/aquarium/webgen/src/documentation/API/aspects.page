@@ -5,12 +5,14 @@ in_menu: true
 ---
 ## Aspects
 
+See also the <a href="../../rdoc/index.html" target="rdoc">Aquarium Rdocs</a>.
+
 <p><span class="keyword">Aspects</span> are modularization constructs for encapsulating <span class="keyword">concerns</span> that cut across the normal system object and module boundaries. Two classic examples including the mapping of a global persistence or security strategy to the objects in the system that must use or be controlled by them.</p>
 
-Think of your persistence strategy as one, well-modularized domain and your business logic as another. Rather than <span class="keyword">tangle</span> the business objects with the code to support persistence and <span class="keyword">scatter</span> that logic all over the application (breaking [DRY]), <span class="keyword">aspects</span> modularize the <i>integration</i> logic between the persistence and domain-logic subsystems. 
+Think of your persistence strategy as one, well-modularized domain and your business logic as another. Rather than <span class="keyword">tangle</span> the business objects with the code to support persistence and <span class="keyword">scatter</span> that logic all over the application (breaking [DRY]), <span class="keyword">aspects</span> modularize the <i>integration</i> logic between the persistence and domain-logic subsystems.
 
-By modularization, I mean that you can 
-express the intersection <span class="keyword">join points</span> (defined shortly) succinctly and in one 
+By modularization, I mean that you can
+express the intersection <span class="keyword">join points</span> (defined shortly) succinctly and in one
 place, as well as defining the logic that expresses what should happen at those intersection points.
 
 ### Terminology
@@ -42,13 +44,13 @@ There are two disadvantages of the term <span class="keyword">advice</span>. One
 
 Aspects are implemented as classes and you can either create instances of them or use the convenient methods that are added to <code>Object</code>, by default. For example, the following two sections of code are equivalent:
 
-{coderay:: ruby}aspect1 = Aspect.new :before, :calls_to => :all_methods, 
+{coderay:: ruby}aspect1 = Aspect.new :before, :calls_to => :all_methods,
                      :on_types => /*Service$/ do |join_point, object, *args|
   log("calling #{join_point.inspect}")
 end
 
 include Aquarium::DSL
-aspect2 = before :calls_to => :all_methods, 
+aspect2 = before :calls_to => :all_methods,
                  :on_types => /*Service$/ do |join_point, object, *args|
   log("calling #{join_point.inspect}")
 end
@@ -60,7 +62,7 @@ Both examples add <span class="keyword">before advice</span> (which logs the inv
 Here is a similar example that advises just a single instance of the <code>MyService</code> class.
 
 {coderay:: ruby}service = MyService.new(...)
-aspect = before :calls_to = :all_methods, 
+aspect = before :calls_to = :all_methods,
                 :on_object => service do |join_point, object, *args|
   log("calling #{join_point.inspect}")
 end
@@ -84,7 +86,8 @@ Finally, <span class="keyword">Aquarium</span> supports removing <span class="ke
 {coderay:: ruby}aspect.unadvise{coderay}
 <p></p>
 
-Other examples can be found in the [RDoc pages].
+Other examples can be found in the [README] and [examples].
 
-[DRY]:http://en.wikipedia.org/wiki/Don't_repeat_yourself
-[RDoc pages]:http://aquarium.rubyforge.org/rdoc/
+[DRY]:https://en.wikipedia.org/wiki/Don't_repeat_yourself
+[README]:https://github.com/deanwampler/Aquarium
+[examples]:https://github.com/deanwampler/Aquarium/tree/master/aquarium/examples

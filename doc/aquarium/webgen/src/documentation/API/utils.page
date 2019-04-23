@@ -5,6 +5,9 @@ in_menu: true
 ---
 ## Utils
 
-Miscellaneous utilities. See [utils.rb].
+See also the <a href="../../rdoc/index.html" target="rdoc">Aquarium Rdocs</a>.
 
-[utils.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Utils.html
+Miscellaneous utilities. See [Aquarium::Utils].
+
+[Aquarium::Utils]:https://github.com/deanwampler/Aquarium/blob/master/aquarium/lib/aquarium/utils.rb
+

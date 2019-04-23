@@ -4,7 +4,7 @@ include Aquarium::Aspects
 
 # The Aquarium README summarizes the known bugs and limitations of the JRuby integration.
 
-class StringLengthListComparator 
+class StringLengthListComparator
   include java.util.Comparator
   def compare s1, s2
     s1.length <=> s2.length
@@ -16,8 +16,8 @@ class StringListCaseConverterAndSorterWithConvertCaseOverride < Java::example.so
 end
 
 java_example_types = [
-  Java::example.Worker, 
-  Java::example.sorter.StringListSorter, 
+  Java::example.Worker,
+  Java::example.sorter.StringListSorter,
   Java::example.sorter.converter.StringListCaseConverterAndSorter,
   StringListCaseConverterAndSorterWithConvertCaseOverride]
 
@@ -56,8 +56,8 @@ canned_advice = Proc.new { |jp, object, *args|
     result
   }
 
-  
-describe "Java type without advice" do  
+
+describe "Java type without advice" do
   it "should not be advised" do
     do_sort Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort Java::example.sorter.converter.StringListCaseConverterAndSorter.new(StringLengthListComparator.new)
@@ -127,7 +127,7 @@ describe "Java instance with advice added then removed" do
 end
 
 describe "Java interface used with :type => ... (or synonym)" do
-  it "should never match join points; you must use :type(s)_and_descendents, instead" do     
+  it "should never match join points; you must use :type(s)_and_descendents, instead" do
     aspect = Aspect.new :around, :calls_to => [:do_work, :doWork], :type => Java::example.Worker, :ignore_no_matching_join_points => true do; end
     aspect.join_points_matched.should be_empty
   end
@@ -135,7 +135,7 @@ end
 
 describe "Java interface used with :type_and_descendents => ... (or synonym)" do
   before :each do
-    @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.Worker, 
+    @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.Worker,
       # :advice => canned_advice
       :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => canned_advice
     @@aspect_log = ""
@@ -143,7 +143,7 @@ describe "Java interface used with :type_and_descendents => ... (or synonym)" do
   after :each do
     @aspect.unadvise unless @aspect.nil?
   end
-  
+
   it "should invoke the advice when the advised methods of directly-implementing subclasses are called" do
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter
@@ -175,11 +175,11 @@ end
 
 describe "Java class used with :type_and_descendents => ..." do
   before :each do
-    @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.StringListSorter, 
+    @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.StringListSorter,
       :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => canned_advice
     @@aspect_log = ""
   end
-  
+
   it "should invoke the advice when the advised methods of the class are called" do
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter
@@ -209,7 +209,7 @@ end
 describe "Derived Java class used with :type_and_descendents => ..." do
   before :each do
     @@aspect_log = ""
-    @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.converter.StringListCaseConverterAndSorter, 
+    @aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.converter.StringListCaseConverterAndSorter,
       :exclude_type => StringListCaseConverterAndSorterWithConvertCaseOverride, :advice => canned_advice
   end
 
@@ -275,7 +275,7 @@ describe "Java camel-case method name 'doFooBar'" do
   end
 
   it "should be matched when using the camel-case form of the name 'doFooBar'" do
-    aspect = Aspect.new :around, :calls_to => :doWork, :type_and_descendents => Java::example.sorter.StringListSorter, 
+    aspect = Aspect.new :around, :calls_to => :doWork, :type_and_descendents => Java::example.sorter.StringListSorter,
       :restricting_methods_to => [:exclude_ancestor_methods], :advice => canned_advice
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter, :doWork
@@ -284,16 +284,16 @@ describe "Java camel-case method name 'doFooBar'" do
   end
 
   it "should be matched when using the underscore form of the name 'do_foo_bar'" do
-    aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.StringListSorter, 
+    aspect = Aspect.new :around, :calls_to => :do_work, :type_and_descendents => Java::example.sorter.StringListSorter,
       :restricting_methods_to => [:exclude_ancestor_methods], :advice => canned_advice
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter
     log_should_contain_entries
     aspect.unadvise
   end
-  
+
   it "should advise 'doFooBar' separately from 'do_foo_bar', so that invoking 'do_foo_bar' will not invoke the advice!" do
-    aspect = Aspect.new :around, :calls_to => :doWork, :type_and_descendents => Java::example.sorter.StringListSorter, 
+    aspect = Aspect.new :around, :calls_to => :doWork, :type_and_descendents => Java::example.sorter.StringListSorter,
       :restricting_methods_to => [:exclude_ancestor_methods], :advice => canned_advice
     list_sorter = Java::example.sorter.StringListSorter.new(StringLengthListComparator.new)
     do_sort list_sorter, :do_work
@@ -401,7 +401,7 @@ describe "JDK classes" do
     list.add(2)
     @@aspect_log.should be_empty
   end
-end  
+end
 
 
 include Aquarium::Utils
@@ -415,7 +415,7 @@ describe TypeUtils, ".descendents" do
 
   it "should return Java classes extending a Java class" do
     expected = [
-      Java::example.sorter.StringListSorter, 
+      Java::example.sorter.StringListSorter,
       Java::example.sorter.converter.StringListCaseConverterAndSorter,
       StringListCaseConverterAndSorterWithConvertCaseOverride]
     actual = TypeUtils.descendents Java::example.sorter.StringListSorter
@@ -428,7 +428,7 @@ describe "Java::Packages::Type.ancestors" do
   it "should return Java classes and interfaces that are ancestors of a Java class" do
     anc = Java::example.sorter.converter.StringListCaseConverterAndSorter.ancestors
     [Java::example.Worker, Java::example.sorter.StringListSorter, Java::example.sorter.converter.StringListCaseConverterAndSorter].each do |t|
-      anc.should include(t) 
+      anc.should include(t)
     end
   end
 end

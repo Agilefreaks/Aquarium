@@ -3,5 +3,5 @@
 aquarium.html:
   inMenu: true
   orderInfo: 100
-  url: http://aquarium.rubyforge.org
+  url: https://deanwampler.github.io/open-source/aquarium/index.html
   title: aquarium

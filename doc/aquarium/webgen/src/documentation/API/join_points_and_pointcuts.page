@@ -5,9 +5,11 @@ in_menu: true
 ---
 ## Join Points and Pointcuts
 
-### TODO
+See also the <a href="../../rdoc/index.html" target="rdoc">Aquarium Rdocs</a>.
 
-For now, look at the [join\_point.rb] and the [pointcut.rb] files for documentation and look at the <code>examples</code> directory in the distribution for usage examples.
+In addition to the examples in the [README], see [Aquarium::JoinPoint] and [Aquarium::Pointcut] files for documentation and look at the [examples] directory in the distribution for usage examples.
 
-[join_point.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Aspects/JoinPoint.html
-[pointcut.rb]:http://aquarium.rubyforge.org/rdoc/Aquarium/Aspects/Pointcut.html
+[README]:https://github.com/deanwampler/Aquarium
+[Aquarium::Joinpoint]:https://github.com/deanwampler/Aquarium/blob/master/aquarium/lib/aquarium/aspects/join_point.rb
+[Aquarium::Pointcut]:https://github.com/deanwampler/Aquarium/blob/master/aquarium/lib/aquarium/aspects/pointcut.rb
+[example]:https://github.com/deanwampler/Aquarium/tree/master/aquarium/examples

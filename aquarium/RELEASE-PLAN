@@ -6,26 +6,26 @@ Mostly bug fixes and enhancements. Only "minor" breakages of backwards compatibi
 
 === Versions 0.2
 
-Change the argument list for advice to |join_point, object, *args| from |join_point, *args|, 
-where "*args" are the arguments passed to the invoked join point (method). Since nontrivial 
-advice usually needs the object being advised, it became clear that having to call 
-"join_point.context.advised_object" is too tedious. 
+Change the argument list for advice to |join_point, object, *args| from |join_point, *args|,
+where "*args" are the arguments passed to the invoked join point (method). Since nontrivial
+advice usually needs the object being advised, it became clear that having to call
+"join_point.context.advised_object" is too tedious.
 
 This change will obvious break existing aspects.
 
 === Versions 0.3+
 
-More refinements and simplifications to the API and functionality, including much-needed 
+More refinements and simplifications to the API and functionality, including much-needed
 redundancy reduction. I haven't used mocks much in the specs, but they would help improve the
-performance of the RSpec runs. 
+performance of the RSpec runs.
 
-The main thrust of new feature work will be expanding the pointcut language to include 
-conditionals and stack context constructs, as well as more intuitive ways of expressing sets of 
-types, such as types nested arbitrarily deep in module "namespaces" (e.g., #13403), etc. 
+The main thrust of new feature work will be expanding the pointcut language to include
+conditionals and stack context constructs, as well as more intuitive ways of expressing sets of
+types, such as types nested arbitrarily deep in module "namespaces" (e.g., #13403), etc.
 
 I'm also thinking about an alternative syntax for the DSL. Instead of just this:
 
-	Aspect.new :around :pointcuts => [pc1, pc2, ...] do |jp, object, *args| 
+	Aspect.new :around :pointcuts => [pc1, pc2, ...] do |jp, object, *args|
 		# advise
 	end
 
@@ -33,12 +33,12 @@ How about something like the following?
 
 	around do
  		pointcuts pc1 or pc2
- 		advise_with do |jp, object, *args| 
+ 		advise_with do |jp, object, *args|
 			# advise
 		end
 	end
 
-I'm not sure it adds much (at this stage of thinking about it...) except that it could make 
+I'm not sure it adds much (at this stage of thinking about it...) except that it could make
 composition of complex pointcuts easier.
 
 I also want to ensure full support for running in JRuby. In particular, you should be able to
@@ -47,13 +47,13 @@ advise Java types!
 === Version 0.5
 
 My goals for this release include more performance improvements (#19321) and investigating some ideas
-for a real DSL, meaning declarative statements in blocks, rather than method arguments. It will be 
+for a real DSL, meaning declarative statements in blocks, rather than method arguments. It will be
 redundant somewhat with the existing "method-argument form", as it exists today, but it will set
 the stage for much more complex aspect definitions than would be convenient with the current form.
 
 Another big change is to make pointcut evaluation and advice application happen continuous at runtime,
 rather than only when the aspect is defined. This would eliminate subtle problems related to the order
-of loading and also makes the declarative nature of aspects more fully realized. For example, if I 
+of loading and also makes the declarative nature of aspects more fully realized. For example, if I
 declare an aspect for all types in a module namespace, it should still apply to nested types defined
 or loaded after the aspect is defined. This enhancement will also make it easier to define reusable
 and "abstract" aspects, where they aren't applied immediately, but only when extended by "concrete"
@@ -64,11 +64,14 @@ simpler aspects.
 
 Finally, this release will finally support Ruby 1.9.X and the latest JRuby at the time of the release.
 
+=== Version 0.6.X and 0.7.X
+
+These releases updated to the latest with Ruby and JRuby versions without other significant changes.
+
 === Version 1.0+
 
 I have been thinking about higher-order abstractions that work above the "Pointcut + Advice
-Model" of Aquarium (and AspectJ...) today. I consider the pointcut + advice model to be an 
+Model" of Aquarium (and AspectJ...) today. I consider the pointcut + advice model to be an
 important, maybe essential, building block of AOP, but if that's all AOP is, then we've probably
-already hit the limit of what we can expect AOP to do. That doesn't seem right to me, but it's 
+already hit the limit of what we can expect AOP to do. That doesn't seem right to me, but it's
 not at all clear what the higher-order abstractions should be.
-	
