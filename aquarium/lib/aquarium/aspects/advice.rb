@@ -1,29 +1,31 @@
 require 'aquarium/utils/array_utils'
-require 'aquarium/extensions/string'
+require 'aquarium/utils/camel_case'
 require 'aquarium/utils/invalid_options'
 require 'aquarium/utils/nil_object'
+
+include Aquarium::Utils::CamelCase
 
 module Aquarium
   module Aspects
     module Advice
-      
+
       UNKNOWN_ADVICE_KIND = "unknown"
 
-      KINDS_IN_PRIORITY_ORDER = [:around, :before, :after, :after_returning, :after_raising] 
+      KINDS_IN_PRIORITY_ORDER = [:around, :before, :after, :after_returning, :after_raising]
 
       @DEBUG_BACKTRACES = false
 
       def self.debug_backtraces; @DEBUG_BACKTRACES; end
       def self.debug_backtraces=( val ); @DEBUG_BACKTRACES = val; end
-      
+
       def self.kinds; KINDS_IN_PRIORITY_ORDER; end
 
       def self.sort_by_priority_order advice_kinds
-        advice_kinds.sort do |x,y| 
+        advice_kinds.sort do |x,y|
           KINDS_IN_PRIORITY_ORDER.index(x.to_sym) <=> KINDS_IN_PRIORITY_ORDER.index(y.to_sym)
         end.map {|x| x.to_sym}
       end
-      
+
       def self.compare_advice_kinds kind1, kind2
         if kind1.nil?
           return kind2.nil? ? 0 : -1
@@ -35,18 +37,18 @@ module Aquarium
           return kind2.eql?(UNKNOWN_ADVICE_KIND) ? 1 : KINDS_IN_PRIORITY_ORDER.index(kind1) <=> KINDS_IN_PRIORITY_ORDER.index(kind2)
         end
       end
-      
-    end  
+
+    end
 
     # Supports Enumerable, but not the sorting methods, as this class is a linked list structure.
     # This is of limited usefulness, because you wouldn't use an iterator to invoke the procs
     # in the chain, because each proc will invoke the next node arbitrarily or possibly not at all
     # in the case of around advice!
-    class AdviceChainNode 
+    class AdviceChainNode
       include Enumerable
       def initialize options = {}
         # assign :next_node and :static_join_point so the attributes are always created
-        options[:next_node] ||= nil  
+        options[:next_node] ||= nil
         options[:static_join_point] ||= nil
         options.each do |key, value|
           instance_variable_set "@#{key}".intern, value
@@ -55,7 +57,7 @@ module Aquarium
           EOF
         end
       end
-        
+
       # Bug #19262 workaround: need to only pass jp argument if arity is 1.
       def call_advice jp
         if advice.arity == 1
@@ -64,7 +66,7 @@ module Aquarium
           advice.call jp, jp.context.advised_object, *jp.context.parameters
         end
       end
-  
+
       def call jp
         begin
           advice_wrapper jp
@@ -72,7 +74,7 @@ module Aquarium
           handle_call_rescue e, "", jp
         end
       end
-      
+
       def invoke_original_join_point current_jp
         begin
           last.advice_wrapper current_jp
@@ -80,41 +82,41 @@ module Aquarium
           handle_call_rescue e, "While executing the original join_point: ", current_jp
         end
       end
-      
+
       # Supports Enumerable
-      def each 
-        node = self 
-        while node.nil? == false 
-          yield node 
-          node = node.next_node 
-        end 
+      def each
+        node = self
+        while node.nil? == false
+          yield node
+          node = node.next_node
+        end
       end
-      
+
       def last
         last_node = nil
-        each { |node| last_node = node unless node.nil? } 
+        each { |node| last_node = node unless node.nil? }
         last_node
       end
-      
+
       def size
         inject(0) {|memo, node| memo += 1}
       end
-      
+
       def empty?
         next_node.nil?
       end
-  
+
       # TODO: remove this method, which causes run-away recursions in R1.9.1
       # def inspect &block
-      #   block ? yield(self) : super 
+      #   block ? yield(self) : super
       # end
-  
+
       NIL_OBJECT = Aquarium::Utils::NilObject.new
-      
+
       protected
-      
+
       #--
-      # For performance reasons, we don't clone the context. 
+      # For performance reasons, we don't clone the context.
       # TODO: There are potential concurrency issues!
       #++
       def update_current_context jp
@@ -124,12 +126,12 @@ module Aquarium
         jp.context.current_advice_node = self
       end
 
-      def reset_current_context jp 
+      def reset_current_context jp
         return if advice.arity == 0
         jp.context.advice_kind = @last_advice_kind
         jp.context.current_advice_node = @last_advice_node
       end
-      
+
       def handle_call_rescue ex, error_message_prefix, jp
         if Aquarium::Aspects::Advice.debug_backtraces
           class_or_instance_method_separater = jp.instance_method? ? "#" : "."
@@ -154,7 +156,7 @@ module Aquarium
     # rather than object.method(...).call(*args). The latter fails when the original method
     # calls super. This is a Ruby bug: http://www.ruby-forum.com/topic/124276
     class NoAdviceChainNode < AdviceChainNode
-      # Note that we extract the block passed to the original method call, if any, 
+      # Note that we extract the block passed to the original method call, if any,
       # from the context and pass it to method invocation.
       def initialize options = {}
         super options
@@ -166,7 +168,7 @@ module Aquarium
 
     class BeforeAdviceChainNode < AdviceChainNode
       def initialize options = {}
-        super options 
+        super options
       end
       def advice_wrapper jp
         update_current_context jp
@@ -220,11 +222,11 @@ module Aquarium
       def after_raising_exceptions_list_includes raised_exception
         after_raising_exceptions_list.find {|x| raised_exception.kind_of? x}
       end
-  
-      def after_raising_exceptions_list 
+
+      def after_raising_exceptions_list
         list = @after_raising.kind_of?(Set) ? @after_raising.to_a : @after_raising
         (list.nil? || list.empty? || (list.size == 1 && list[0] == "")) ? [Object] : list
-      end    
+      end
     end
 
     class AfterAdviceChainNode < AdviceChainNode
@@ -232,7 +234,7 @@ module Aquarium
         super options
       end
       def advice_wrapper jp
-        # call_advice is invoked in each bloc, rather than once in an "ensure" clause, so the invocation in 
+        # call_advice is invoked in each bloc, rather than once in an "ensure" clause, so the invocation in
         # the rescue clause can allow the advice to change the exception that will be raised.
         begin
           returned_value = next_node.call jp
@@ -270,18 +272,18 @@ module Aquarium
     end
 
     # The advice_kind argument must be one of the values returned by Advice.kinds or one of the special values
-    # ":no" or ":none", signfying a node for which there is no advice, where the actual method being advised is 
+    # ":no" or ":none", signfying a node for which there is no advice, where the actual method being advised is
     # called directly instead. This kind of node is normally used as the terminal leaf in the chain.
     module AdviceChainNodeFactory
       def self.make_node options = {}
         advice_kind = options[:advice_kind]
         raise Aquarium::Utils::InvalidOptions.new("Unknown advice kind specified: #{advice_kind}") unless valid(advice_kind)
         advice_kind = :no if advice_kind == :none
-        advice_chain_node_name = advice_kind.to_s.to_camel_case + "AdviceChainNode"
+        advice_chain_node_name = Aquarium::Utils::CamelCase.to_camel_case(advice_kind.to_s) + "AdviceChainNode"
         clazz = Aquarium::Aspects.const_get advice_chain_node_name
         clazz.new options
       end
-  
+
       def self.valid advice_kind
         advice_kind == :no || advice_kind == :none || Advice.kinds.include?(advice_kind)
       end

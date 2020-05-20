@@ -1,6 +1,7 @@
 require 'aquarium/utils/array_utils'
 require 'aquarium/utils/hash_utils'
 require 'aquarium/utils/set_utils'
+require 'aquarium/utils/camel_case'
 
 require 'aquarium/utils/method_utils'
 require 'aquarium/utils/name_utils'
