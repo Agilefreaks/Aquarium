@@ -542,7 +542,7 @@ However, Aquarium does have a few advantages over AspectJ, especially when advis
 * Aquarium supports named advice that can be defined separately from the aspects that use the advice.
 * Aquarium can advise ancestor (parent) types, not just derived (descendent) types of specified types.
 
-See also the next section, **Known Limitations*.
+See also the next section, **Known Limitations**.
 
 ### Known Limitations
 
