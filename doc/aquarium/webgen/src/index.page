@@ -13,6 +13,7 @@ sort_info: 1
 
 ### News
 
+* V0.7.3 (May 20, 2020): Supports for Ruby 2.7.0. Removed problematic monkey patching. (0.7.2 had doc errors.)
 * V0.7.1 (April 23, 2019): Supports for Ruby 2.6.3 and JRuby 9.2.7.0. New hosting location for the documentation.
 * V0.6.0 (October 31, 2013): Support for Ruby 2.0.0 and eliminates a known thread-safety issue.
 * V0.5.1 (May 1, 2012): Now supports Ruby 1.9.3 and JRuby 1.6.7.

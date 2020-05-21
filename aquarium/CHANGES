@@ -1,4 +1,6 @@
-== Version 0.7.2
+== Version 0.7.3
+
+(0.7.2 had documentation errors.)
 
 Removed an ill-advised (if you'll pardon the expression...) use of monkey patching to add a `to_camel_case` method to `String`, which I only used in one place! Instead, I just call a utility to do this.
 

@@ -1,6 +1,6 @@
-== Updating to Aquarium-0.7.2
+== Updating to Aquarium-0.7.3
 
-Version 0.7.2 has only been tested with Ruby 2.7.0, but it should support the same versions as version 0.7.1, as this release contains only a relatively small set of code changes to fix issue #43.
+Version 0.7.3 has only been tested with Ruby 2.7.0, but it should support the same versions as version 0.7.1, as this release contains only a relatively small set of code changes to fix issue #43.
 
 == Updating to Aquarium-0.7.1
 
