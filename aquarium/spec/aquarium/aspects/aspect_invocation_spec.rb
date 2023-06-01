@@ -205,14 +205,14 @@ describe Aspect, "methods" do
     [:type, :type_and_descendents, :type_and_ancestors, :type_and_nested_types].each do |type_key|
       it "should ignore the :default_objects if at least one :#{type_key} is given and the :default_objects are objects." do
         object = Aquarium::AspectInvocationTestClass.new
-        aspect = Aspect.new(:after, :default_objects => object, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method, :method => :public_test_method) {true}
+        aspect = Aspect.new(:after, :default_objects => object, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method) {true}
         aspect.join_points_matched.size.should == 1
         aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == object}
         aspect.unadvise
       end
 
       it "should ignore the :default_objects if at least one :#{type_key} is given and the :default_objects are types." do
-        aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method, :method => :public_test_method) {true}
+        aspect = Aspect.new(:after, :default_objects => Aquarium::AspectInvocationTestClass, type_key => Aquarium::AspectInvocationTestClass2, :method => :public_test_method) {true}
         aspect.join_points_matched.size.should == 1
         aspect.join_points_matched.each {|jp| jp.type_or_object.should_not == Aquarium::AspectInvocationTestClass}
         aspect.unadvise

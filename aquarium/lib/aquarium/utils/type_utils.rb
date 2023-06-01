@@ -20,6 +20,8 @@ module Aquarium
             result << mod if mod.ancestors.include?(clazz)
             do_descendents clazz, mod, visited, result
           end
+        rescue
+          next
         end
         result.uniq
       end
