@@ -111,6 +111,8 @@ module Aquarium
               con = t.const_get c
               pointcuts.append_matched({t => con}) if con.kind_of?(Aquarium::Aspects::Pointcut)
             end
+          rescue
+            next
           end
         end
         pointcuts
